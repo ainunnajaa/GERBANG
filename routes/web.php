@@ -1,0 +1,64 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\WebProfilController;
+use App\Http\Controllers\KelolaPenggunaController;
+use App\Http\Controllers\WelcomeController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [WelcomeController::class, 'index']);
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
+
+// Admin routes
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/admin/kelola-pengguna', [KelolaPenggunaController::class, 'index'])->name('admin.users');
+    
+        Route::get('/admin/pengguna/create', [KelolaPenggunaController::class, 'create'])->name('admin.users.create');
+        Route::post('/admin/pengguna', [KelolaPenggunaController::class, 'store'])->name('admin.users.store');
+        Route::get('/admin/pengguna/{user}/edit', [KelolaPenggunaController::class, 'edit'])->name('admin.users.edit');
+        Route::patch('/admin/pengguna/{user}', [KelolaPenggunaController::class, 'update'])->name('admin.users.update');
+    Route::get('/admin/kelola-presensi', fn() => view('admin.kelola_presensi'))->name('admin.presensi');
+    Route::get('/admin/riwayat-presensi', fn() => view('admin.riwayat_presensi'))->name('admin.riwayat');
+
+    Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
+    Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
+    Route::delete('/admin/kelola-web-profil/principal-photo', [WebProfilController::class, 'deletePrincipalPhoto'])->name('admin.web_profil.principal_photo.delete');
+
+    // Program Unggulan CRUD
+    Route::post('/admin/program-unggulan', [WebProfilController::class, 'storeProgram'])->name('admin.programs.store');
+    Route::patch('/admin/program-unggulan/{program}', [WebProfilController::class, 'updateProgram'])->name('admin.programs.update');
+    Route::delete('/admin/program-unggulan/{program}', [WebProfilController::class, 'deleteProgram'])->name('admin.programs.delete');
+
+    // Konten CRUD
+    Route::post('/admin/konten', [WebProfilController::class, 'storeContent'])->name('admin.contents.store');
+    Route::patch('/admin/konten/{content}', [WebProfilController::class, 'updateContent'])->name('admin.contents.update');
+    Route::delete('/admin/konten/{content}', [WebProfilController::class, 'deleteContent'])->name('admin.contents.delete');
+
+    // Backgrounds CRUD
+    Route::post('/admin/background', [WebProfilController::class, 'storeBackground'])->name('admin.backgrounds.store');
+    Route::delete('/admin/background/{bg}', [WebProfilController::class, 'deleteBackground'])->name('admin.backgrounds.delete');
+});
+
+// Guru routes
+Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
+    Route::get('/guru/presensi', fn() => view('guru.presensi'))->name('guru.presensi');
+    Route::get('/guru/kehadiran', fn() => view('guru.kehadiran'))->name('guru.kehadiran');
+});
+
+// Wali Murid routes
+Route::middleware(['auth', 'verified', 'role:wali_murid'])->group(function () {
+    Route::get('/wali/daftar', fn() => view('wali_murid.daftar'))->name('wali.daftar');
+    Route::get('/wali/aktivitas', fn() => view('wali_murid.aktivitas'))->name('wali.aktivitas');
+});
