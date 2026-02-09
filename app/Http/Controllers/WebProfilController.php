@@ -16,13 +16,13 @@ class WebProfilController extends Controller
 	{
 		$profile = SchoolProfile::first();
 		$programs = $profile
-			? SchoolProgram::where('school_profile_id', $profile->id)->orderBy('order')->get()
+			? SchoolProgram::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
 		$contents = $profile
-			? SchoolContent::where('school_profile_id', $profile->id)->orderBy('order')->get()
+			? SchoolContent::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
 		$backgrounds = $profile
-			? SchoolBackground::where('school_profile_id', $profile->id)->orderBy('order')->get()
+			? SchoolBackground::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
 
 		return view('admin.kelola_web_profil', [
@@ -63,7 +63,10 @@ class WebProfilController extends Controller
 			$profile->updated_by = Auth::id();
 			$profile->save();
 
-			return redirect()->route('admin.web_profil')->with('status', 'Data kepala sekolah berhasil disimpan.');
+			return redirect()->route('admin.web_profil')->with([
+				'status' => 'Data kepala sekolah berhasil disimpan.',
+				'open_section' => 'principal',
+			]);
 		}
 
 		if ($section === 'contact') {
@@ -82,17 +85,32 @@ class WebProfilController extends Controller
 			$profile->updated_by = Auth::id();
 			$profile->save();
 
-			return redirect()->route('admin.web_profil')->with('status', 'Kontak sekolah berhasil disimpan.');
+			return redirect()->route('admin.web_profil')->with([
+				'status' => 'Kontak sekolah berhasil disimpan.',
+				'open_section' => 'contact',
+			]);
 		}
 
 		$validated = $request->validate([
 			'school_name' => ['nullable', 'string', 'max:255'],
+			'school_logo' => ['nullable', 'image', 'max:4096'],
 			'welcome_message' => ['required', 'string'],
 			'vision' => ['nullable', 'string'],
 			'mission' => ['nullable', 'string'],
 		]);
 
 		$profile = SchoolProfile::firstOrNew(['id' => 1]);
+		if ($request->hasFile('school_logo')) {
+			if ($profile->school_logo_path) {
+				try {
+					Storage::disk('public')->delete($profile->school_logo_path);
+				} catch (\Throwable $e) {
+					// ignore
+				}
+			}
+			$logoPath = $request->file('school_logo')->store('school_logos', 'public');
+			$profile->school_logo_path = $logoPath;
+		}
 		$profile->school_name = $validated['school_name'] ?? null;
 		$profile->welcome_message = $validated['welcome_message'];
 		$profile->vision = $validated['vision'] ?? null;
@@ -100,7 +118,10 @@ class WebProfilController extends Controller
 		$profile->updated_by = Auth::id();
 		$profile->save();
 
-		return redirect()->route('admin.web_profil')->with('status', 'Profil sekolah berhasil disimpan.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Profil sekolah berhasil disimpan.',
+			'open_section' => 'profile',
+		]);
 	}
 
 	public function deletePrincipalPhoto()
@@ -117,7 +138,30 @@ class WebProfilController extends Controller
 			}
 		}
 
-		return redirect()->route('admin.web_profil')->with('status', 'Foto kepala sekolah dihapus.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Foto kepala sekolah dihapus.',
+			'open_section' => 'principal',
+		]);
+	}
+
+	public function deleteSchoolLogo()
+	{
+		$profile = SchoolProfile::first();
+		if ($profile && $profile->school_logo_path) {
+			$path = $profile->school_logo_path;
+			$profile->school_logo_path = null;
+			$profile->save();
+			try {
+				Storage::disk('public')->delete($path);
+			} catch (\Throwable $e) {
+				// ignore
+			}
+		}
+
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Logo sekolah dihapus.',
+			'open_section' => 'profile',
+		]);
 	}
 
 	// Program Unggulan CRUD
@@ -140,7 +184,10 @@ class WebProfilController extends Controller
 			'order' => $validated['order'] ?? 0,
 		]);
 
-		return redirect()->route('admin.web_profil')->with('status', 'Program unggulan ditambahkan.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Program unggulan ditambahkan.',
+			'open_section' => 'programs',
+		]);
 	}
 
 	public function updateProgram(Request $request, SchoolProgram $program)
@@ -159,14 +206,20 @@ class WebProfilController extends Controller
 			'order' => $validated['order'] ?? 0,
 		]);
 
-		return redirect()->route('admin.web_profil')->with('status', 'Program unggulan diperbarui.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Program unggulan diperbarui.',
+			'open_section' => 'programs',
+		]);
 	}
 
 	public function deleteProgram(SchoolProgram $program)
 	{
 		$program->delete();
 
-		return redirect()->route('admin.web_profil')->with('status', 'Program unggulan dihapus.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Program unggulan dihapus.',
+			'open_section' => 'programs',
+		]);
 	}
 
 	// Konten Sosial Media CRUD
@@ -190,7 +243,10 @@ class WebProfilController extends Controller
 			'order' => $validated['order'] ?? 0,
 		]);
 
-		return redirect()->route('admin.web_profil')->with('status', 'Konten berhasil ditambahkan.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Konten berhasil ditambahkan.',
+			'open_section' => 'contents',
+		]);
 	}
 
 	public function updateContent(Request $request, SchoolContent $content)
@@ -209,14 +265,20 @@ class WebProfilController extends Controller
 			'order' => $validated['order'] ?? 0,
 		]);
 
-		return redirect()->route('admin.web_profil')->with('status', 'Konten berhasil diperbarui.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Konten berhasil diperbarui.',
+			'open_section' => 'contents',
+		]);
 	}
 
 	public function deleteContent(SchoolContent $content)
 	{
 		$content->delete();
 
-		return redirect()->route('admin.web_profil')->with('status', 'Konten dihapus.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Konten dihapus.',
+			'open_section' => 'contents',
+		]);
 	}
 
 	// Background CRUD
@@ -236,7 +298,10 @@ class WebProfilController extends Controller
 			'order' => $validated['order'] ?? 0,
 		]);
 
-		return redirect()->route('admin.web_profil')->with('status', 'Gambar background ditambahkan.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Gambar background ditambahkan.',
+			'open_section' => 'background',
+		]);
 	}
 
 	public function deleteBackground(SchoolBackground $bg)
@@ -250,7 +315,10 @@ class WebProfilController extends Controller
 			// ignore
 		}
 
-		return redirect()->route('admin.web_profil')->with('status', 'Gambar background dihapus.');
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Gambar background dihapus.',
+			'open_section' => 'background',
+		]);
 	}
 }
 

@@ -3,11 +3,17 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WebProfilController;
+use App\Http\Controllers\KelolaBeritaController;
+use App\Http\Controllers\BeritaPublikController;
 use App\Http\Controllers\KelolaPenggunaController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+
+// Public berita
+Route::get('/berita', [BeritaPublikController::class, 'index'])->name('publik.berita.index');
+Route::get('/berita/{berita}', [BeritaPublikController::class, 'show'])->name('publik.berita.show');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
@@ -35,6 +41,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
     Route::delete('/admin/kelola-web-profil/principal-photo', [WebProfilController::class, 'deletePrincipalPhoto'])->name('admin.web_profil.principal_photo.delete');
+    Route::delete('/admin/kelola-web-profil/school-logo', [WebProfilController::class, 'deleteSchoolLogo'])->name('admin.web_profil.school_logo.delete');
 
     // Program Unggulan CRUD
     Route::post('/admin/program-unggulan', [WebProfilController::class, 'storeProgram'])->name('admin.programs.store');
@@ -49,6 +56,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Backgrounds CRUD
     Route::post('/admin/background', [WebProfilController::class, 'storeBackground'])->name('admin.backgrounds.store');
     Route::delete('/admin/background/{bg}', [WebProfilController::class, 'deleteBackground'])->name('admin.backgrounds.delete');
+
+    // Kelola Berita
+    Route::get('/admin/kelola-berita', [KelolaBeritaController::class, 'index'])->name('admin.berita');
+    Route::get('/admin/kelola-berita/create', [KelolaBeritaController::class, 'create'])->name('admin.berita.create');
+    Route::get('/admin/kelola-berita/{berita}', [KelolaBeritaController::class, 'show'])->name('admin.berita.show');
+    Route::post('/admin/kelola-berita', [KelolaBeritaController::class, 'store'])->name('admin.berita.store');
 });
 
 // Guru routes

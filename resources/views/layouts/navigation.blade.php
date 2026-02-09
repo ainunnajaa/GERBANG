@@ -42,22 +42,23 @@
     @endphp
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <div class="flex items-center gap-8">
-                <a href="{{ route('dashboard') }}" class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $roleLabel }}</a>
-                <ul class="flex gap-6 text-base text-gray-700 dark:text-gray-200">
-                    <li><a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Dashboard</a></li>
+        <div class="flex items-center justify-between h-14">
+            <div class="flex items-center gap-6">
+                <a href="{{ route('dashboard') }}" class="font-semibold text-base text-gray-900 dark:text-gray-100">{{ $roleLabel }}</a>
+                <ul class="flex gap-5 text-sm text-gray-700 dark:text-gray-200">
+                    <li><a href="{{ route('dashboard') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Dashboard</a></li>
                     @if($role === 'admin')
-                        <li><a href="{{ route('admin.users') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Pengguna</a></li>
-                        <li><a href="{{ route('admin.presensi') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Presensi</a></li>
-                        <li><a href="{{ route('admin.riwayat') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Riwayat Presensi</a></li>
-                        <li><a href="{{ route('admin.web_profil') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Web Profil</a></li>
+                        <li><a href="{{ route('admin.users') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Pengguna</a></li>
+                        <li><a href="{{ route('admin.presensi') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Presensi</a></li>
+                        <li><a href="{{ route('admin.riwayat') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Riwayat Presensi</a></li>
+                        <li><a href="{{ route('admin.web_profil') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Web Profil</a></li>
+                        <li><a href="{{ route('admin.berita') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kelola Berita</a></li>
                     @elseif($role === 'guru')
-                        <li><a href="{{ route('guru.presensi') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Presensi</a></li>
-                        <li><a href="{{ route('guru.kehadiran') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kehadiran</a></li>
+                        <li><a href="{{ route('guru.presensi') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Presensi</a></li>
+                        <li><a href="{{ route('guru.kehadiran') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kehadiran</a></li>
                     @elseif($role === 'wali_murid')
-                        <li><a href="{{ route('wali.daftar') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Daftar</a></li>
-                        <li><a href="{{ route('wali.aktivitas') }}" class="px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Aktivitas</a></li>
+                        <li><a href="{{ route('wali.daftar') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Daftar</a></li>
+                        <li><a href="{{ route('wali.aktivitas') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Aktivitas</a></li>
                     @endif
                 </ul>
             </div>

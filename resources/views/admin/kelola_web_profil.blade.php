@@ -14,12 +14,32 @@
                     </style>
 
                     @if (session('status'))
-                        <div class="mb-4 p-3 rounded bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-100">
-                            {{ session('status') }}
+                        <div
+                            x-data="{ show: true }"
+                            x-init="setTimeout(() => show = false, 3000)"
+                            x-show="show"
+                            x-transition
+                            class="fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg bg-green-600 text-white text-sm flex items-center gap-2"
+                        >
+                            <span>{{ session('status') }}</span>
+                            <button type="button" @click="show = false" class="text-white/80 hover:text-white text-xs">Tutup</button>
                         </div>
                     @endif
 
-                    <div x-data="{ showProfile: false, showPrincipal: false, showBackground: false, showPrograms: false, showContents: false, showContact: false }" class="space-y-6">
+                    @php
+                        $openSection = session('open_section');
+                    @endphp
+                    <div
+                        x-data="{
+                            showProfile: {{ $openSection === 'profile' ? 'true' : 'false' }},
+                            showPrincipal: {{ $openSection === 'principal' ? 'true' : 'false' }},
+                            showBackground: {{ $openSection === 'background' ? 'true' : 'false' }},
+                            showPrograms: {{ $openSection === 'programs' ? 'true' : 'false' }},
+                            showContents: {{ $openSection === 'contents' ? 'true' : 'false' }},
+                            showContact: {{ $openSection === 'contact' ? 'true' : 'false' }}
+                        }"
+                        class="space-y-6"
+                    >
                         <!-- Profil Sekolah -->
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                             <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showProfile = !showProfile">
@@ -29,9 +49,34 @@
                                 </svg>
                             </button>
                             <div x-show="showProfile" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
-                                <form method="POST" action="{{ route('admin.web_profil.save') }}" class="space-y-6">
+                                <form method="POST" action="{{ route('admin.web_profil.save') }}" enctype="multipart/form-data" class="space-y-6">
                                     @csrf
                                     <input type="hidden" name="section" value="profile">
+                                    <div>
+                                        <label for="school_logo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Logo Sekolah</label>
+                                        @if (empty($profile) || empty($profile->school_logo_path))
+                                            <input id="school_logo" name="school_logo" type="file" accept="image/*" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                            @error('school_logo')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                            <div id="school_logo_preview" class="mt-2 hidden">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-16 h-16 rounded-md overflow-hidden border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                                                        <img id="school_logo_preview_img" src="" alt="Preview Logo Sekolah" class="w-full h-full object-contain">
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">Preview logo sebelum disimpan</p>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="mt-2 flex items-center gap-3">
+                                                <div class="w-16 h-16 rounded-md overflow-hidden border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                                                    <img src="{{ asset('storage/' . $profile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
+                                                </div>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Logo sekolah saat ini</p>
+                                                <button type="button" onclick="document.getElementById('delete_school_logo_form')?.submit();" class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">Hapus Logo</button>
+                                            </div>
+                                        @endif
+                                    </div>
                                     <div>
                                         <label for="school_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Sekolah</label>
                                         <input id="school_name" name="school_name" type="text" value="{{ old('school_name', $profile->school_name ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: SMAN 1 Contoh Kota">
@@ -68,7 +113,7 @@
                                     </div>
 
                                 <div class="flex items-center justify-end mt-4">
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm md:text-base">Simpan</button>
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md hover:bg-gray-200 dark:hover_bg-gray-600 font-medium text-sm md:text-base">Simpan</button>
                                 </div>
                                 </form>
                             </div>
@@ -155,6 +200,24 @@
                                 const input = document.getElementById('principal_photo');
                                 const preview = document.getElementById('principal_photo_preview');
                                 const img = document.getElementById('principal_photo_preview_img');
+                                if (input) {
+                                    input.addEventListener('change', function(e){
+                                        const file = e.target.files && e.target.files[0];
+                                        if (!file) {
+                                            if (preview) preview.classList.add('hidden');
+                                            if (img) img.src = '';
+                                            return;
+                                        }
+                                        const url = URL.createObjectURL(file);
+                                        if (img) img.src = url;
+                                        if (preview) preview.classList.remove('hidden');
+                                    });
+                                }
+                            })();
+                            (function(){
+                                const input = document.getElementById('school_logo');
+                                const preview = document.getElementById('school_logo_preview');
+                                const img = document.getElementById('school_logo_preview_img');
                                 if (input) {
                                     input.addEventListener('change', function(e){
                                         const file = e.target.files && e.target.files[0];
@@ -274,6 +337,15 @@
 
                                 <div class="space-y-3">
                                     @if(!empty($programs) && $programs->count())
+                                        <div class="hidden md:flex items-center justify-between px-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                            <div class="flex-1">Program</div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-32">Judul</span>
+                                                <span class="w-40">Deskripsi</span>
+                                                <span class="w-28">Icon</span>
+                                                <span class="w-20 text-center">Aksi</span>
+                                            </div>
+                                        </div>
                                         @foreach($programs as $p)
                                             <div class="p-4 rounded-md bg-white dark:bg-gray-800 flex items-center justify-between">
                                                 <div class="flex-1">
@@ -286,10 +358,10 @@
                                                     <form method="POST" action="{{ route('admin.programs.update', $p) }}" class="flex items-center gap-2">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <input name="title" type="text" value="{{ $p->title }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
-                                                        <input name="description" type="text" value="{{ $p->description }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
-                                                        <input name="icon" type="text" value="{{ $p->icon }}" class="rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" placeholder="Icon" />
-                                                        <button type="submit" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Simpan</button>
+                                                        <input name="title" type="text" value="{{ $p->title }}" class="w-32 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                        <input name="description" type="text" value="{{ $p->description }}" class="w-40 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                        <input name="icon" type="text" value="{{ $p->icon }}" class="w-28 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" placeholder="Icon" />
+                                                        <button type="submit" class="w-20 inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Simpan</button>
                                                     </form>
                                                     <form method="POST" action="{{ route('admin.programs.delete', $p) }}">
                                                         @csrf
@@ -349,30 +421,32 @@
                                                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $c->url }}</div>
                                                 </div>
                                                 <div class="flex items-start justify-between gap-3">
-                                                    <form method="POST" action="{{ route('admin.contents.update', $c) }}" class="space-y-2 flex-1">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <div>
-                                                            <label class="block text-xs font-medium mb-1">Link Instagram</label>
-                                                            <input name="url" type="url" value="{{ $c->url }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                    <div class="flex-1 space-y-2">
+                                                        <form id="content_update_{{ $c->id }}" method="POST" action="{{ route('admin.contents.update', $c) }}" class="space-y-2">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <div>
+                                                                <label class="block text-xs font-medium mb-1">Link Instagram</label>
+                                                                <input name="url" type="url" value="{{ $c->url }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium mb-1">Judul</label>
+                                                                <input name="title" type="text" value="{{ $c->title }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-medium mb-1">Keterangan</label>
+                                                                <input name="description" type="text" value="{{ $c->description }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
+                                                            </div>
+                                                        </form>
+                                                        <div class="mt-2 flex items-center gap-2">
+                                                            <button type="submit" form="content_update_{{ $c->id }}" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Simpan</button>
+                                                            <form method="POST" action="{{ route('admin.contents.delete', $c) }}">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:text-white dark:hover:bg-red-800">Hapus</button>
+                                                            </form>
                                                         </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium mb-1">Judul</label>
-                                                            <input name="title" type="text" value="{{ $c->title }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs font-medium mb-1">Keterangan</label>
-                                                            <input name="description" type="text" value="{{ $c->description }}" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm" />
-                                                        </div>
-                                                        <div>
-                                                            <button type="submit" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Simpan</button>
-                                                        </div>
-                                                    </form>
-                                                    <form method="POST" action="{{ route('admin.contents.delete', $c) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:text-white dark:hover:bg-red-800">Hapus</button>
-                                                    </form>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -434,6 +508,13 @@
                             </div>
                         </div>
                     </div>
+
+                    @if (!empty($profile?->school_logo_path))
+                        <form id="delete_school_logo_form" method="POST" action="{{ route('admin.web_profil.school_logo.delete') }}" class="hidden">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endif
 
                     <div class="mt-6">
                         <a href="/" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm md:text-base">Lihat Halaman Utama</a>

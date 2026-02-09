@@ -11,6 +11,7 @@ class SchoolProfile extends Model
 
     protected $fillable = [
         'school_name',
+        'school_logo_path',
         'welcome_message',
         'principal_name',
         'principal_photo_path',
