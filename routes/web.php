@@ -7,6 +7,7 @@ use App\Http\Controllers\KelolaBeritaController;
 use App\Http\Controllers\BeritaPublikController;
 use App\Http\Controllers\KelolaPenggunaController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\PresensiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
@@ -35,8 +36,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('/admin/pengguna', [KelolaPenggunaController::class, 'store'])->name('admin.users.store');
         Route::get('/admin/pengguna/{user}/edit', [KelolaPenggunaController::class, 'edit'])->name('admin.users.edit');
         Route::patch('/admin/pengguna/{user}', [KelolaPenggunaController::class, 'update'])->name('admin.users.update');
-    Route::get('/admin/kelola-presensi', fn() => view('admin.kelola_presensi'))->name('admin.presensi');
-    Route::get('/admin/riwayat-presensi', fn() => view('admin.riwayat_presensi'))->name('admin.riwayat');
+
+    Route::get('/admin/kelola-presensi', [PresensiController::class, 'adminIndex'])->name('admin.presensi');
+    Route::post('/admin/kelola-presensi/jam', [PresensiController::class, 'updateSettings'])->name('admin.presensi.settings.update');
+    Route::get('/admin/riwayat-presensi', [PresensiController::class, 'adminRiwayat'])->name('admin.riwayat');
+    Route::get('/admin/riwayat-presensi/guru/{guru}', [PresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
+    Route::delete('/admin/presensi/{presensi}', [PresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
 
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
@@ -64,9 +69,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/admin/kelola-berita', [KelolaBeritaController::class, 'store'])->name('admin.berita.store');
 });
 
+
 // Guru routes
 Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
-    Route::get('/guru/presensi', fn() => view('guru.presensi'))->name('guru.presensi');
+    Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
+    Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
     Route::get('/guru/kehadiran', fn() => view('guru.kehadiran'))->name('guru.kehadiran');
 });
 
