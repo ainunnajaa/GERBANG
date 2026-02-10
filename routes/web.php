@@ -40,7 +40,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/admin/kelola-presensi', [PresensiController::class, 'adminIndex'])->name('admin.presensi');
     Route::post('/admin/kelola-presensi/jam', [PresensiController::class, 'updateSettings'])->name('admin.presensi.settings.update');
     Route::get('/admin/riwayat-presensi', [PresensiController::class, 'adminRiwayat'])->name('admin.riwayat');
+    Route::get('/admin/riwayat-presensi-semua', [PresensiController::class, 'adminRiwayatSemua'])->name('admin.presensi.all');
+    Route::get('/admin/riwayat-presensi-semua/export', [PresensiController::class, 'adminExportPresensiSemua'])->name('admin.presensi.all.export');
     Route::get('/admin/riwayat-presensi/guru/{guru}', [PresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
+    Route::get('/admin/riwayat-presensi/guru/{guru}/download', [PresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [PresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
 
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
@@ -74,7 +77,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
     Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
-    Route::get('/guru/kehadiran', fn() => view('guru.kehadiran'))->name('guru.kehadiran');
+    Route::get('/guru/kehadiran', [PresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
 });
 
 // Wali Murid routes

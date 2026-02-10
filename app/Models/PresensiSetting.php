@@ -12,6 +12,7 @@ class PresensiSetting extends Model
     protected $fillable = [
         'jam_masuk_start',
         'jam_masuk_end',
+        'jam_masuk_toleransi',
         'jam_pulang_start',
         'jam_pulang_end',
         'qr_text',

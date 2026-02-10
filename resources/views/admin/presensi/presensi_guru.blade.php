@@ -27,6 +27,7 @@
 										<th class="px-4 py-2 text-left">Tanggal</th>
 										<th class="px-4 py-2 text-left">Jam Masuk</th>
 										<th class="px-4 py-2 text-left">Jam Pulang</th>
+										<th class="px-4 py-2 text-left">Status</th>
 										<th class="px-4 py-2 text-right">Aksi</th>
 									</tr>
 								</thead>
@@ -36,6 +37,22 @@
 											<td class="px-4 py-2">{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') }}</td>
 											<td class="px-4 py-2">{{ $item->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
 											<td class="px-4 py-2">{{ $item->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
+											<td class="px-4 py-2">
+												@php
+													$status = '-';
+													if ($item->jam_masuk) {
+														$jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
+														$tol = isset($settings) && $settings && $settings->jam_masuk_toleransi
+															? \Carbon\Carbon::parse($settings->jam_masuk_toleransi)
+															: ($settings && $settings->jam_masuk_end ? \Carbon\Carbon::parse($settings->jam_masuk_end) : null);
+
+														if ($tol) {
+															$status = $jamMasuk->lte($tol) ? 'H' : 'T';
+														}
+													}
+												@endphp
+												{{ $status }}
+											</td>
 											<td class="px-4 py-2 text-right">
 												<form action="{{ route('admin.presensi.delete', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus riwayat presensi ini?');">
 													@csrf

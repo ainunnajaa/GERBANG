@@ -31,6 +31,9 @@
                             {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }}
                             -
                             {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}
+                            @if($settings->jam_masuk_toleransi)
+                                (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})
+                            @endif
                         </li>
                         <li>
                             Pulang:

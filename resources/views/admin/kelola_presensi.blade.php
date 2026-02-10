@@ -37,6 +37,16 @@
                             @enderror
                         </div>
                         <div>
+                            <label class="block text-sm font-medium mb-1">Batas Toleransi Keterlambatan Masuk</label>
+                            <input type="time" name="jam_masuk_toleransi" value="{{ old('jam_masuk_toleransi', optional($settings->jam_masuk_toleransi ? \Carbon\Carbon::parse($settings->jam_masuk_toleransi) : null)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Presensi masuk setelah jam ini (namun masih dalam rentang jam masuk) akan diberi status "T" (Terlambat).
+                            </p>
+                            @error('jam_masuk_toleransi')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium mb-1">Jam Pulang Mulai</label>
                             <input type="time" name="jam_pulang_start" value="{{ old('jam_pulang_start', \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
                             @error('jam_pulang_start')
@@ -78,7 +88,12 @@
                     <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
                         <p>Jam presensi saat ini:</p>
                         <ul class="list-disc list-inside">
-                            <li>Masuk: {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}</li>
+                            <li>
+                                Masuk: {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}
+                                @if($settings->jam_masuk_toleransi)
+                                    (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})
+                                @endif
+                            </li>
                             <li>Pulang: {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</li>
                         </ul>
                     </div>
