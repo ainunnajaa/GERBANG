@@ -16,5 +16,8 @@ class PresensiSetting extends Model
         'jam_pulang_start',
         'jam_pulang_end',
         'qr_text',
+        'latitude',
+        'longitude',
+        'radius_meter',
     ];
 }

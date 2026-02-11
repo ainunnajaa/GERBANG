@@ -19,30 +19,14 @@
 						</a>
 					</div>
 
-					<form method="GET" action="{{ route('admin.presensi.all') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+					<form method="GET" action="{{ route('admin.presensi.all') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 						<div>
-							<label class="block text-sm font-medium mb-1">Tanggal</label>
-							<input type="date" name="tanggal" value="{{ $selectedDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<label class="block text-sm font-medium mb-1">Tanggal Mulai</label>
+							<input type="date" name="tanggal_mulai" value="{{ $startDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 						</div>
 						<div>
-							<label class="block text-sm font-medium mb-1">Bulan</label>
-							<select name="bulan" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-								<option value="">Semua</option>
-								@for ($m = 1; $m <= 12; $m++)
-									<option value="{{ $m }}" {{ (int)($selectedMonth ?? 0) === $m ? 'selected' : '' }}>
-										{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}
-									</option>
-								@endfor
-							</select>
-						</div>
-						<div>
-							<label class="block text-sm font-medium mb-1">Tahun</label>
-							<select name="tahun" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-								<option value="">Semua</option>
-								@foreach($years as $year)
-									<option value="{{ $year }}" {{ (int)($selectedYear ?? 0) === (int)$year ? 'selected' : '' }}>{{ $year }}</option>
-								@endforeach
-							</select>
+							<label class="block text-sm font-medium mb-1">Tanggal Selesai</label>
+							<input type="date" name="tanggal_selesai" value="{{ $endDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 						</div>
 						<div class="flex items-center gap-2">
 							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
@@ -55,14 +39,20 @@
 					<div class="flex items-center justify-between mt-4">
 						<p class="text-xs text-gray-500 dark:text-gray-400">
 							Filter saat ini:
-							@if($selectedDate)
-								Tanggal {{ $selectedDate }}
+							@if($startDate || $endDate)
+								Tanggal
+								@if($startDate)
+									mulai {{ $startDate }}
+								@endif
+								@if($endDate)
+									sampai {{ $endDate }}
+								@endif
 							@else
-								Tahun {{ $selectedYear ?? 'semua' }}, Bulan {{ $selectedMonth ?? 'semua' }}
+								Semua tanggal
 							@endif
 						</p>
 						<a
-							href="{{ route('admin.presensi.all.export', ['tanggal' => $selectedDate, 'bulan' => $selectedMonth, 'tahun' => $selectedYear]) }}"
+							href="{{ route('admin.presensi.all.export', ['tanggal_mulai' => $startDate, 'tanggal_selesai' => $endDate]) }}"
 							class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700"
 						>
 							Export CSV (Semua Guru)

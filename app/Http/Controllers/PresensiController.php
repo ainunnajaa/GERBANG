@@ -11,6 +11,27 @@ use Carbon\Carbon;
 
 class PresensiController extends Controller
 {
+	/**
+	 * Hitung jarak antara dua titik koordinat (meter) menggunakan rumus Haversine.
+	 */
+	protected function haversineDistance($lat1, $lon1, $lat2, $lon2): float
+	{
+		$earthRadius = 6371000; // meter
+
+		$latFrom = deg2rad($lat1);
+		$lonFrom = deg2rad($lon1);
+		$latTo = deg2rad($lat2);
+		$lonTo = deg2rad($lon2);
+
+		$latDelta = $latTo - $latFrom;
+		$lonDelta = $lonTo - $lonFrom;
+
+		$a = sin($latDelta / 2) ** 2 + cos($latFrom) * cos($latTo) * sin($lonDelta / 2) ** 2;
+		$c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+		return $earthRadius * $c;
+	}
+
 	public function guruIndex()
 	{
 		$settings = PresensiSetting::first();
@@ -18,10 +39,12 @@ class PresensiController extends Controller
 			$settings = PresensiSetting::create([
 				'jam_masuk_start' => '07:00:00',
 				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
 				'jam_pulang_start' => '13:00:00',
 				'jam_pulang_end' => '14:30:00',
 				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+				'latitude' => null,
+				'longitude' => null,
+				'radius_meter' => null,
 			]);
 		}
 
@@ -32,8 +55,6 @@ class PresensiController extends Controller
 
 	public function guruKehadiran(Request $request)
 	{
-		$user = Auth::user();
-
 		$settings = PresensiSetting::first();
 		if (! $settings) {
 			$settings = PresensiSetting::create([
@@ -46,38 +67,30 @@ class PresensiController extends Controller
 			]);
 		}
 
-		$selectedDate = $request->input('tanggal');
-		$selectedMonth = $request->input('bulan');
-		$selectedYear = $request->input('tahun');
-
+		$user = Auth::user();
 		$query = Presensi::where('user_id', $user->id);
 
-		if ($selectedDate) {
-			$query->whereDate('tanggal', $selectedDate);
-		} else {
-			if ($selectedYear) {
-				$query->whereYear('tanggal', $selectedYear);
-			} else {
-				$selectedYear = now()->year;
-				$query->whereYear('tanggal', $selectedYear);
-			}
+		$startDate = $request->input('tanggal_mulai');
+		$endDate = $request->input('tanggal_selesai');
 
-			if ($selectedMonth) {
-				$query->whereMonth('tanggal', $selectedMonth);
-			}
+		if ($startDate && $endDate) {
+			$query->whereBetween('tanggal', [$startDate, $endDate]);
+		} elseif ($startDate) {
+			$query->whereDate('tanggal', '>=', $startDate);
+		} elseif ($endDate) {
+			$query->whereDate('tanggal', '<=', $endDate);
 		}
 
 		$presensis = $query
 			->orderByDesc('tanggal')
-			->orderByDesc('created_at')
-			->get();
+			->paginate(20)
+			->appends($request->query());
 
 		return view('guru.kehadiran', [
 			'presensis' => $presensis,
-			'selectedDate' => $selectedDate,
-			'selectedMonth' => $selectedMonth,
-			'selectedYear' => $selectedYear,
 			'settings' => $settings,
+			'startDate' => $startDate,
+			'endDate' => $endDate,
 		]);
 	}
 
@@ -88,7 +101,6 @@ class PresensiController extends Controller
 			$settings = PresensiSetting::create([
 				'jam_masuk_start' => '07:00:00',
 				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
 				'jam_pulang_start' => '13:00:00',
 				'jam_pulang_end' => '14:30:00',
 				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
@@ -120,19 +132,23 @@ class PresensiController extends Controller
 		$data = $request->validate([
 			'jam_masuk_start' => ['required', 'date_format:H:i'],
 			'jam_masuk_end' => ['required', 'date_format:H:i'],
-			'jam_masuk_toleransi' => ['required', 'date_format:H:i'],
 			'jam_pulang_start' => ['required', 'date_format:H:i'],
 			'jam_pulang_end' => ['required', 'date_format:H:i'],
 			'qr_text' => ['nullable', 'string', 'max:255'],
+			'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+			'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+			'radius_meter' => ['nullable', 'integer', 'min:10'],
 		]);
 
 		$settings = PresensiSetting::first() ?? new PresensiSetting();
 		$settings->jam_masuk_start = $data['jam_masuk_start'] . ':00';
 		$settings->jam_masuk_end = $data['jam_masuk_end'] . ':00';
-		$settings->jam_masuk_toleransi = $data['jam_masuk_toleransi'] . ':00';
 		$settings->jam_pulang_start = $data['jam_pulang_start'] . ':00';
 		$settings->jam_pulang_end = $data['jam_pulang_end'] . ':00';
 		$settings->qr_text = $data['qr_text'] ?? env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
+		$settings->latitude = $data['latitude'] ?? null;
+		$settings->longitude = $data['longitude'] ?? null;
+		$settings->radius_meter = $data['radius_meter'] ?? null;
 		$settings->save();
 
 		return back()->with('success', 'Jam presensi berhasil diperbarui.');
@@ -145,7 +161,6 @@ class PresensiController extends Controller
 			$settings = PresensiSetting::create([
 				'jam_masuk_start' => '07:00:00',
 				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
 				'jam_pulang_start' => '13:00:00',
 				'jam_pulang_end' => '14:30:00',
 				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
@@ -175,8 +190,61 @@ class PresensiController extends Controller
 		]);
 	}
 
+	public function adminRiwayatSemua(Request $request)
+	{
+		$settings = PresensiSetting::first();
+		if (! $settings) {
+			$settings = PresensiSetting::create([
+				'jam_masuk_start' => '07:00:00',
+				'jam_masuk_end' => '08:00:00',
+				'jam_masuk_toleransi' => '07:15:00',
+				'jam_pulang_start' => '13:00:00',
+				'jam_pulang_end' => '14:30:00',
+				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+			]);
+		}
+
+		$query = Presensi::with('user');
+
+		$startDate = $request->input('tanggal_mulai');
+		$endDate = $request->input('tanggal_selesai');
+
+		if ($startDate && $endDate) {
+			$query->whereBetween('tanggal', [$startDate, $endDate]);
+		} elseif ($startDate) {
+			$query->whereDate('tanggal', '>=', $startDate);
+		} elseif ($endDate) {
+			$query->whereDate('tanggal', '<=', $endDate);
+		}
+
+		$presensis = $query
+			->orderByDesc('tanggal')
+			->orderBy('user_id')
+			->paginate(50)
+			->appends($request->query());
+
+		return view('admin.presensi.riwayat_presensi_blade', [
+			'presensis' => $presensis,
+			'settings' => $settings,
+			'startDate' => $startDate,
+			'endDate' => $endDate,
+		]);
+	}
+
 	public function adminPresensiGuru(User $guru)
 	{
+		$settings = PresensiSetting::first();
+		if (! $settings) {
+			$settings = PresensiSetting::create([
+				'jam_masuk_start' => '07:00:00',
+				'jam_masuk_end' => '08:00:00',
+				'jam_masuk_toleransi' => '07:15:00',
+				'jam_pulang_start' => '13:00:00',
+				'jam_pulang_end' => '14:30:00',
+				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+			]);
+		}
+
 		$presensis = Presensi::where('user_id', $guru->id)
 			->orderByDesc('tanggal')
 			->orderByDesc('created_at')
@@ -185,16 +253,26 @@ class PresensiController extends Controller
 		return view('admin.presensi.presensi_guru', [
 			'guru' => $guru,
 			'presensis' => $presensis,
-			'settings' => PresensiSetting::first(),
+			'settings' => $settings,
 		]);
 	}
 
 	public function adminDownloadPresensiGuru(User $guru)
 	{
 		$settings = PresensiSetting::first();
+		if (! $settings) {
+			$settings = PresensiSetting::create([
+				'jam_masuk_start' => '07:00:00',
+				'jam_masuk_end' => '08:00:00',
+				'jam_masuk_toleransi' => '07:15:00',
+				'jam_pulang_start' => '13:00:00',
+				'jam_pulang_end' => '14:30:00',
+				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+			]);
+		}
+
 		$presensis = Presensi::where('user_id', $guru->id)
 			->orderBy('tanggal')
-			->orderBy('created_at')
 			->get();
 
 		$fileName = 'riwayat_presensi_' . $guru->id . '_' . now()->format('Ymd_His') . '.csv';
@@ -232,63 +310,19 @@ class PresensiController extends Controller
 		]);
 	}
 
-	public function adminRiwayatSemua(Request $request)
+	public function adminDeletePresensi(Presensi $presensi)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
+		$guruId = $presensi->user_id;
+		$tanggal = $presensi->tanggal; // tipe Carbon karena cast di model
 
-		$query = Presensi::with('user');
+		// Hapus semua data presensi guru tersebut pada tanggal yang sama (berdasarkan DATE saja)
+		Presensi::where('user_id', $guruId)
+			->whereDate('tanggal', $tanggal)
+			->delete();
 
-		$selectedDate = $request->input('tanggal');
-		$selectedMonth = $request->input('bulan');
-		$selectedYear = $request->input('tahun');
-
-		if ($selectedDate) {
-			$query->whereDate('tanggal', $selectedDate);
-			$parsed = Carbon::parse($selectedDate);
-			$selectedYear = $parsed->year;
-			$selectedMonth = $parsed->format('m');
-		} else {
-			if ($selectedYear) {
-				$query->whereYear('tanggal', $selectedYear);
-			} else {
-				$selectedYear = now()->year;
-				$query->whereYear('tanggal', $selectedYear);
-			}
-
-			if ($selectedMonth) {
-				$query->whereMonth('tanggal', $selectedMonth);
-			}
-		}
-
-		$presensis = $query
-			->orderByDesc('tanggal')
-			->orderBy('user_id')
-			->paginate(50)
-			->appends($request->query());
-
-		$years = Presensi::selectRaw('YEAR(tanggal) as year')
-			->distinct()
-			->orderByDesc('year')
-			->pluck('year');
-
-		return view('admin.presensi.riwayat_presensi_blade', [
-			'presensis' => $presensis,
-			'settings' => $settings,
-			'years' => $years,
-			'selectedDate' => $selectedDate,
-			'selectedMonth' => $selectedMonth,
-			'selectedYear' => $selectedYear,
-		]);
+		return redirect()
+			->route('admin.presensi.guru', $guruId)
+			->with('success', 'Riwayat presensi untuk tanggal tersebut berhasil dihapus.');
 	}
 
 	public function adminExportPresensiSemua(Request $request)
@@ -307,19 +341,15 @@ class PresensiController extends Controller
 
 		$query = Presensi::with('user');
 
-		$selectedDate = $request->input('tanggal');
-		$selectedMonth = $request->input('bulan');
-		$selectedYear = $request->input('tahun');
+		$startDate = $request->input('tanggal_mulai');
+		$endDate = $request->input('tanggal_selesai');
 
-		if ($selectedDate) {
-			$query->whereDate('tanggal', $selectedDate);
-		} else {
-			if ($selectedYear) {
-				$query->whereYear('tanggal', $selectedYear);
-			}
-			if ($selectedMonth) {
-				$query->whereMonth('tanggal', $selectedMonth);
-			}
+		if ($startDate && $endDate) {
+			$query->whereBetween('tanggal', [$startDate, $endDate]);
+		} elseif ($startDate) {
+			$query->whereDate('tanggal', '>=', $startDate);
+		} elseif ($endDate) {
+			$query->whereDate('tanggal', '<=', $endDate);
 		}
 
 		$presensis = $query
@@ -364,20 +394,12 @@ class PresensiController extends Controller
 		]);
 	}
 
-	public function adminDeletePresensi(Presensi $presensi)
-	{
-		$guruId = $presensi->user_id;
-		$presensi->delete();
-
-		return redirect()
-			->route('admin.presensi.guru', $guruId)
-			->with('success', 'Riwayat presensi berhasil dihapus.');
-	}
-
 	public function scan(Request $request)
 	{
 		$request->validate([
 			'qr_code' => 'required|string',
+			'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+			'longitude' => ['nullable', 'numeric', 'between:-180,180'],
 		]);
 
 		$now = Carbon::now();
@@ -389,11 +411,28 @@ class PresensiController extends Controller
 			$settings = PresensiSetting::create([
 				'jam_masuk_start' => '07:00:00',
 				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
 				'jam_pulang_start' => '13:00:00',
 				'jam_pulang_end' => '14:30:00',
 				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+				'latitude' => null,
+				'longitude' => null,
+				'radius_meter' => null,
 			]);
+		}
+
+		// Jika admin mengatur batas lokasi, cek apakah guru berada dalam radius
+		if ($settings->latitude !== null && $settings->longitude !== null && $settings->radius_meter !== null) {
+			$lat = $request->input('latitude');
+			$lng = $request->input('longitude');
+
+			if ($lat === null || $lng === null) {
+				return back()->with('error', 'Lokasi tidak terdeteksi. Aktifkan GPS dan izinkan akses lokasi.');
+			}
+
+			$distance = $this->haversineDistance($settings->latitude, $settings->longitude, $lat, $lng);
+			if ($distance > $settings->radius_meter) {
+				return back()->with('error', 'Anda berada di luar area yang diizinkan untuk presensi.');
+			}
 		}
 
 		$expectedCode = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
@@ -402,55 +441,71 @@ class PresensiController extends Controller
 		}
 
 		$masukStart = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_start, 0, 5));
-		$masukEndConfig = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_end, 0, 5));
-		$masukToleransi = Carbon::createFromFormat('H:i', substr(($settings->jam_masuk_toleransi ?? $settings->jam_masuk_end), 0, 5));
-		// Batas akhir jam masuk yang diizinkan: ambil nilai terbesar antara jam_masuk_end dan jam_masuk_toleransi.
-		$masukEndAllowed = $masukEndConfig->greaterThan($masukToleransi) ? $masukEndConfig : $masukToleransi;
+		$masukEnd = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_end, 0, 5));
 		$pulangStart = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_start, 0, 5));
 		$pulangEnd = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_end, 0, 5));
 
 		$current = Carbon::createFromFormat('H:i', $currentTime);
 
-		// Guru masih boleh presensi masuk selama masih dalam rentang jam_masuk_start s.d batas akhir yang diizinkan.
-		$isMasuk = $current->between($masukStart, $masukEndAllowed);
+		$isMasuk = $current->between($masukStart, $masukEnd);
 		$isPulang = $current->between($pulangStart, $pulangEnd);
 
 		if (! $isMasuk && ! $isPulang) {
-			return back()->with('error', 'Bukan jam presensi. Jam masuk: ' . $masukStart->format('H:i') . '-' . $masukEndAllowed->format('H:i') . ', jam pulang: ' . $pulangStart->format('H:i') . '-' . $pulangEnd->format('H:i'));
+			return back()->with('error', 'Bukan jam presensi. Jam masuk: ' . $masukStart->format('H:i') . '-' . $masukEnd->format('H:i') . ', jam pulang: ' . $pulangStart->format('H:i') . '-' . $pulangEnd->format('H:i'));
 		}
 
 		$user = Auth::user();
 
-		$presensi = Presensi::firstOrCreate([
-			'user_id' => $user->id,
-			'tanggal' => $today,
-		]);
+		// Cari data presensi hari ini (jika ada)
+		$presensi = Presensi::where('user_id', $user->id)
+			->whereDate('tanggal', $today)
+			->first();
+
+		// Jika sudah ada jam masuk dan jam pulang, presensi untuk hari ini dianggap lengkap
+		if ($presensi && $presensi->jam_masuk && $presensi->jam_pulang) {
+			return back()->with('error', 'Presensi hari ini sudah lengkap. Tidak dapat melakukan presensi lagi.');
+		}
 
 		if ($isMasuk) {
-			if ($presensi->jam_masuk) {
-				return back()->with('error', 'Anda sudah melakukan presensi masuk hari ini.');
+			// Jika sudah pernah presensi masuk hari ini, blok dan tampilkan merah
+			if ($presensi && $presensi->jam_masuk) {
+				return back()->with('error', 'Presensi masuk Anda hari ini sudah tercatat.');
 			}
 
-			$presensi->jam_masuk = $now->format('H:i:s');
-			$presensi->save();
-
-			// Tentukan apakah terlambat berdasarkan jam toleransi
-			$isLate = $now->gt($masukToleransi);
-			$message = 'Presensi masuk berhasil tercatat pada pukul ' . $now->format('H:i');
-			if ($isLate) {
-				$message .= ' (TERLAMBAT)';
+			if (! $presensi) {
+				// Belum ada data hari ini, buat baru dengan jam masuk
+				Presensi::create([
+					'user_id' => $user->id,
+					'tanggal' => $today,
+					'jam_masuk' => $now->format('H:i:s'),
+				]);
+			} else {
+				// Sudah ada record hari ini tapi belum ada jam masuk
+				$presensi->jam_masuk = $now->format('H:i:s');
+				$presensi->save();
 			}
 
-			return back()->with('success', $message); 
+			return back()->with('success', 'Presensi masuk berhasil tercatat pada pukul ' . $now->format('H:i'));
 		}
 
 		if ($isPulang) {
-			if ($presensi->jam_pulang) {
-				return back()->with('error', 'Anda sudah melakukan presensi pulang hari ini.');
+			// Jika sudah pernah presensi pulang hari ini, blok dan tampilkan merah
+			if ($presensi && $presensi->jam_pulang) {
+				return back()->with('error', 'Presensi pulang Anda hari ini sudah tercatat.');
 			}
 
-			$presensi->jam_pulang = $now->format('H:i:s');
-			$presensi->save();
+			if (! $presensi) {
+				// Belum ada data hari ini, buat baru dengan jam pulang
+				Presensi::create([
+					'user_id' => $user->id,
+					'tanggal' => $today,
+					'jam_pulang' => $now->format('H:i:s'),
+				]);
+			} else {
+				// Sudah ada record hari ini tapi belum ada jam pulang
+				$presensi->jam_pulang = $now->format('H:i:s');
+				$presensi->save();
+			}
 
 			return back()->with('success', 'Presensi pulang berhasil tercatat pada pukul ' . $now->format('H:i'));
 		}

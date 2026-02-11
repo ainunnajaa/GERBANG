@@ -78,6 +78,58 @@
                             @enderror
                         </div>
 
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Latitude Lokasi Presensi</label>
+                            <input
+                                type="number"
+                                step="0.0000001"
+                                name="latitude"
+                                value="{{ old('latitude', $settings->latitude) }}"
+                                class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
+                            >
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Masukkan titik lintang (latitude) lokasi sekolah yang diizinkan untuk presensi.
+                            </p>
+                            @error('latitude')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Longitude Lokasi Presensi</label>
+                            <input
+                                type="number"
+                                step="0.0000001"
+                                name="longitude"
+                                value="{{ old('longitude', $settings->longitude) }}"
+                                class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
+                            >
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Masukkan garis bujur (longitude) lokasi sekolah.
+                            </p>
+                            @error('longitude')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Radius Lokasi (meter)</label>
+                            <input
+                                type="number"
+                                min="10"
+                                step="1"
+                                name="radius_meter"
+                                value="{{ old('radius_meter', $settings->radius_meter) }}"
+                                class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
+                            >
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Guru hanya dapat presensi jika berada dalam radius ini dari titik koordinat di atas. Kosongkan jika tidak ingin membatasi lokasi.
+                            </p>
+                            @error('radius_meter')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="md:col-span-2 flex justify-end mt-2">
                             <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
                                 Simpan Pengaturan

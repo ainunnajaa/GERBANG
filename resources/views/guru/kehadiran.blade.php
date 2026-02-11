@@ -13,34 +13,21 @@
 
                     <form method="GET" action="{{ route('guru.kehadiran') }}" class="flex flex-wrap items-end gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Tanggal</label>
+                            <label class="block text-sm font-medium mb-1">Tanggal Mulai</label>
                             <input
                                 type="date"
-                                name="tanggal"
-                                value="{{ $selectedDate }}"
+                                name="tanggal_mulai"
+                                value="{{ $startDate }}"
                                 class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
                             >
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Bulan</label>
-                            <select name="bulan" class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-                                <option value="">Semua</option>
-                                @for ($m = 1; $m <= 12; $m++)
-                                    <option value="{{ $m }}" {{ (int)($selectedMonth ?? 0) === $m ? 'selected' : '' }}>
-                                        {{ str_pad($m, 2, '0', STR_PAD_LEFT) }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Tahun</label>
+                            <label class="block text-sm font-medium mb-1">Tanggal Selesai</label>
                             <input
-                                type="number"
-                                name="tahun"
-                                min="2000"
-                                max="2100"
-                                value="{{ $selectedYear ?? now()->year }}"
-                                class="w-28 border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
+                                type="date"
+                                name="tanggal_selesai"
+                                value="{{ $endDate }}"
+                                class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
                             >
                         </div>
                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
@@ -51,10 +38,16 @@
 
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                         Filter saat ini:
-                        @if($selectedDate)
-                            Tanggal {{ $selectedDate }}
+                        @if($startDate || $endDate)
+                            Tanggal
+                            @if($startDate)
+                                mulai {{ $startDate }}
+                            @endif
+                            @if($endDate)
+                                sampai {{ $endDate }}
+                            @endif
                         @else
-                            Tahun {{ $selectedYear ?? now()->year }}, Bulan {{ $selectedMonth ?? 'semua' }}
+                            Semua tanggal
                         @endif
                     </p>
 
