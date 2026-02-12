@@ -1,21 +1,17 @@
 <x-app-layout>
 	<x-slot name="header">
 		<h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-			Detail Berita
+			{{ __('Berita Sekolah') }}
 		</h2>
 	</x-slot>
 
-	<div class="py-6">
+	<div class="py-12">
 		<div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100">
 					<div class="mb-4 flex items-center justify-between">
-						<a href="{{ route('admin.berita') }}" class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-							← Kembali ke Kelola Berita
-						</a>
-						<span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-							{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}
-						</span>
+						<a href="{{ route('guru.berita.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">&larr; Kembali ke Daftar Berita</a>
+						<span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
 					</div>
 
 					<h1 class="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
@@ -48,3 +44,4 @@
 		</div>
 	</div>
 </x-app-layout>
+

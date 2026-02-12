@@ -26,6 +26,7 @@ class KelolaBeritaController extends Controller
 			'tanggal_berita' => ['required', 'date'],
 			'judul' => ['required', 'string', 'max:255'],
 			'isi' => ['required', 'string'],
+			'instagram_url' => ['nullable', 'url'],
 			'gambar' => ['nullable', 'image', 'max:2048'],
 		]);
 
@@ -39,6 +40,7 @@ class KelolaBeritaController extends Controller
 			'judul' => $validated['judul'],
 			'isi' => $validated['isi'],
 			'gambar_path' => $gambarPath,
+			'instagram_url' => $validated['instagram_url'] ?? null,
 		]);
 
 		return redirect()->route('admin.berita')->with('status', 'Berita berhasil dibuat.');
@@ -47,5 +49,39 @@ class KelolaBeritaController extends Controller
 	public function show(Berita $berita)
 	{
 		return view('admin.berita.read_berita', compact('berita'));
+	}
+
+	public function edit(Berita $berita)
+	{
+		return view('admin.berita.edit_berita', compact('berita'));
+	}
+
+	public function update(Request $request, Berita $berita)
+	{
+		$validated = $request->validate([
+			'tanggal_berita' => ['required', 'date'],
+			'judul' => ['required', 'string', 'max:255'],
+			'isi' => ['required', 'string'],
+			'instagram_url' => ['nullable', 'url'],
+			'gambar' => ['nullable', 'image', 'max:2048'],
+		]);
+
+		$gambarPath = $berita->gambar_path;
+		if ($request->hasFile('gambar')) {
+			if ($gambarPath) {
+				Storage::disk('public')->delete($gambarPath);
+			}
+			$gambarPath = $request->file('gambar')->store('berita-images', 'public');
+		}
+
+		$berita->update([
+			'tanggal_berita' => $validated['tanggal_berita'],
+			'judul' => $validated['judul'],
+			'isi' => $validated['isi'],
+			'gambar_path' => $gambarPath,
+			'instagram_url' => $validated['instagram_url'] ?? null,
+		]);
+
+		return redirect()->route('admin.berita')->with('status', 'Berita berhasil diperbarui.');
 	}
 }

@@ -56,6 +56,7 @@
                     @elseif($role === 'guru')
                         <li><a href="{{ route('guru.presensi') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Presensi</a></li>
                         <li><a href="{{ route('guru.kehadiran') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Kehadiran</a></li>
+                        <li><a href="{{ route('guru.berita.index') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Berita</a></li>
                     @elseif($role === 'wali_murid')
                         <li><a href="{{ route('wali.daftar') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Daftar</a></li>
                         <li><a href="{{ route('wali.aktivitas') }}" class="px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white">Aktivitas</a></li>
