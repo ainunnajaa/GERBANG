@@ -132,6 +132,7 @@ class PresensiController extends Controller
 		$data = $request->validate([
 			'jam_masuk_start' => ['required', 'date_format:H:i'],
 			'jam_masuk_end' => ['required', 'date_format:H:i'],
+			'jam_masuk_toleransi' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_start' => ['required', 'date_format:H:i'],
 			'jam_pulang_end' => ['required', 'date_format:H:i'],
 			'qr_text' => ['nullable', 'string', 'max:255'],
@@ -143,6 +144,9 @@ class PresensiController extends Controller
 		$settings = PresensiSetting::first() ?? new PresensiSetting();
 		$settings->jam_masuk_start = $data['jam_masuk_start'] . ':00';
 		$settings->jam_masuk_end = $data['jam_masuk_end'] . ':00';
+		$settings->jam_masuk_toleransi = $data['jam_masuk_toleransi']
+			? $data['jam_masuk_toleransi'] . ':00'
+			: null;
 		$settings->jam_pulang_start = $data['jam_pulang_start'] . ':00';
 		$settings->jam_pulang_end = $data['jam_pulang_end'] . ':00';
 		$settings->qr_text = $data['qr_text'] ?? env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
@@ -293,7 +297,7 @@ class PresensiController extends Controller
 				$status = '-';
 				if ($item->jam_masuk && $tol) {
 					$jamMasuk = Carbon::parse($item->jam_masuk);
-					$status = $jamMasuk->lte($tol) ? 'H' : 'T';
+					$status = $jamMasuk->lt($tol) ? 'H' : 'T';
 				}
 
 				fputcsv($handle, [
@@ -375,7 +379,7 @@ class PresensiController extends Controller
 				$status = '-';
 				if ($item->jam_masuk && $tol) {
 					$jamMasuk = Carbon::parse($item->jam_masuk);
-					$status = $jamMasuk->lte($tol) ? 'H' : 'T';
+					$status = $jamMasuk->lt($tol) ? 'H' : 'T';
 				}
 
 				fputcsv($handle, [

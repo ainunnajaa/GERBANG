@@ -79,7 +79,7 @@
                                                             ? \Carbon\Carbon::parse($settings->jam_masuk_toleransi)
                                                             : ($settings->jam_masuk_end ? \Carbon\Carbon::parse($settings->jam_masuk_end) : null);
                                                         if ($tol) {
-                                                            $status = $jamMasuk->lte($tol) ? 'H' : 'T';
+                                                            $status = $jamMasuk->lt($tol) ? 'H' : 'T';
                                                         }
                                                     }
                                                 @endphp
