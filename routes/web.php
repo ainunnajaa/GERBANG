@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WebProfilController;
 use App\Http\Controllers\KelolaBeritaController;
 use App\Http\Controllers\BeritaPublikController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\KelolaPenggunaController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\PresensiController;
@@ -68,8 +69,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Kelola Berita
     Route::get('/admin/kelola-berita', [KelolaBeritaController::class, 'index'])->name('admin.berita');
     Route::get('/admin/kelola-berita/create', [KelolaBeritaController::class, 'create'])->name('admin.berita.create');
+    Route::get('/admin/kelola-berita/{berita}/edit', [KelolaBeritaController::class, 'edit'])->name('admin.berita.edit');
     Route::get('/admin/kelola-berita/{berita}', [KelolaBeritaController::class, 'show'])->name('admin.berita.show');
     Route::post('/admin/kelola-berita', [KelolaBeritaController::class, 'store'])->name('admin.berita.store');
+    Route::patch('/admin/kelola-berita/{berita}', [KelolaBeritaController::class, 'update'])->name('admin.berita.update');
 });
 
 
@@ -78,6 +81,8 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
     Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
     Route::get('/guru/kehadiran', [PresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
+    Route::get('/guru/berita', [BeritaController::class, 'index'])->name('guru.berita.index');
+    Route::get('/guru/berita/{berita}', [BeritaController::class, 'show'])->name('guru.berita.show');
 });
 
 // Wali Murid routes

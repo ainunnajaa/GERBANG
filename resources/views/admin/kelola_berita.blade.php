@@ -27,7 +27,7 @@
 					@else
 						<div class="space-y-4">
 							@foreach($beritas as $berita)
-								<a href="{{ route('admin.berita.show', $berita) }}" class="block border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex gap-4 items-start hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+								<div class="block border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex gap-4 items-start hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
 									@if($berita->gambar_path)
 										<div class="w-24 h-24 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
 											<img src="{{ asset('storage/' . $berita->gambar_path) }}" alt="Gambar Berita" class="w-full h-full object-cover">
@@ -39,8 +39,12 @@
 											<span class="text-xs text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
 										</div>
 										<p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-3">{{ \Illuminate\Support\Str::limit($berita->isi, 180) }}</p>
+										<div class="mt-3 flex gap-2">
+											<a href="{{ route('admin.berita.show', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Lihat</a>
+											<a href="{{ route('admin.berita.edit', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600">Edit</a>
+										</div>
 									</div>
-								</a>
+								</div>
 							@endforeach
 						</div>
 					@endif

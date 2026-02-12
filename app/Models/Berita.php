@@ -14,5 +14,6 @@ class Berita extends Model
 		'judul',
 		'isi',
 		'gambar_path',
+		'instagram_url',
 	];
 }
