@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Presensi;
+use App\Models\PresensiIzin;
 use App\Models\PresensiSetting;
+use App\Models\User;
+use App\Models\Berita;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -15,7 +18,10 @@ class DashboardController extends Controller
         $role = $request->user()->role ?? 'wali_murid';
 
         return match ($role) {
-            'admin' => view('dashboard.admin'),
+            'admin' => view('dashboard.admin', [
+                'jumlahGuru' => User::where('role', 'guru')->count(),
+                'jumlahBerita' => Berita::count(),
+            ]),
             'guru' => $this->guruDashboard($request),
             default => view('dashboard.wali_murid'),
         };
@@ -48,51 +54,78 @@ class DashboardController extends Controller
                 : ($settings->jam_masuk_end ? Carbon::parse($settings->jam_masuk_end) : null);
         }
 
-        $jumlahHadir = 0;
-        $jumlahTerlambat = 0;
 
-        foreach ($presensis as $presensi) {
-            if (! $presensi->jam_masuk || ! $tol) {
-                continue;
-            }
+        // Hitung jumlah hadir: tanggal unik dengan jam masuk < toleransi
+        $jumlahHadir = $presensis
+            ->filter(function ($presensi) use ($tol) {
+                if (! $presensi->jam_masuk || ! $tol) return false;
+                $jamMasuk = Carbon::parse($presensi->jam_masuk);
+                return $jamMasuk->lt($tol);
+            })
+            ->pluck('tanggal')
+            ->unique()
+            ->count();
 
-            $jamMasuk = Carbon::parse($presensi->jam_masuk);
-            if ($jamMasuk->lt($tol)) {
-                $jumlahHadir++;
-            } else {
-                $jumlahTerlambat++;
-            }
-        }
+        // Hitung jumlah terlambat: tanggal unik dengan jam masuk >= toleransi
+        $jumlahTerlambat = $presensis
+            ->filter(function ($presensi) use ($tol) {
+                if (! $presensi->jam_masuk || ! $tol) return false;
+                $jamMasuk = Carbon::parse($presensi->jam_masuk);
+                return $jamMasuk->gte($tol);
+            })
+            ->pluck('tanggal')
+            ->unique()
+            ->count();
+
+        // Hitung jumlah izin berdasarkan tabel presensi_izins
+        $jumlahIzin = PresensiIzin::where('user_id', $user->id)
+            ->whereDate('tanggal', '<=', $today)
+            ->count();
 
         $jumlahTidakHadir = 0;
         $bulanOptions = [];
+        $years = [];
         $selectedMonth = $request->query('bulan');
+        $selectedYear = $request->query('tahun');
         $selectedMonthLabel = null;
         $weeklyLabels = [];
         $weeklyValues = [];
 
         if ($presensis->isNotEmpty()) {
-            $firstDate = Carbon::parse($presensis->min('tanggal'))->startOfMonth();
-            $lastMonth = $today->copy()->startOfMonth();
-            $monthsPeriod = CarbonPeriod::create($firstDate, '1 month', $lastMonth);
+            // Daftar bulan (1-12) dan tahun dinamis berdasarkan data presensi
+            $bulanOptions = [
+                1 => 'Januari',
+                2 => 'Februari',
+                3 => 'Maret',
+                4 => 'April',
+                5 => 'Mei',
+                6 => 'Juni',
+                7 => 'Juli',
+                8 => 'Agustus',
+                9 => 'September',
+                10 => 'Oktober',
+                11 => 'November',
+                12 => 'Desember',
+            ];
 
-            foreach ($monthsPeriod as $month) {
-                $bulanOptions[] = [
-                    'value' => $month->format('Y-m'),
-                    'label' => $month->translatedFormat('F Y'),
-                ];
-            }
+            $firstDate = Carbon::parse($presensis->min('tanggal'));
+            $firstYear = $firstDate->year;
+            $lastYear = $today->year + 1;
+            $years = range($firstYear, $lastYear);
 
             if (! $selectedMonth) {
-                $selectedMonth = $lastMonth->format('Y-m');
+                $selectedMonth = $today->month;
+            }
+            if (! $selectedYear) {
+                $selectedYear = $today->year;
             }
 
-            try {
-                $monthDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
-            } catch (\Exception $e) {
-                $monthDate = $lastMonth;
-                $selectedMonth = $lastMonth->format('Y-m');
+            $selectedMonth = max(1, min(12, (int) $selectedMonth));
+            if (! in_array((int) $selectedYear, $years, true)) {
+                $selectedYear = $today->year;
             }
+
+            $monthDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
 
             $selectedMonthLabel = $monthDate->translatedFormat('F Y');
             $startOfMonth = $monthDate->copy()->startOfMonth();
@@ -117,31 +150,43 @@ class DashboardController extends Controller
                 ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
                 ->get();
 
-            $weeklyCounts = [];
-            foreach ($presensiBulan as $p) {
-                if (! $p->jam_masuk) {
-                    continue;
+            // Jika bulan terpilih tidak punya data presensi, biarkan grafik kosong
+            if ($presensiBulan->isNotEmpty()) {
+                $weeklyCounts = [];
+                foreach ($presensiBulan as $p) {
+                    if (! $p->jam_masuk) {
+                        continue;
+                    }
+                    $week = Carbon::parse($p->tanggal)->weekOfMonth;
+                    $weeklyCounts[$week] = ($weeklyCounts[$week] ?? 0) + 1;
                 }
-                $week = Carbon::parse($p->tanggal)->weekOfMonth;
-                $weeklyCounts[$week] = ($weeklyCounts[$week] ?? 0) + 1;
-            }
 
-            $maxWeek = ! empty($weeklyCounts) ? max(array_keys($weeklyCounts)) : $endOfMonth->weekOfMonth;
-            for ($w = 1; $w <= $maxWeek; $w++) {
-                $weeklyLabels[] = 'Minggu ' . $w;
-                $weeklyValues[] = $weeklyCounts[$w] ?? 0;
+                $maxWeek = ! empty($weeklyCounts) ? max(array_keys($weeklyCounts)) : $endOfMonth->weekOfMonth;
+                for ($w = 1; $w <= $maxWeek; $w++) {
+                    $weeklyLabels[] = 'Minggu ' . $w;
+                    $weeklyValues[] = $weeklyCounts[$w] ?? 0;
+                }
             }
         }
 
+        $beritas = \App\Models\Berita::orderByDesc('tanggal_berita')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
         return view('dashboard.guru', [
             'jumlahHadir' => $jumlahHadir,
+            'jumlahIzin' => $jumlahIzin,
             'jumlahTerlambat' => $jumlahTerlambat,
             'jumlahTidakHadir' => $jumlahTidakHadir,
             'bulanOptions' => $bulanOptions,
+            'years' => $years,
             'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
             'selectedMonthLabel' => $selectedMonthLabel,
             'weeklyLabels' => $weeklyLabels,
             'weeklyValues' => $weeklyValues,
+            'beritas' => $beritas,
         ]);
     }
 }

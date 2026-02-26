@@ -217,8 +217,14 @@
 						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 							@foreach ($gurus as $guru)
 								<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
-									<div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden">
-										<img src="https://via.placeholder.com/150" alt="Guru" class="w-full h-full object-cover">
+									<div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
+										@if ($guru->profile_photo_path)
+											<img src="{{ asset('storage/' . $guru->profile_photo_path) }}" alt="Foto {{ $guru->name }}" class="w-full h-full object-cover">
+										@else
+											<span class="text-xl font-semibold text-gray-800 dark:text-gray-100">
+												{{ strtoupper(substr($guru->name, 0, 1)) }}
+											</span>
+										@endif
 									</div>
 									<h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ $guru->name }}</h4>
 									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Guru</p>

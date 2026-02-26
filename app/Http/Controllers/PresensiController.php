@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\GuruRiwayatExport;
+use App\Exports\RekapBulananExport;
 use App\Models\Presensi;
+use App\Models\PresensiIzin;
 use App\Models\PresensiSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PresensiController extends Controller
 {
@@ -53,45 +57,53 @@ class PresensiController extends Controller
 		]);
 	}
 
-	public function guruKehadiran(Request $request)
+	public function guruIzin(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
 		$user = Auth::user();
-		$query = Presensi::where('user_id', $user->id);
+		$today = now()->toDateString();
 
-		$startDate = $request->input('tanggal_mulai');
-		$endDate = $request->input('tanggal_selesai');
+		$data = $request->validate([
+			'keterangan' => ['required', 'string', 'max:1000'],
+		]);
 
-		if ($startDate && $endDate) {
-			$query->whereBetween('tanggal', [$startDate, $endDate]);
-		} elseif ($startDate) {
-			$query->whereDate('tanggal', '>=', $startDate);
-		} elseif ($endDate) {
-			$query->whereDate('tanggal', '<=', $endDate);
+
+
+		// Simpan/Update data izin
+		PresensiIzin::updateOrCreate(
+			[
+				'user_id' => $user->id,
+				'tanggal' => $today,
+			],
+			[
+				'keterangan' => $data['keterangan'],
+			]
+		);
+
+		// Cek apakah sudah presensi masuk hari ini
+		$presensi = Presensi::where('user_id', $user->id)
+			->whereDate('tanggal', $today)
+			->first();
+
+		if ($presensi && $presensi->jam_masuk) {
+			// Sudah presensi masuk: update keterangan dan pastikan status H
+			$presensi->keterangan = $data['keterangan'];
+			$presensi->status = 'H';
+			$presensi->save();
+		} else {
+			// Belum presensi masuk: buat presensi status I (izin)
+			Presensi::updateOrCreate(
+				[
+					'user_id' => $user->id,
+					'tanggal' => $today,
+				],
+				[
+					'status' => 'I',
+					'keterangan' => $data['keterangan'],
+				]
+			);
 		}
 
-		$presensis = $query
-			->orderByDesc('tanggal')
-			->paginate(20)
-			->appends($request->query());
-
-		return view('guru.kehadiran', [
-			'presensis' => $presensis,
-			'settings' => $settings,
-			'startDate' => $startDate,
-			'endDate' => $endDate,
-		]);
+		return back()->with('success', 'Izin Anda untuk hari ini berhasil dikirim ke admin.');
 	}
 
 	public function adminIndex()
@@ -158,245 +170,6 @@ class PresensiController extends Controller
 		return back()->with('success', 'Jam presensi berhasil diperbarui.');
 	}
 
-	public function adminRiwayat()
-	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$today = now()->toDateString();
-		$todayPresensis = Presensi::with('user')
-			->whereDate('tanggal', $today)
-			->get();
-
-		$gurus = User::where('role', 'guru')
-			->orderBy('name')
-			->get();
-
-		$presensis = Presensi::with('user')
-			->orderByDesc('tanggal')
-			->orderBy('user_id')
-			->paginate(20);
-
-		return view('admin.riwayat_presensi', [
-			'presensis' => $presensis,
-			'todayPresensis' => $todayPresensis,
-			'today' => $today,
-			'settings' => $settings,
-			'gurus' => $gurus,
-		]);
-	}
-
-	public function adminRiwayatSemua(Request $request)
-	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$query = Presensi::with('user');
-
-		$startDate = $request->input('tanggal_mulai');
-		$endDate = $request->input('tanggal_selesai');
-
-		if ($startDate && $endDate) {
-			$query->whereBetween('tanggal', [$startDate, $endDate]);
-		} elseif ($startDate) {
-			$query->whereDate('tanggal', '>=', $startDate);
-		} elseif ($endDate) {
-			$query->whereDate('tanggal', '<=', $endDate);
-		}
-
-		$presensis = $query
-			->orderByDesc('tanggal')
-			->orderBy('user_id')
-			->paginate(50)
-			->appends($request->query());
-
-		return view('admin.presensi.riwayat_presensi_blade', [
-			'presensis' => $presensis,
-			'settings' => $settings,
-			'startDate' => $startDate,
-			'endDate' => $endDate,
-		]);
-	}
-
-	public function adminPresensiGuru(User $guru)
-	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$presensis = Presensi::where('user_id', $guru->id)
-			->orderByDesc('tanggal')
-			->orderByDesc('created_at')
-			->paginate(30);
-
-		return view('admin.presensi.presensi_guru', [
-			'guru' => $guru,
-			'presensis' => $presensis,
-			'settings' => $settings,
-		]);
-	}
-
-	public function adminDownloadPresensiGuru(User $guru)
-	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$presensis = Presensi::where('user_id', $guru->id)
-			->orderBy('tanggal')
-			->get();
-
-		$fileName = 'riwayat_presensi_' . $guru->id . '_' . now()->format('Ymd_His') . '.csv';
-
-		return response()->streamDownload(function () use ($presensis, $settings) {
-			$handle = fopen('php://output', 'w');
-			// Header CSV
-			fputcsv($handle, ['Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status']);
-
-			$tol = null;
-			if ($settings) {
-				$tol = $settings->jam_masuk_toleransi
-					? Carbon::parse($settings->jam_masuk_toleransi)
-					: ($settings->jam_masuk_end ? Carbon::parse($settings->jam_masuk_end) : null);
-			}
-
-			foreach ($presensis as $item) {
-				$status = '-';
-				if ($item->jam_masuk && $tol) {
-					$jamMasuk = Carbon::parse($item->jam_masuk);
-					$status = $jamMasuk->lt($tol) ? 'H' : 'T';
-				}
-
-				fputcsv($handle, [
-					$item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : '',
-					$item->jam_masuk ? Carbon::parse($item->jam_masuk)->format('H:i') : '',
-					$item->jam_pulang ? Carbon::parse($item->jam_pulang)->format('H:i') : '',
-					$status,
-				]);
-			}
-
-			fclose($handle);
-		}, $fileName, [
-			'Content-Type' => 'text/csv',
-		]);
-	}
-
-	public function adminDeletePresensi(Presensi $presensi)
-	{
-		$guruId = $presensi->user_id;
-		$tanggal = $presensi->tanggal; // tipe Carbon karena cast di model
-
-		// Hapus semua data presensi guru tersebut pada tanggal yang sama (berdasarkan DATE saja)
-		Presensi::where('user_id', $guruId)
-			->whereDate('tanggal', $tanggal)
-			->delete();
-
-		return redirect()
-			->route('admin.presensi.guru', $guruId)
-			->with('success', 'Riwayat presensi untuk tanggal tersebut berhasil dihapus.');
-	}
-
-	public function adminExportPresensiSemua(Request $request)
-	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$query = Presensi::with('user');
-
-		$startDate = $request->input('tanggal_mulai');
-		$endDate = $request->input('tanggal_selesai');
-
-		if ($startDate && $endDate) {
-			$query->whereBetween('tanggal', [$startDate, $endDate]);
-		} elseif ($startDate) {
-			$query->whereDate('tanggal', '>=', $startDate);
-		} elseif ($endDate) {
-			$query->whereDate('tanggal', '<=', $endDate);
-		}
-
-		$presensis = $query
-			->orderBy('tanggal')
-			->orderBy('user_id')
-			->get();
-
-		$fileName = 'riwayat_presensi_semua_' . now()->format('Ymd_His') . '.csv';
-
-		return response()->streamDownload(function () use ($presensis, $settings) {
-			$handle = fopen('php://output', 'w');
-			// Header CSV
-			fputcsv($handle, ['Tanggal', 'Nama Guru', 'Kelas', 'Jam Masuk', 'Jam Pulang', 'Status']);
-
-			$tol = null;
-			if ($settings) {
-				$tol = $settings->jam_masuk_toleransi
-					? Carbon::parse($settings->jam_masuk_toleransi)
-					: ($settings->jam_masuk_end ? Carbon::parse($settings->jam_masuk_end) : null);
-			}
-
-			foreach ($presensis as $item) {
-				$status = '-';
-				if ($item->jam_masuk && $tol) {
-					$jamMasuk = Carbon::parse($item->jam_masuk);
-					$status = $jamMasuk->lt($tol) ? 'H' : 'T';
-				}
-
-				fputcsv($handle, [
-					$item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : '',
-					optional($item->user)->name,
-					optional($item->user)->kelas,
-					$item->jam_masuk ? Carbon::parse($item->jam_masuk)->format('H:i') : '',
-					$item->jam_pulang ? Carbon::parse($item->jam_pulang)->format('H:i') : '',
-					$status,
-				]);
-			}
-
-			fclose($handle);
-		}, $fileName, [
-			'Content-Type' => 'text/csv',
-		]);
-	}
 
 	public function scan(Request $request)
 	{
@@ -451,11 +224,24 @@ class PresensiController extends Controller
 
 		$current = Carbon::createFromFormat('H:i', $currentTime);
 
-		$isMasuk = $current->between($masukStart, $masukEnd);
+		// Jam presensi masuk yang diterima:
+		// - Normal: antara jam_masuk_start s.d jam_masuk_end (status "hadir").
+		// - Terlambat tapi masih diterima: > jam_masuk_end s.d jam_masuk_toleransi (status "terlambat").
+		// - Di luar itu: ditolak.
+		$masukAcceptEnd = $settings->jam_masuk_toleransi
+			? Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi, 0, 5))
+			: $masukEnd;
+
+		$isMasuk = $current->between($masukStart, $masukAcceptEnd);
 		$isPulang = $current->between($pulangStart, $pulangEnd);
 
 		if (! $isMasuk && ! $isPulang) {
-			return back()->with('error', 'Bukan jam presensi. Jam masuk: ' . $masukStart->format('H:i') . '-' . $masukEnd->format('H:i') . ', jam pulang: ' . $pulangStart->format('H:i') . '-' . $pulangEnd->format('H:i'));
+			$jamMasukText = $masukStart->format('H:i') . '-' . $masukEnd->format('H:i');
+			if ($settings->jam_masuk_toleransi) {
+				$jamMasukText .= ' (toleransi sampai ' . Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi, 0, 5))->format('H:i') . ')';
+			}
+
+			return back()->with('error', 'Bukan jam presensi. Jam masuk: ' . $jamMasukText . ', jam pulang: ' . $pulangStart->format('H:i') . '-' . $pulangEnd->format('H:i'));
 		}
 
 		$user = Auth::user();
@@ -473,44 +259,53 @@ class PresensiController extends Controller
 		if ($isMasuk) {
 			// Jika sudah pernah presensi masuk hari ini, blok dan tampilkan merah
 			if ($presensi && $presensi->jam_masuk) {
-				return back()->with('error', 'Presensi masuk Anda hari ini sudah tercatat.');
+				return back()->with('error', 'Presensi masuk Anda hari ini sudah tercatat. Tidak dapat melakukan presensi masuk dua kali.');
 			}
 
+			// Tentukan status hadir/terlambat:
+			// - Dalam rentang jam_masuk_start s.d jam_masuk_end  -> "hadir" (H)
+			// - Setelah jam_masuk_end s.d jam_masuk_toleransi      -> "terlambat" (T)
+			$statusBoundary = $masukEnd; // batas akhir status hadir
+			$statusCode = $current->lte($statusBoundary) ? 'H' : 'T';
+			$statusText = $statusCode === 'T' ? 'terlambat' : 'hadir';
+
 			if (! $presensi) {
-				// Belum ada data hari ini, buat baru dengan jam masuk
+				// Belum ada data hari ini, buat baru dengan jam masuk, status hadir/terlambat
 				Presensi::create([
 					'user_id' => $user->id,
 					'tanggal' => $today,
 					'jam_masuk' => $now->format('H:i:s'),
+					'status' => $statusCode,
+					'keterangan' => null,
 				]);
 			} else {
 				// Sudah ada record hari ini tapi belum ada jam masuk
 				$presensi->jam_masuk = $now->format('H:i:s');
+				$presensi->status = $statusCode;
 				$presensi->save();
 			}
 
-			return back()->with('success', 'Presensi masuk berhasil tercatat pada pukul ' . $now->format('H:i'));
+			$pesan = 'Presensi masuk berhasil tercatat dengan status ' . $statusText . ' pada pukul ' . $now->format('H:i');
+			session()->forget('error');
+			return back()->with('success', $pesan);
 		}
 
 		if ($isPulang) {
-			// Jika sudah pernah presensi pulang hari ini, blok dan tampilkan merah
-			if ($presensi && $presensi->jam_pulang) {
-				return back()->with('error', 'Presensi pulang Anda hari ini sudah tercatat.');
+			// Wajib sudah presensi masuk terlebih dahulu
+			if (! $presensi || ! $presensi->jam_masuk) {
+				return back()->with('error', 'Anda belum melakukan presensi masuk hari ini. Silakan presensi masuk terlebih dahulu sebelum presensi pulang.');
 			}
 
-			if (! $presensi) {
-				// Belum ada data hari ini, buat baru dengan jam pulang
-				Presensi::create([
-					'user_id' => $user->id,
-					'tanggal' => $today,
-					'jam_pulang' => $now->format('H:i:s'),
-				]);
-			} else {
-				// Sudah ada record hari ini tapi belum ada jam pulang
-				$presensi->jam_pulang = $now->format('H:i:s');
-				$presensi->save();
+			// Jika sudah pernah presensi pulang hari ini, tampilkan info sukses
+			if ($presensi->jam_pulang) {
+				session()->forget('error');
+				return back()->with('success', 'Presensi pulang Anda hari ini sudah tercatat.');
 			}
 
+			// Sudah ada record hari ini dengan jam_masuk, tapi belum ada jam_pulang
+			$presensi->jam_pulang = $now->format('H:i:s');
+			$presensi->save();
+			session()->forget('error');
 			return back()->with('success', 'Presensi pulang berhasil tercatat pada pukul ' . $now->format('H:i'));
 		}
 

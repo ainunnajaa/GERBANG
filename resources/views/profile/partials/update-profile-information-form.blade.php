@@ -47,7 +47,9 @@
             @endif
         </div>
 
-        <div class="flex items-center gap-4">
+        @include('profile.partials.form_biodata')
+
+        <div class="flex items-center gap-4 mt-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')

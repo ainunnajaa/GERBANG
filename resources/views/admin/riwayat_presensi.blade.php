@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -27,9 +27,20 @@
                             @foreach($gurus as $guru)
                                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150 flex flex-col justify-between">
                                     <div class="p-5">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                            {{ $guru->name }}
-                                        </h3>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex items-center justify-center">
+                                                @if($guru->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $guru->profile_photo_path) }}" alt="Foto {{ $guru->name }}" class="w-full h-full object-cover">
+                                                @else
+                                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                                        {{ strtoupper(substr($guru->name, 0, 1)) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                {{ $guru->name }}
+                                            </h3>
+                                        </div>
                                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
                                             <span class="font-medium">Kelas:</span>
                                             {{ $guru->kelas ?? '-' }}

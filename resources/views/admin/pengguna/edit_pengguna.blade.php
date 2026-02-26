@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-8">
+    <div class="py-1">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             @if(session('status'))
                 <div class="mb-4 p-4 rounded bg-emerald-50 text-emerald-700">{{ session('status') }}</div>

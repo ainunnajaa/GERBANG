@@ -5,30 +5,57 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
-                    <h3 class="text-lg font-semibold">Riwayat Presensi</h3>
+                    @php
+                        $bulanNames = [
+                            1 => 'Januari',
+                            2 => 'Februari',
+                            3 => 'Maret',
+                            4 => 'April',
+                            5 => 'Mei',
+                            6 => 'Juni',
+                            7 => 'Juli',
+                            8 => 'Agustus',
+                            9 => 'September',
+                            10 => 'Oktober',
+                            11 => 'November',
+                            12 => 'Desember',
+                        ];
+                    @endphp
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h3 class="text-lg font-semibold">Riwayat Presensi</h3>
+                        <a href="{{ route('guru.kehadiran.bulanan') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700">
+                            Rekap Bulanan
+                        </a>
+                    </div>
 
-                    <form method="GET" action="{{ route('guru.kehadiran') }}" class="flex flex-wrap items-end gap-4 mb-4">
+                    <form method="GET" action="{{ route('guru.kehadiran') }}" class="flex flex-wrap items-end gap-4 mb-4 mt-2">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Tanggal Mulai</label>
-                            <input
-                                type="date"
-                                name="tanggal_mulai"
-                                value="{{ $startDate }}"
-                                class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
-                            >
+                            <label class="block text-sm font-medium mb-1">Bulan</label>
+                            <select name="bulan" class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                @foreach($bulanNames as $num => $name)
+                                    <option value="{{ $num }}" @selected($num == ($month ?? now()->month))>{{ $name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Tanggal Selesai</label>
-                            <input
-                                type="date"
-                                name="tanggal_selesai"
-                                value="{{ $endDate }}"
-                                class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
-                            >
+                            <label class="block text-sm font-medium mb-1">Tahun</label>
+                            <select name="tahun" class="border rounded px-3 pr-6 py-2 text-sm bg-white dark:bg-gray-900 min-w-[5rem]">
+                                @foreach($years as $y)
+                                    <option value="{{ $y }}" @selected($y == ($year ?? now()->year))>{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Minggu ke</label>
+                            <select name="minggu" class="border rounded px-3 pr-6 py-2 text-sm bg-white dark:bg-gray-900 min-w-[4.5rem]">
+                                @for($w = 1; $w <= ($maxWeek ?? 5); $w++)
+                                    <option value="{{ $w }}" @selected($w == ($week ?? 1))>{{ $w }}</option>
+                                @endfor
+                            </select>
                         </div>
                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
                             Terapkan
@@ -38,16 +65,11 @@
 
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                         Filter saat ini:
-                        @if($startDate || $endDate)
-                            Tanggal
-                            @if($startDate)
-                                mulai {{ $startDate }}
-                            @endif
-                            @if($endDate)
-                                sampai {{ $endDate }}
-                            @endif
+                        @if($startDate && $endDate)
+                            Minggu ke-{{ $week }} bulan {{ $bulanNames[$month] ?? $month }} {{ $year }}
+                            ({{ $startDate }} s.d. {{ $endDate }})
                         @else
-                            Semua tanggal
+                            Tidak ada rentang minggu yang dipilih.
                         @endif
                     </p>
 
@@ -62,29 +84,46 @@
                                         <th class="px-4 py-2 text-left">Jam Masuk</th>
                                         <th class="px-4 py-2 text-left">Jam Pulang</th>
                                         <th class="px-4 py-2 text-left">Status</th>
+                                        <th class="px-4 py-2 text-left">Jam Izin</th>
+                                        <th class="px-4 py-2 text-left">Keterangan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($presensis as $item)
                                         <tr class="border-b border-gray-100 dark:border-gray-700">
+                                            @php
+                                                $tanggalKey = $item->tanggal instanceof \Carbon\Carbon
+                                                    ? $item->tanggal->toDateString()
+                                                    : \Carbon\Carbon::parse($item->tanggal)->toDateString();
+                                                $izin = $izinsByDate[$tanggalKey] ?? null;
+                                            @endphp
+
                                             <td class="px-4 py-2">{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') }}</td>
                                             <td class="px-4 py-2">{{ $item->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
                                             <td class="px-4 py-2">{{ $item->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
                                             <td class="px-4 py-2">
-                                                @php
-                                                    $status = '-';
-                                                    if ($item->jam_masuk && isset($settings)) {
-                                                        $jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
-                                                        $tol = $settings->jam_masuk_toleransi
-                                                            ? \Carbon\Carbon::parse($settings->jam_masuk_toleransi)
-                                                            : ($settings->jam_masuk_end ? \Carbon\Carbon::parse($settings->jam_masuk_end) : null);
-                                                        if ($tol) {
-                                                            $status = $jamMasuk->lt($tol) ? 'H' : 'T';
-                                                        }
-                                                    }
-                                                @endphp
-                                                {{ $status }}
+                                @php
+                                    $status = '-';
+                                    if ($item->jam_masuk && isset($settings) && $settings->jam_masuk_end) {
+                                        // Hadir atau terlambat
+                                        $jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
+                                        $batasHadir = \Carbon\Carbon::parse($settings->jam_masuk_end);
+                                        $status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
+                                    } elseif ($izin) {
+                                        // Izin tanpa presensi
+                                        $status = 'I';
+                                    }
+                                @endphp
+                                {{ $status }}
                                             </td>
+                                            <td class="px-4 py-2">
+                                                @if($izin)
+                                                    {{ \Carbon\Carbon::parse($izin->created_at)->format('H:i') }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-2">{{ $izin->keterangan ?? '-' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

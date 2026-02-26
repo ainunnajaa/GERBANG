@@ -98,5 +98,17 @@ class KelolaPenggunaController extends Controller
 
 		return redirect()->route('admin.users')->with('status', 'Profil pengguna berhasil diperbarui.');
 	}
+
+	public function destroy(User $user)
+	{
+		// Opsional: cegah admin menghapus dirinya sendiri
+		if (auth()->id() === $user->id) {
+			return redirect()->route('admin.users')->with('status', 'Anda tidak dapat menghapus akun Anda sendiri.');
+		}
+
+		$user->delete();
+
+		return redirect()->route('admin.users')->with('status', 'Pengguna berhasil dihapus.');
+	}
 }
 

@@ -48,7 +48,15 @@ class KelolaBeritaController extends Controller
 
 	public function show(Berita $berita)
 	{
-		return view('admin.berita.read_berita', compact('berita'));
+		$recentBeritas = Berita::orderByDesc('tanggal_berita')
+			->orderByDesc('created_at')
+			->limit(5)
+			->get();
+
+		return view('admin.berita.read_berita', [
+			'berita' => $berita,
+			'recentBeritas' => $recentBeritas,
+		]);
 	}
 
 	public function edit(Berita $berita)
@@ -83,5 +91,16 @@ class KelolaBeritaController extends Controller
 		]);
 
 		return redirect()->route('admin.berita')->with('status', 'Berita berhasil diperbarui.');
+	}
+
+	public function destroy(Berita $berita)
+	{
+		if ($berita->gambar_path) {
+			Storage::disk('public')->delete($berita->gambar_path);
+		}
+
+		$berita->delete();
+
+		return redirect()->route('admin.berita')->with('status', 'Berita berhasil dihapus.');
 	}
 }

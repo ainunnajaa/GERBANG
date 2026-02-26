@@ -31,7 +31,7 @@
         };
     @endphp
 
-    <div class="py-8">
+    <div class="py-1">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-6">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -64,8 +64,12 @@
                 @forelse($users as $user)
                     <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <div class="flex items-center gap-4 min-w-0">
-                            <div class="w-12 h-12 rounded-full {{ $roleColor($user->role ?? '') }} flex items-center justify-center text-white font-bold text-sm md:text-base select-none">
-                                {{ $initials($user->name) }}
+                            <div class="w-12 h-12 rounded-full {{ $roleColor($user->role ?? '') }} flex items-center justify-center text-white font-bold text-sm md:text-base select-none overflow-hidden">
+                                @if ($user->profile_photo_path)
+                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Foto {{ $user->name }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ $initials($user->name) }}
+                                @endif
                             </div>
                             <div class="min-w-0">
                                 <h3 class="font-bold text-gray-800 dark:text-gray-100 text-sm md:text-base truncate">{{ $user->name }}</h3>
@@ -77,6 +81,20 @@
                         </div>
                         <div class="flex gap-2 shrink-0">
                             <a href="{{ route('admin.users.edit', $user) }}" class="bg-rose-500 hover:bg-rose-600 text-white text-xs md:text-sm font-medium py-2 px-4 rounded-lg transition">Edit</a>
+                            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.');">
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    type="submit"
+                                    class="
+                                        border border-red-500 text-red-600 bg-white hover:bg-red-50
+                                        dark:border-red-400 dark:text-red-100 dark:bg-transparent dark:hover:bg-red-500/20
+                                        text-xs md:text-sm font-medium py-2 px-4 rounded-lg transition
+                                    "
+                                >
+                                    Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
                 @empty

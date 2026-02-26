@@ -28,7 +28,7 @@
             </div>
         </div>
     </nav>
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-1">
         <h2 class="text-2xl font-semibold mb-4">Selamat datang, {{ auth()->user()->name }}</h2>
         <p class="text-gray-600">Ini adalah dashboard Wali Murid.</p>
     </main>

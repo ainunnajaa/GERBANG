@@ -5,28 +5,32 @@
 		</h2>
 	</x-slot>
 
-	<div class="py-12">
+	<div class="py-1">
 		<div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
 					<div class="flex items-center justify-between">
-						<h3 class="text-lg font-semibold">Filter Riwayat Presensi</h3>
-						<a
-							href="{{ route('admin.riwayat') }}"
-							class="inline-flex items-center px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-						>
-							&larr; Kembali ke Daftar Guru
-						</a>
+						<h3 class="text-lg font-semibold">Riwayat Presensi Harian</h3>
+						<div class="flex items-center gap-2">
+							<a
+								href="{{ route('admin.riwayat') }}"
+								class="inline-flex items-center px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+							>
+								&larr; Kembali ke Daftar Guru
+							</a>
+							<a
+								href="{{ route('admin.presensi.bulanan') }}"
+								class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700"
+							>
+								Rekap Bulanan
+							</a>
+						</div>
 					</div>
 
 					<form method="GET" action="{{ route('admin.presensi.all') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 						<div>
-							<label class="block text-sm font-medium mb-1">Tanggal Mulai</label>
-							<input type="date" name="tanggal_mulai" value="{{ $startDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-						</div>
-						<div>
-							<label class="block text-sm font-medium mb-1">Tanggal Selesai</label>
-							<input type="date" name="tanggal_selesai" value="{{ $endDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<label class="block text-sm font-medium mb-1">Tanggal</label>
+							<input type="date" name="tanggal" value="{{ $selectedDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 						</div>
 						<div class="flex items-center gap-2">
 							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
@@ -39,24 +43,12 @@
 					<div class="flex items-center justify-between mt-4">
 						<p class="text-xs text-gray-500 dark:text-gray-400">
 							Filter saat ini:
-							@if($startDate || $endDate)
-								Tanggal
-								@if($startDate)
-									mulai {{ $startDate }}
-								@endif
-								@if($endDate)
-									sampai {{ $endDate }}
-								@endif
+							@if($selectedDate)
+								Tanggal {{ $selectedDate }}
 							@else
 								Semua tanggal
 							@endif
 						</p>
-						<a
-							href="{{ route('admin.presensi.all.export', ['tanggal_mulai' => $startDate, 'tanggal_selesai' => $endDate]) }}"
-							class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700"
-						>
-							Export CSV (Semua Guru)
-						</a>
 					</div>
 
 					<div class="overflow-x-auto mt-4">
@@ -69,6 +61,8 @@
 									<th class="px-4 py-2 text-left">Jam Masuk</th>
 									<th class="px-4 py-2 text-left">Jam Pulang</th>
 									<th class="px-4 py-2 text-left">Status</th>
+									<th class="px-4 py-2 text-left">Jam Izin</th>
+									<th class="px-4 py-2 text-left">Keterangan</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -79,25 +73,30 @@
 										<td class="px-4 py-2">{{ optional($item->user)->kelas ?? '-' }}</td>
 										<td class="px-4 py-2">{{ $item->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
 										<td class="px-4 py-2">{{ $item->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
+										@php
+											$izin = $izinsByUser[$item->user_id] ?? null;
+											$status = '-';
+											if ($item->jam_masuk && isset($settings) && $settings->jam_masuk_end) {
+												$jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
+												$batasHadir = \Carbon\Carbon::parse($settings->jam_masuk_end);
+												$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
+											} elseif ($izin) {
+												$status = 'I';
+											}
+										@endphp
+										<td class="px-4 py-2">{{ $status }}</td>
 										<td class="px-4 py-2">
-											@php
-												$status = '-';
-												if ($item->jam_masuk && isset($settings)) {
-													$jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
-													$tol = $settings->jam_masuk_toleransi
-														? \Carbon\Carbon::parse($settings->jam_masuk_toleransi)
-														: ($settings->jam_masuk_end ? \Carbon\Carbon::parse($settings->jam_masuk_end) : null);
-													if ($tol) {
-														$status = $jamMasuk->lt($tol) ? 'H' : 'T';
-													}
-												}
-											@endphp
-											{{ $status }}
+											@if($izin)
+												{{ \Carbon\Carbon::parse($izin->created_at)->format('H:i') }}
+											@else
+												-
+											@endif
 										</td>
+										<td class="px-4 py-2">{{ $izin->keterangan ?? '-' }}</td>
 									</tr>
 								@empty
 									<tr>
-										<td colspan="6" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+										<td colspan="7" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
 											Belum ada data presensi untuk filter ini.
 										</td>
 									</tr>

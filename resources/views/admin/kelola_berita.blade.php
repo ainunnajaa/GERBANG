@@ -42,6 +42,11 @@
 										<div class="mt-3 flex gap-2">
 											<a href="{{ route('admin.berita.show', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Lihat</a>
 											<a href="{{ route('admin.berita.edit', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600">Edit</a>
+											<form action="{{ route('admin.berita.delete', $berita) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus berita ini?');">
+												@csrf
+												@method('DELETE')
+												<button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-red-600 text-white hover:bg-red-700">Hapus</button>
+											</form>
 										</div>
 									</div>
 								</div>

@@ -4,21 +4,54 @@ namespace App\Http\Controllers;
 
 use App\Models\Berita;
 use App\Models\SchoolProfile;
+use Illuminate\Http\Request;
 
 class BeritaPublikController extends Controller
 {
-	public function index()
+	public function index(Request $request)
 	{
-		$beritas = Berita::orderByDesc('tanggal_berita')->orderByDesc('created_at')->get();
+		$search = $request->input('q');
+
+		$query = Berita::query();
+
+		if ($search) {
+			$query->where('judul', 'like', '%' . $search . '%');
+		}
+
+		$beritas = $query
+			->orderByDesc('tanggal_berita')
+			->orderByDesc('created_at')
+			->get();
+
+		$recentBeritas = Berita::orderByDesc('tanggal_berita')
+			->orderByDesc('created_at')
+			->limit(5)
+			->get();
+
 		$schoolProfile = SchoolProfile::first();
 
-		return view('publik.daftar_berita', compact('beritas', 'schoolProfile'));
+		return view('publik.daftar_berita', [
+			'beritas' => $beritas,
+			'recentBeritas' => $recentBeritas,
+			'schoolProfile' => $schoolProfile,
+			'currentSearch' => $search,
+		]);
 	}
 
 	public function show(Berita $berita)
 	{
 		$schoolProfile = SchoolProfile::first();
 
-		return view('publik.baca_berita', compact('berita', 'schoolProfile'));
+		$recentBeritas = Berita::orderByDesc('tanggal_berita')
+			->orderByDesc('created_at')
+			->limit(5)
+			->get();
+
+		return view('publik.baca_berita', [
+			'berita' => $berita,
+			'schoolProfile' => $schoolProfile,
+			'recentBeritas' => $recentBeritas,
+			'currentSearch' => null,
+		]);
 	}
 }

@@ -5,26 +5,90 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
-                    @if (session('success'))
-                        <div class="p-3 bg-green-100 text-green-800 rounded text-sm">
-                            {{ session('success') }}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg relative">
+                {{-- Popup besar untuk notifikasi presensi --}}
+                @if (session('success'))
+                    <div
+                        x-data="{ open: true }"
+                        x-init="setTimeout(() => open = false, 6000)"
+                        x-show="open"
+                        x-cloak
+                        class="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    >
+                        <div class="absolute inset-0 bg-black/40"></div>
+                        <div class="relative max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-green-500 px-6 py-6 text-center text-gray-900 dark:text-gray-100">
+                            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold mb-1">Presensi Berhasil</h3>
+                            <p class="text-sm sm:text-base font-medium mb-2">Presensi masuk Anda hari ini sudah tercatat.</p>
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
+                                {{ session('success') }}
+                            </p>
+                            <button
+                                type="button"
+                                @click="open = false"
+                                class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                Tutup
+                            </button>
                         </div>
-                    @endif
+                    </div>
+                @endif
 
-                    @if (session('error'))
-                        <div class="p-3 bg-red-100 text-red-800 rounded text-sm">
-                            {{ session('error') }}
+                @if (session('error') && !session('success'))
+                    <div
+                        x-data="{ open: true }"
+                        x-init="setTimeout(() => open = false, 7000)"
+                        x-show="open"
+                        x-cloak
+                        class="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    >
+                        <div class="absolute inset-0 bg-black/40"></div>
+                        <div class="relative max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-red-500 px-6 py-6 text-center text-gray-900 dark:text-gray-100">
+                            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+                                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold mb-1">Presensi Gagal</h3>
+                            <p class="text-sm sm:text-base font-medium mb-2">Presensi Anda belum dapat dicatat.</p>
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
+                                {{ session('error') }}
+                            </p>
+                            <button
+                                type="button"
+                                @click="open = false"
+                                class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                                Tutup
+                            </button>
                         </div>
-                    @endif
+                    </div>
+                @endif
+
+                <div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
 
                     <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Lakukan presensi dengan memindai kode QR yang ditampilkan oleh admin.
-                        Jam presensi saat ini:
+                        Pilih jenis kehadiran Anda hari ini, lalu lakukan sesuai petunjuk di bawah.
                     </p>
+
+                    <div class="mt-2 flex items-center justify-between gap-2 text-xs">
+                        <span class="text-gray-600 dark:text-gray-300">Mode saat ini: Presensi QR</span>
+                        <a href="{{ route('guru.izin.form') }}" class="inline-flex items-center px-3 py-1 rounded-md border border-blue-500 text-blue-600 text-xs font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                            Form Izin
+                        </a>
+                    </div>
+
+                    <div id="section-presensi">
+                        <p class="mt-4 text-sm text-gray-700 dark:text-gray-300">
+                            Lakukan presensi dengan memindai kode QR yang ditampilkan oleh admin.
+                            Jam presensi saat ini:
+                        </p>
                     <ul class="list-disc list-inside text-sm text-gray-700 dark:text-gray-300">
                         <li>
                             Masuk:
@@ -63,6 +127,7 @@
 
                     <p id="scan-status" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
                 </div>
+
             </div>
         </div>
     </div>
@@ -70,6 +135,8 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Halaman ini sekarang hanya untuk Presensi QR.
+
             const qrRegionId = "qr-reader";
             const statusEl = document.getElementById('scan-status');
             const inputEl = document.getElementById('qr_code_input');
@@ -80,6 +147,11 @@
 
             let currentLat = null;
             let currentLng = null;
+
+            // Info awal agar terlihat bahwa script berjalan
+            if (statusEl) {
+                statusEl.textContent = 'Arahkan kamera ke kode QR untuk presensi.';
+            }
 
             // Data geofence dari setting admin
             const centerLat = @json($settings->latitude);
@@ -132,19 +204,27 @@
                 locationInfoEl.textContent = 'Perangkat ini tidak mendukung geolokasi.';
             }
 
+            let scanSubmitted = false;
             function onScanSuccess(decodedText, decodedResult) {
-                if (!currentLat || !currentLng) {
-                    statusEl.textContent = 'Lokasi belum terdeteksi. Pastikan GPS aktif dan izinkan akses lokasi.';
+                if (scanSubmitted) {
+                    statusEl.textContent = 'Presensi sedang diproses, mohon tunggu...';
+                    return;
+                }
+                // Jika geofence diaktifkan, pastikan lokasi sudah terdeteksi sebelum kirim
+                if (hasGeofence && (!currentLat || !currentLng)) {
+                    statusEl.textContent = 'Lokasi belum terdeteksi. Tunggu sampai lokasi muncul, lalu coba scan lagi.';
                     return;
                 }
 
-                if (hasGeofence && !isInsideRadius) {
-                    statusEl.textContent = 'Anda berada di luar radius lokasi presensi yang diizinkan. Presensi tidak dapat dilakukan.';
-                    return;
+                if (hasGeofence) {
+                    // Pastikan nilai terakhir lokasi ikut terkirim ke server
+                    latInput.value = currentLat;
+                    lngInput.value = currentLng;
                 }
 
                 statusEl.textContent = 'QR berhasil dibaca, mengirim presensi...';
                 inputEl.value = decodedText;
+                scanSubmitted = true;
                 formEl.submit();
             }
 
@@ -152,12 +232,19 @@
                 // Bisa diabaikan agar tidak terlalu berisik di console
             }
 
-            const html5QrcodeScanner = new Html5QrcodeScanner(
-                qrRegionId,
-                { fps: 10, qrbox: 250 },
-                false
-            );
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            // Pastikan library html5-qrcode berhasil dimuat
+            if (window.Html5QrcodeScanner) {
+                const html5QrcodeScanner = new Html5QrcodeScanner(
+                    qrRegionId,
+                    { fps: 10, qrbox: 250 },
+                    false
+                );
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            } else {
+                if (statusEl) {
+                    statusEl.textContent = 'Scanner QR tidak dapat dimuat. Periksa koneksi internet atau muat ulang halaman.';
+                }
+            }
         });
     </script>
 </x-app-layout>
