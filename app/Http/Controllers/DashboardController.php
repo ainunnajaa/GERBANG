@@ -152,19 +152,24 @@ class DashboardController extends Controller
 
             // Jika bulan terpilih tidak punya data presensi, biarkan grafik kosong
             if ($presensiBulan->isNotEmpty()) {
-                $weeklyCounts = [];
+                $daysInMonth = $endOfMonth->day;
+                // Minggu 1-4 selalu ada, Minggu 5 hanya jika bulan > 28 hari
+                $totalWeeks = $daysInMonth > 28 ? 5 : 4;
+
+                $weeklyCounts = array_fill(1, $totalWeeks, 0);
                 foreach ($presensiBulan as $p) {
                     if (! $p->jam_masuk) {
                         continue;
                     }
-                    $week = Carbon::parse($p->tanggal)->weekOfMonth;
-                    $weeklyCounts[$week] = ($weeklyCounts[$week] ?? 0) + 1;
+                    $day = Carbon::parse($p->tanggal)->day;
+                    // 1-7 = Minggu 1, 8-14 = Minggu 2, 15-21 = Minggu 3, 22-28 = Minggu 4, 29+ = Minggu 5
+                    $week = min($totalWeeks, (int) ceil($day / 7));
+                    $weeklyCounts[$week]++;
                 }
 
-                $maxWeek = ! empty($weeklyCounts) ? max(array_keys($weeklyCounts)) : $endOfMonth->weekOfMonth;
-                for ($w = 1; $w <= $maxWeek; $w++) {
+                for ($w = 1; $w <= $totalWeeks; $w++) {
                     $weeklyLabels[] = 'Minggu ' . $w;
-                    $weeklyValues[] = $weeklyCounts[$w] ?? 0;
+                    $weeklyValues[] = $weeklyCounts[$w];
                 }
             }
         }
@@ -172,6 +177,20 @@ class DashboardController extends Controller
         $beritas = \App\Models\Berita::orderByDesc('tanggal_berita')
             ->orderByDesc('created_at')
             ->limit(10)
+            ->get();
+
+        // Daftar guru (max 4 for preview card)
+        $daftarGuru = User::where('role', 'guru')
+            ->select('id', 'name', 'kelas', 'profile_photo_path')
+            ->orderBy('name')
+            ->limit(4)
+            ->get();
+        $totalGuru = User::where('role', 'guru')->count();
+
+        // Instagram content from admin (SchoolContent)
+        $instagramContents = \App\Models\SchoolContent::where('platform', 'instagram')
+            ->orderBy('order')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('dashboard.guru', [
@@ -187,6 +206,9 @@ class DashboardController extends Controller
             'weeklyLabels' => $weeklyLabels,
             'weeklyValues' => $weeklyValues,
             'beritas' => $beritas,
+            'daftarGuru' => $daftarGuru,
+            'totalGuru' => $totalGuru,
+            'instagramContents' => $instagramContents,
         ]);
     }
 }

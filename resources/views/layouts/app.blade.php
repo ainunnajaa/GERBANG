@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"style="font-size: 109%;">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,7 +21,7 @@
             isDark: false,
             openTheme: false,
             sidebarOpen: false,
-            sidebarCollapsed: false,
+            sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
             windowWidth: window.innerWidth,
             init() {
                 const saved = localStorage.getItem('theme') || 'system';
@@ -57,44 +57,44 @@
             }
         }"
     >
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
+        <div class="min-h-screen bg-gray-200 dark:bg-gray-900 overflow-x-hidden">
             <!-- Sidebar (desktop) -->
             <aside
                 x-cloak
-                class="hidden md:flex fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm z-30 transform transition-transform duration-300 ease-in-out"
-                :class="sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'"
+                class="hidden md:flex fixed top-4 bottom-4 left-4 bg-white dark:bg-gray-800 rounded-2xl z-30 transform transition-all duration-300 ease-in-out overflow-hidden"
+                :class="sidebarCollapsed ? 'w-[4.5rem]' : 'w-60'"
             >
                 @include('layouts.navigation')
             </aside>
 
             <!-- Main content area -->
-            <div id="main-content" class="min-h-screen flex flex-col pt-4 transition-[padding] duration-300 ease-in-out" :class="sidebarCollapsed ? '' : 'md:pl-64'">
+            <div id="main-content" class="min-h-screen flex flex-col pt-4 transition-[padding] duration-300 ease-in-out" :class="sidebarCollapsed ? 'md:pl-[5.5rem]' : 'md:pl-[17rem]'">
                 <!-- Top Navbar (fixed pada semua ukuran layar) -->
                 <header
                     id="top-navbar"
-                    class="fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-[3.570rem] px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm transform translate-y-0 transition-all duration-300 ease-in-out"
-                    x-bind:style="(windowWidth >= 768 && !sidebarCollapsed) ? 'left: 16rem;' : 'left: 0;'"
+                    class="fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-[3.570rem] px-4 sm:px-6 lg:px-8 bg-[#0000F4] dark:bg-[#0000F4] transform translate-y-0 transition-all duration-300 ease-in-out"
+                    x-bind:style="(windowWidth >= 768) ? (sidebarCollapsed ? 'padding-left: 5.5rem;' : 'padding-left: 17rem;') : 'padding-left: 0;'"
                 >
                     <div class="flex items-center gap-2">
-                        <!-- Hamburger for mobile -->
+                        <!-- Hamburger (desktop only) -->
                         <button
                             type="button"
-                            class="hidden md:inline-flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            @click="sidebarCollapsed = !sidebarCollapsed"
+                            class="hidden md:inline-flex items-center justify-center p-2 rounded-md text-white/90 hover:bg-white/10 dark:text-gray-200 dark:hover:bg-gray-700"
+                            @click="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('sidebarCollapsed', sidebarCollapsed); if(windowWidth < 768) sidebarOpen = !sidebarOpen"
                         >
                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 12h16.5m-16.5 6.75h16.5" />
                             </svg>
                         </button>
 
-                        <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                        <span class="text-sm font-semibold text-white dark:text-gray-100 truncate md:ml-0 ml-8">
                             GERBANG
                         </span>
                     </div>
 
                     <div class="flex items-center gap-4">
                         <div class="relative" @click.away="openTheme = false">
-                            <button @click="openTheme = !openTheme" type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                            <button @click="openTheme = !openTheme" type="button" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 text-sm text-white dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                                 <span class="mr-2" x-text="themeMode === 'system' ? 'Tema: Sistem' : (themeMode === 'light' ? 'Tema: Terang' : 'Tema: Gelap')"></span>
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
@@ -115,7 +115,7 @@
 
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
-                                <button class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-5 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none transition ease-in-out duration-150">
+                                <button class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-5 font-medium rounded-md text-white dark:text-gray-200 bg-white/15 dark:bg-gray-800 hover:bg-white/25 dark:hover:bg-gray-700 focus:outline-none transition ease-in-out duration-150">
                                     <span class="mr-2">{{ Auth::user()->name }}</span>
                                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -143,7 +143,7 @@
 
                 <!-- Page Heading -->
                 @isset($header)
-                    <header class="bg-gray-50 dark:bg-gray-900">
+                    <header class="bg-gray-200 dark:bg-gray-900">
                         <div class="py-6 px-4 sm:px-6 lg:px-8">
                             {{ $header }}
                         </div>
@@ -151,7 +151,7 @@
                 @endisset
 
                 <!-- Page Content -->
-                <main class="bg-gray-50 dark:bg-gray-900 flex-1 pb-16 md:pb-0">
+                <main class="bg-gray-200 dark:bg-gray-900 flex-1 pb-16 md:pb-0">
                     <div class="px-4 sm:px-6 lg:px-8 py-1">
                         {{ $slot }}
                     </div>
@@ -162,89 +162,89 @@
                 @endphp
 
                 <!-- Bottom Navbar (mobile) -->
-                <nav class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden">
-                    <a href="{{ route('dashboard') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                        <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-flow-col auto-cols-fr border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden">
+                    <a href="{{ route('dashboard') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-blue-400 border-t-2 border-blue-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                        <svg class="w-5 h-5 mb-0.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a.75.75 0 011.06 0L21.75 12M4.5 9.75V21h15V9.75" />
                         </svg>
-                        <span>Dashboard</span>
+                        <span>Home</span>
                     </a>
 
                     @if($role === 'admin')
-                        <a href="{{ route('admin.users') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('admin.users') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('admin.users') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('admin.users*') ? 'text-orange-600 dark:text-orange-400 border-t-2 border-orange-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
                             </svg>
                             <span>Pengguna</span>
                         </a>
-                        <a href="{{ route('admin.presensi') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('admin.presensi') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('admin.presensi') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('admin.presensi*') ? 'text-green-600 dark:text-green-400 border-t-2 border-green-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2.25-10.5H6.75A2.25 2.25 0 004.5 8.25v9A2.25 2.25 0 006.75 19.5h8.379c.597 0 1.17-.237 1.591-.659l2.121-2.121A2.25 2.25 0 0019.5 15.129V8.25a2.25 2.25 0 00-2.25-2.25z" />
                             </svg>
                             <span>Presensi</span>
                         </a>
-                        <a href="{{ route('admin.riwayat') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('admin.riwayat') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('admin.riwayat') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('admin.riwayat*') ? 'text-cyan-600 dark:text-cyan-400 border-t-2 border-cyan-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
                             </svg>
                             <span>Riwayat</span>
                         </a>
-                        <a href="{{ route('admin.web_profil') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('admin.web_profil') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('admin.web_profil') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('admin.web_profil*') ? 'text-purple-600 dark:text-purple-400 border-t-2 border-purple-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 4.5h15m-15 4.5h7.5" />
                             </svg>
-                            <span>Web Profil</span>
+                            <span>Web</span>
                         </a>
-                        <a href="{{ route('admin.berita') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('admin.berita') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('admin.berita') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('admin.berita*') ? 'text-red-600 dark:text-red-400 border-t-2 border-red-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-6.5a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 7.75v8.5A2.25 2.25 0 006.75 18.5h6.5" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75L18.75 21 22 16.5" />
                             </svg>
                             <span>Berita</span>
                         </a>
                     @elseif($role === 'guru')
-                        <a href="{{ route('guru.presensi') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('guru.presensi') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('guru.presensi') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.presensi*') ? 'text-orange-600 dark:text-orange-400 border-t-2 border-orange-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 9.75h16.5M9 14.25h11.25M9 18.75h11.25M4.5 14.25h.008v.008H4.5v-.008zM4.5 18.75h.008v.008H4.5v-.008z" />
                             </svg>
                             <span>Presensi</span>
                         </a>
-                        <a href="{{ route('guru.izin.form') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('guru.izin.form') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('guru.izin.form') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.izin*') ? 'text-green-600 dark:text-green-400 border-t-2 border-green-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             <span>Izin</span>
                         </a>
-                        <a href="{{ route('guru.kehadiran') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('guru.kehadiran') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('guru.kehadiran') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.kehadiran*') ? 'text-cyan-600 dark:text-cyan-400 border-t-2 border-cyan-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>Kehadiran</span>
                         </a>
-                        <a href="{{ route('guru.berita.index') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('guru.berita.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('guru.berita.index') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.berita*') ? 'text-purple-600 dark:text-purple-400 border-t-2 border-purple-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-6.5a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 7.75v8.5A2.25 2.25 0 006.75 18.5h6.5" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75L18.75 21 22 16.5" />
                             </svg>
                             <span>Berita</span>
                         </a>
                     @elseif($role === 'wali_murid')
-                        <a href="{{ route('wali.daftar') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('wali.daftar') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('wali.daftar') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('wali.daftar*') ? 'text-orange-600 dark:text-orange-400 border-t-2 border-orange-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5M3.75 9.75h16.5M9 15h11.25M9 19.5h11.25M4.5 15h.008v.008H4.5V15zm0 4.5h.008v.008H4.5V19.5z" />
                             </svg>
                             <span>Daftar</span>
                         </a>
-                        <a href="{{ route('wali.aktivitas') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('wali.aktivitas') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                            <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <a href="{{ route('wali.aktivitas') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('wali.aktivitas*') ? 'text-green-600 dark:text-green-400 border-t-2 border-green-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
                             </svg>
                             <span>Aktivitas</span>
                         </a>
                     @endif
 
-                    <a href="{{ route('profile.edit') }}" class="flex flex-col items-center justify-center py-2 px-3 text-xs {{ request()->routeIs('profile.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300' }}">
-                        <svg class="w-6 h-6 mb-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <a href="{{ route('profile.edit') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('profile*') ? 'text-red-600 dark:text-red-400 border-t-2 border-red-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                        <svg class="w-5 h-5 mb-0.5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
                         </svg>
                         <span>Profile</span>

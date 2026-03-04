@@ -6,7 +6,7 @@
 	</x-slot>
 
 	<div class="py-1">
-		<div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+		<div class="px-4 sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100">
 					<div class="mb-6">
@@ -31,25 +31,28 @@
 						@endif
 					</div>
 
-					<div class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+					<div class="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
 						<div>
 							@if($beritas->isEmpty())
 								<p class="text-sm text-gray-600 dark:text-gray-300">Belum ada berita yang dipublikasikan.</p>
 							@else
-								<div class="grid gap-6 md:grid-cols-2">
+								<div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
 									@foreach($beritas as $berita)
-										<a href="{{ route('guru.berita.show', $berita) }}" class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+										<a href="{{ route('guru.berita.show', $berita) }}" class="flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
 											@if($berita->gambar_path)
-												<div class="h-40 w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
+												<div class="aspect-[4/3] w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
 													<img src="{{ asset('storage/' . $berita->gambar_path) }}" alt="Gambar Berita" class="w-full h-full object-cover">
 												</div>
 											@endif
-											<div class="p-4 flex flex-col gap-2">
+											<div class="p-4 flex flex-col gap-2 flex-1">
 												<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
 													<span>{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
 												</div>
 												<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{{ $berita->judul }}</h2>
 												<p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-3">{{ \Illuminate\Support\Str::limit($berita->isi, 180) }}</p>
+												<div class="mt-auto pt-2 flex justify-end">
+													<span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Baca Selengkapnya &rarr;</span>
+												</div>
 											</div>
 										</a>
 									@endforeach

@@ -12,7 +12,6 @@
                 @if (session('success'))
                     <div
                         x-data="{ open: true }"
-                        x-init="setTimeout(() => open = false, 6000)"
                         x-show="open"
                         x-cloak
                         class="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -43,7 +42,6 @@
                 @if (session('error') && !session('success'))
                     <div
                         x-data="{ open: true }"
-                        x-init="setTimeout(() => open = false, 7000)"
                         x-show="open"
                         x-cloak
                         class="fixed inset-0 z-50 flex items-center justify-center px-4"
