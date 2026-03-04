@@ -29,7 +29,7 @@
 							@endif
 
 							<div class="prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed">
-								{!! nl2br(e($berita->isi)) !!}
+								{!! $berita->isi !!}
 							</div>
 
 							@if(!empty($berita->instagram_url))

@@ -303,9 +303,6 @@
 					</div>
 				@endif
 @isset($guruCount)
-							<div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-								<span class="font-medium">Jumlah Guru:</span> {{ $guruCount }}
-							</div>
 						@endif
 							</div>
 						</div>
