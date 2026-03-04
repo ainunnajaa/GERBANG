@@ -6,11 +6,11 @@
 	</x-slot>
 
 	<div class="py-1">
-		<div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+		<div class="px-4 sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-				<div class="p-6 text-gray-900 dark:text-gray-100">
+				<div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100 overflow-x-hidden">
 					<div class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-						<div>
+						<div class="min-w-0">
 							<div class="mb-4 flex items-center justify-between">
 								<a href="{{ route('guru.berita.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">&larr; Kembali ke Daftar Berita</a>
 								<span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
@@ -22,21 +22,21 @@
 
 							@if($berita->gambar_path)
 								<div class="mb-6">
-									<div class="w-full max-h-96 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+									<div class="aspect-[4/3] w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
 										<img src="{{ asset('storage/' . $berita->gambar_path) }}" alt="Gambar Berita" class="w-full h-full object-cover">
 									</div>
 								</div>
 							@endif
 
-							<div class="prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed">
+							<div class="prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed break-words overflow-hidden">
 								{!! nl2br(e($berita->isi)) !!}
 							</div>
 
 							@if(!empty($berita->instagram_url))
 								<div class="mt-8">
 									<h3 class="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-100">Preview Instagram</h3>
-									<div class="w-full md:max-w-md lg:max-w-sm rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900">
-										<blockquote class="instagram-media w-full" data-instgrm-permalink="{{ $berita->instagram_url }}" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px rgba(0,0,0,0.15); margin: 0; max-width:none; padding:0; width:100%; "></blockquote>
+									<div class="w-full max-w-[min(100%,400px)] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900">
+										<blockquote class="instagram-media" data-instgrm-permalink="{{ $berita->instagram_url }}" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px rgba(0,0,0,0.15); margin:0; max-width:100%; min-width:0; padding:0; width:100%;"></blockquote>
 									</div>
 									<script async src="https://www.instagram.com/embed.js"></script>
 								</div>

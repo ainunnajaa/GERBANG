@@ -93,7 +93,7 @@
 		@endif
 	</header>
 
-	<div class="max-w-6xl mx-auto px-4 py-1">
+	<div class="px-4 sm:px-6 lg:px-8 py-1">
 		<div class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
 			<div>
 				<div class="mb-4 flex items-center justify-between">
