@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'api_co_id' => [
+        'key' => env('API_CO_ID_KEY'),
+    ],
+
 ];

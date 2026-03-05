@@ -97,7 +97,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
             ->select('id', 'name', 'kelas', 'profile_photo_path', 'email', 'phone')
             ->orderBy('name')
             ->get();
-        return view('publik.daftar_guru', compact('gurus'));
+        return view('guru.daftar_guru', compact('gurus'));
     })->name('guru.daftar-guru');
 });
 
