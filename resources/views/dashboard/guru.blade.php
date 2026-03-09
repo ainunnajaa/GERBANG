@@ -112,10 +112,24 @@
                         const weeklyLabels = @json($weeklyLabels ?? []);
                         const weeklyValues = @json($weeklyValues ?? []);
                         if (weeklyLabels.length > 0) {
+                            
+                            // Konfigurasi warna dinamis yang super jelas untuk mode terang & gelap
                             function getThemeColors() {
                                 const isDark = document.documentElement.classList.contains('dark');
-                                return { isDark, axisColor: isDark ? '#D1D5DB' : '#4B5563', gridColor: isDark ? 'rgba(75, 85, 99, 0.2)' : 'rgba(209, 213, 219, 0.4)', legendLabelColor: isDark ? '#FFFFFF' : '#111827' };
+                                return {
+                                    isDark,
+                                    axisColor: isDark ? '#9CA3AF' : '#4B5563', // Text abu-abu terang di mode gelap
+                                    gridColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)', // Garis yang kontras
+                                    legendLabelColor: isDark ? '#F3F4F6' : '#111827',
+                                    barBg: isDark ? 'rgba(96, 165, 250, 0.85)' : 'rgba(37, 99, 235, 0.85)', // Biru lebih nyala di mode gelap
+                                    barBorder: isDark ? 'rgba(96, 165, 250, 1)' : 'rgba(37, 99, 235, 1)',
+                                    tooltipBg: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                                    tooltipTitle: isDark ? '#F9FAFB' : '#111827',
+                                    tooltipText: isDark ? '#D1D5DB' : '#4B5563',
+                                    tooltipBorder: isDark ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)'
+                                };
                             }
+
                             function initAttendanceChart() {
                                 const chartCanvas = document.getElementById('attendanceChart');
                                 if (!chartCanvas) return;
@@ -123,13 +137,39 @@
                                 const ctx = chartCanvas.getContext('2d');
                                 const themeColors = getThemeColors();
                                 const isMobile = window.innerWidth < 640;
+                                
                                 const attendanceChart = new Chart(ctx, {
                                     type: 'bar',
-                                    data: { labels: weeklyLabels, datasets: [{ label: 'Jumlah Hadir', data: weeklyValues, backgroundColor: 'rgba(37, 99, 235, 0.7)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 2, borderRadius: 6, barPercentage: isMobile ? 0.5 : 0.6, categoryPercentage: isMobile ? 0.6 : 0.7 }] },
+                                    data: { 
+                                        labels: weeklyLabels, 
+                                        datasets: [{ 
+                                            label: 'Jumlah Hadir', 
+                                            data: weeklyValues, 
+                                            backgroundColor: themeColors.barBg, 
+                                            borderColor: themeColors.barBorder, 
+                                            borderWidth: 2, 
+                                            borderRadius: 6, 
+                                            barPercentage: isMobile ? 0.5 : 0.6, 
+                                            categoryPercentage: isMobile ? 0.6 : 0.7 
+                                        }] 
+                                    },
                                     options: {
                                         responsive: true, maintainAspectRatio: false, resizeDelay: 100,
                                         layout: { padding: { top: isMobile ? 4 : 8, right: isMobile ? 4 : 12, bottom: isMobile ? 2 : 4, left: isMobile ? 2 : 4 } },
-                                        plugins: { legend: { labels: { color: themeColors.legendLabelColor, padding: isMobile ? 8 : 16, font: { size: isMobile ? 11 : 12 } } } },
+                                        plugins: { 
+                                            legend: { 
+                                                labels: { color: themeColors.legendLabelColor, padding: isMobile ? 8 : 16, font: { size: isMobile ? 11 : 12 } } 
+                                            },
+                                            tooltip: {
+                                                backgroundColor: themeColors.tooltipBg,
+                                                titleColor: themeColors.tooltipTitle,
+                                                bodyColor: themeColors.tooltipText,
+                                                borderColor: themeColors.tooltipBorder,
+                                                borderWidth: 1,
+                                                padding: 10,
+                                                displayColors: false
+                                            }
+                                        },
                                         scales: {
                                             x: { ticks: { color: themeColors.axisColor, font: { size: isMobile ? 10 : 12 } }, grid: { display: false } },
                                             y: { beginAtZero: true, precision: 0, ticks: { stepSize: 1, color: themeColors.axisColor, font: { size: isMobile ? 10 : 12 } }, grid: { color: themeColors.gridColor, borderDash: [5, 5] } }
@@ -140,6 +180,32 @@
                                 const nudgeResize = () => { window.dispatchEvent(new Event('resize')); attendanceChart.resize(); };
                                 window.requestAnimationFrame(nudgeResize);
                             }
+
+                            // Observer Tema Gelap: Jika user mengganti tema, grafik otomatis berganti warna 
+                            const themeObserver = new MutationObserver(() => {
+                                if (window.__attendanceChart) {
+                                    const newColors = getThemeColors();
+                                    const chart = window.__attendanceChart;
+                                    chart.data.datasets[0].backgroundColor = newColors.barBg;
+                                    chart.data.datasets[0].borderColor = newColors.barBorder;
+                                    chart.options.plugins.legend.labels.color = newColors.legendLabelColor;
+                                    chart.options.plugins.tooltip.backgroundColor = newColors.tooltipBg;
+                                    chart.options.plugins.tooltip.titleColor = newColors.tooltipTitle;
+                                    chart.options.plugins.tooltip.bodyColor = newColors.tooltipText;
+                                    chart.options.plugins.tooltip.borderColor = newColors.tooltipBorder;
+                                    chart.options.scales.x.ticks.color = newColors.axisColor;
+                                    chart.options.scales.y.ticks.color = newColors.axisColor;
+                                    chart.options.scales.y.grid.color = newColors.gridColor;
+                                    chart.update();
+                                }
+                                if (window.__doughnutChart) {
+                                    const isDark = document.documentElement.classList.contains('dark');
+                                    window.__doughnutChart.data.datasets[0].borderColor = isDark ? '#1F2937' : '#FFFFFF';
+                                    window.__doughnutChart.update();
+                                }
+                            });
+                            themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
                             function start() {
                                 if (window.Chart) { initAttendanceChart(); return; }
                                 let tries = 0;
@@ -231,7 +297,9 @@
                                     if (!canvas || !window.Chart) return;
                                     const isDark = document.documentElement.classList.contains('dark');
                                     const totalData = channelData.hadir + channelData.izin + channelData.terlambat + channelData.tidakHadir;
-                                    new Chart(canvas.getContext('2d'), {
+                                    
+                                    // Disimpan ke window agar Observer tema bisa memperbaruinya
+                                    window.__doughnutChart = new Chart(canvas.getContext('2d'), {
                                         type: 'pie',
                                         data: {
                                             labels: ['Hadir', 'Izin', 'Terlambat', 'Tidak Hadir'],
@@ -444,12 +512,22 @@
             </div>
             
             <div class="lg:col-span-1 h-full min-h-[500px]">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full relative">
                     @if(isset($instagramContents) && $instagramContents->isNotEmpty())
                         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
                             <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Postingan Instagram</span>
+                            
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" class="ig-prev flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full transition shadow-sm focus:outline-none">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                </button>
+                                <button type="button" class="ig-next flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full transition shadow-sm focus:outline-none">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="swiper ig-swiper w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                        
+                        <div class="swiper ig-swiper w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative">
                             <div class="swiper-wrapper">
                                 @foreach($instagramContents as $igContent)
                                     <div class="swiper-slide p-0 bg-gray-50 dark:bg-gray-900 flex justify-center">
@@ -460,6 +538,7 @@
                                 @endforeach
                             </div>
                         </div>
+                        
                         <style>
                             .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -469,7 +548,18 @@
                         <script>
                             document.addEventListener('DOMContentLoaded', function () {
                                 if(document.querySelector('.ig-swiper')) {
-                                    new Swiper('.ig-swiper', { loop: true, autoplay: { delay: 6000, disableOnInteraction: false }, slidesPerView: 1, spaceBetween: 0, effect: 'slide', autoHeight: false });
+                                    new Swiper('.ig-swiper', { 
+                                        loop: true, 
+                                        autoplay: { delay: 6000, disableOnInteraction: false }, 
+                                        navigation: { 
+                                            nextEl: '.ig-next', 
+                                            prevEl: '.ig-prev' 
+                                        },
+                                        slidesPerView: 1, 
+                                        spaceBetween: 0, 
+                                        effect: 'slide', 
+                                        autoHeight: false 
+                                    });
                                     if (window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process();
                                 }
                             });
