@@ -256,9 +256,7 @@
 					</div>
 				@endif
 				@isset($guruCount)
-					<div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
-						<span class="font-medium">Total Guru:</span> {{ $guruCount }}
-					</div>
+					
 				@endisset
 
 				@if (!empty($contents) && $contents->count())
