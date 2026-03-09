@@ -3,12 +3,16 @@ import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     plugins: [
-        // ... plugin laravel kamu
+        laravel([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ]),
     ],
     server: {
-        host: '0.0.0.0', // Tambahkan baris ini
+        host: '0.0.0.0',
         hmr: {
-            host: '192.168.1.15' // Ganti dengan IPv4 laptopmu
+            host: 'localhost',
+            port: 5174
         }
     }
 });

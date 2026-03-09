@@ -31,7 +31,7 @@
 	</script>
 	@vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body id="top" class="min-h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1)); color-scheme: light;" data-theme="light" @endif>
 	<header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur sticky top-0 z-30">
 		<div class="flex items-center gap-3 justify-center md:justify-start">
 			@if (!empty($schoolProfile?->school_logo_path))
@@ -129,7 +129,9 @@
 			</div>
 
 			<div class="border-t pt-6 mt-6 lg:mt-0 lg:pt-0 lg:border-t-0 lg:border-l lg:pl-6 border-gray-200 dark:border-gray-700">
-				<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Cari Berita Terbaru</h3>
+				<div class="bg-primary-blue rounded-lg shadow-md p-4 mb-4">
+					<h3 class="text-sm font-semibold text-white">Cari Berita Lainnya</h3>
+				</div>
 				<form method="GET" action="{{ route('publik.berita.index') }}" class="mb-5 flex flex-col sm:flex-row gap-3 sm:items-center">
 					<div class="flex-1">
 						<label for="q-detail" class="sr-only">Cari berita</label>
@@ -138,30 +140,42 @@
 							name="q"
 							type="text"
 							value="{{ $currentSearch ?? '' }}"
-							class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+							class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-100 dark:text-gray-900 text-sm focus:border-primary-blue focus:ring-primary-blue"
 							placeholder="Cari berita berdasarkan judul..."
 						>
 					</div>
-					<button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+					<button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-blue bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue transition">
 						Cari
 					</button>
 				</form>
 
-				<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Posts</h3>
-				@if(isset($recentBeritas) && $recentBeritas->isNotEmpty())
-					<ul class="space-y-3 text-sm">
-						@foreach($recentBeritas as $recent)
-							<li>
-								<a href="{{ route('publik.berita.show', $recent) }}" class="block hover:text-indigo-600 dark:hover:text-indigo-400">
-									<p class="font-medium line-clamp-2">{{ $recent->judul }}</p>
-									<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($recent->tanggal_berita)->format('d M Y') }}</p>
+				<div class="bg-primary-blue rounded-lg shadow-md p-4 mb-4">
+					<h3 class="text-sm font-semibold text-white">Postingan Terbaru</h3>
+				</div>
+				<div class="bg-white dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-4">
+					@if(isset($recentBeritas) && $recentBeritas->isNotEmpty())
+						<ul class="space-y-3 text-sm">
+							@foreach($recentBeritas as $recent)
+								<li>
+									<a href="{{ route('publik.berita.show', $recent) }}" class="block group hover:text-primary-blue dark:hover:text-blue-300 transition">
+										<p class="font-medium line-clamp-2 text-gray-900 dark:text-white group-hover:text-primary-blue dark:group-hover:text-blue-300">{{ $recent->judul }}</p>
+										<p class="text-xs text-gray-500 dark:text-gray-300 mt-0.5">{{ \Carbon\Carbon::parse($recent->tanggal_berita)->format('d M Y') }}</p>
+									</a>
+								</li>
+							@endforeach
+						</ul>
+					@else
+						<p class="text-xs text-gray-600 dark:text-gray-300">Belum ada postingan terbaru.</p>
+					@endif
+				</div>
 								</a>
 							</li>
 						@endforeach
 					</ul>
-				@else
-					<p class="text-xs text-gray-600 dark:text-gray-400">Belum ada postingan terbaru.</p>
-				@endif
+					@else
+						<p class="text-xs text-gray-600">Belum ada postingan terbaru.</p>
+					@endif
+				</div>
 			</div>
 		</div>
 	</div>

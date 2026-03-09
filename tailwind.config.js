@@ -18,6 +18,10 @@ export default {
             spacing: {
                 '15': '3.75rem', // custom height between h-14 (3.5rem) and h-16 (4rem)
             },
+            colors: {
+                'primary-blue': '#0000F4',
+                'primary-blue-dark': '#0000D4',
+            },
         },
     },
 
