@@ -32,7 +32,7 @@
     @endphp
 
     <div class="py-1">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="mb-6">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>

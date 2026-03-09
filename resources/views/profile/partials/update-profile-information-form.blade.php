@@ -47,6 +47,13 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="username" :value="__('Username')" />
+            <x-text-input id="username" name="username" type="text" class="mt-1 block w-full" :value="old('username', $user->username)" autocomplete="off" placeholder="contoh: ainun_najaa" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Username harus unik. Hanya huruf, angka, titik, garis bawah, dan strip.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('username')" />
+        </div>
+
         @include('profile.partials.form_biodata')
 
         <div class="flex items-center gap-4 mt-4">

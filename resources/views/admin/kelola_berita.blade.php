@@ -6,7 +6,7 @@
 	</x-slot>
 
 	<div class="py-6">
-		<div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+		<div class="px-4 sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100">
 					@if (session('status'))
@@ -38,7 +38,7 @@
 											<h4 class="font-semibold text-base">{{ $berita->judul }}</h4>
 											<span class="text-xs text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
 										</div>
-										<p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-3">{{ \Illuminate\Support\Str::limit($berita->isi, 180) }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-3">{{ \Illuminate\Support\Str::limit(strip_tags($berita->isi), 180) }}</p>
 										<div class="mt-3 flex gap-2">
 											<a href="{{ route('admin.berita.show', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">Lihat</a>
 											<a href="{{ route('admin.berita.edit', $berita) }}" class="inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600">Edit</a>

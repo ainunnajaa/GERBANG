@@ -42,27 +42,42 @@
 						<img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
 					</a>
 				@endif
-				<nav class="flex flex-wrap gap-2 justify-center md:justify-start">
-					<div class="relative">
-						<button id="profil_menu_button" type="button" class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs md:text-sm bg-white/20 text-white hover:bg-white/30 font-medium">
-							<span>Profil</span>
+				<nav class="flex items-center gap-2">
+					{{-- Mobile: dropdown --}}
+					<div class="relative md:hidden">
+						<button id="profil_menu_button" type="button" class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium">
+							<span>Profile</span>
 							<svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
 							</svg>
 						</button>
-						<div id="profil_menu" class="absolute left-0 mt-1 w-48 rounded-md shadow-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 z-20 hidden">
-							<a href="#program-unggulan" class="block px-3 py-2 text-xs md:text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
-							<a href="#visi-misi" class="block px-3 py-2 text-xs md:text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
-							<a href="#guru" class="block px-3 py-2 text-xs md:text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
-							<a href="#konten-sosmed" class="block px-3 py-2 text-xs md:text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
-							<a href="#kontak" class="block px-3 py-2 text-xs md:text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
+						<div id="profil_menu" class="absolute left-0 mt-1 w-52 rounded-md shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 z-20 hidden">
+							<a href="#top" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
+							<div class="border-t border-gray-100 dark:border-gray-800 my-1"></div>
+							<a href="#program-unggulan" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
+							<a href="#visi-misi" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
+							<a href="#guru" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
+							<a href="#konten-sosmed" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
+							<a href="#kontak" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
+							<div class="border-t border-gray-100 dark:border-gray-800 my-1"></div>
+							<a href="{{ route('publik.berita.index') }}" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
 						</div>
 					</div>
-					<a href="{{ route('publik.berita.index') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm bg-white text-primary-blue hover:bg-blue-50 font-medium">Berita</a>
+
+					{{-- Desktop: full menu --}}
+					<div class="hidden md:flex flex-wrap items-center gap-2">
+						<a href="#top" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
+						<a href="#program-unggulan" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
+						<a href="#visi-misi" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
+						<a href="#guru" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
+						<a href="#konten-sosmed" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
+						<a href="#kontak" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
+						<a href="{{ route('publik.berita.index') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
+					</div>
 				</nav>
 			</div>
 			@if (Route::has('login'))
-				<div class="flex items-center justify-center md:justify-end gap-3">
+				<div class="flex items-center justify-end gap-2 sm:gap-3">
 					<div class="relative">
 						<button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-white/20 text-white hover:bg-white/30 text-sm">
 							<span id="welcome_theme_label" class="mr-2">Tema: Sistem</span>
@@ -96,7 +111,7 @@
 			@endif
 		</header>
 
-			<main>
+			<main class="flex-1">
 				<div>
 						@if (!empty($backgrounds) && $backgrounds->count())
 							<div class="relative w-full aspect-[21/7.5] mb-6 rounded-lg overflow-hidden">
@@ -132,8 +147,8 @@
 								<div class="mt-6 flex flex-col md:flex-row md:items-start gap-6">
 									@if (!empty($schoolProfile->principal_photo_path))
 										<div class="flex justify-center md:justify-start">
-											<div class="w-80 h-80 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-900 shadow-md">
-												<img src="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}" alt="Foto Kepala Sekolah" class="w-full h-full object-cover">
+											<div class="inline-block rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900">
+												<img src="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}" alt="Foto Kepala Sekolah" class="w-full h-auto object-cover">
 											</div>
 										</div>
 									@endif
@@ -298,40 +313,45 @@
 						<script async src="https://www.instagram.com/embed.js"></script>
 					</div>
 				@endif
-				@if (!empty($schoolProfile) && (!empty($schoolProfile->contact_address) || !empty($schoolProfile->contact_email) || !empty($schoolProfile->contact_phone) || !empty($schoolProfile->contact_opening_hours)))
-				<footer id="kontak" class="mt-10 bg-primary-blue rounded-lg shadow-md p-6 text-sm text-white">
-					<h2 class="text-lg font-semibold mb-3 text-white">Kontak Kami</h2>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							@if (!empty($schoolProfile->contact_address))
-								<div>
-								<div class="font-medium text-white">Alamat Sekolah</div>
-								<p class="mt-1 text-sm text-blue-50 whitespace-pre-line">{{ $schoolProfile->contact_address }}</p>
-								</div>
-							@endif
-							@if (!empty($schoolProfile->contact_email))
-								<div>
-								<div class="font-medium text-white">Email</div>
-								<a href="mailto:{{ $schoolProfile->contact_email }}" class="mt-1 inline-block text-sm text-blue-50 hover:text-white underline">{{ $schoolProfile->contact_email }}</a>
-								</div>
-							@endif
-							@if (!empty($schoolProfile->contact_phone))
-								<div>
-								<div class="font-medium text-white">No. Telepon Sekolah</div>
-								<p class="mt-1 text-sm text-blue-50">{{ $schoolProfile->contact_phone }}</p>
-								</div>
-							@endif
-							@if (!empty($schoolProfile->contact_opening_hours))
-								<div>
-								<div class="font-medium text-white">Jam Buka Sekolah</div>
-								<p class="mt-1 text-sm text-blue-50 whitespace-pre-line">{{ $schoolProfile->contact_opening_hours }}</p>
-								</div>
-							@endif
+@isset($guruCount)
+						@endif
+							</div>
 						</div>
-					</footer>
-				@endif
-					</div>
-				</div>
-			</main>
+					</main>
+
+					@if (!empty($schoolProfile) && (!empty($schoolProfile->contact_address) || !empty($schoolProfile->contact_email) || !empty($schoolProfile->contact_phone) || !empty($schoolProfile->contact_opening_hours)))
+						<footer id="kontak" class="mt-6 md:mt-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200">
+							<div class="px-4 md:px-8 lg:px-16 py-6 md:py-8">
+								<h2 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-100">Kontak Kami</h2>
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									@if (!empty($schoolProfile->contact_address))
+										<div>
+											<div class="font-medium">Alamat Sekolah</div>
+											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->contact_address }}</p>
+										</div>
+									@endif
+									@if (!empty($schoolProfile->contact_email))
+										<div>
+											<div class="font-medium">Email</div>
+											<a href="mailto:{{ $schoolProfile->contact_email }}" class="mt-1 inline-block text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ $schoolProfile->contact_email }}</a>
+										</div>
+									@endif
+									@if (!empty($schoolProfile->contact_phone))
+										<div>
+											<div class="font-medium">No. Telepon Sekolah</div>
+											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ $schoolProfile->contact_phone }}</p>
+										</div>
+									@endif
+									@if (!empty($schoolProfile->contact_opening_hours))
+										<div>
+											<div class="font-medium">Jam Buka Sekolah</div>
+											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->contact_opening_hours }}</p>
+										</div>
+									@endif
+								</div>
+							</div>
+						</footer>
+					@endif
 						<script>
 							(function(){
 								const header = document.querySelector('header');

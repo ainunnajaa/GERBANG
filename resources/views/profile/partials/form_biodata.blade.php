@@ -1,6 +1,19 @@
 <div class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
 	<h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">Biodata</h3>
 
+	<div class="mb-3">
+		<x-input-label for="tanggal_lahir" value="Tanggal Lahir" />
+		<x-text-input
+			id="tanggal_lahir"
+			name="tanggal_lahir"
+			type="date"
+			class="mt-1 block w-full"
+			:value="old('tanggal_lahir', $user->tanggal_lahir ? \Carbon\Carbon::parse($user->tanggal_lahir)->format('Y-m-d') : '')"
+			autocomplete="bday"
+		/>
+		<x-input-error class="mt-2" :messages="$errors->get('tanggal_lahir')" />
+	</div>
+
 	@if ($user->role === 'guru')
 		<div class="mb-3">
 			<x-input-label for="employee_number" value="No Pegawai (hanya untuk Guru)" />

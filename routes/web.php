@@ -92,6 +92,13 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
     Route::get('/guru/kehadiran-bulanan', [RiwayatPresensiController::class, 'guruKehadiranBulanan'])->name('guru.kehadiran.bulanan');
     Route::get('/guru/berita', [BeritaController::class, 'index'])->name('guru.berita.index');
     Route::get('/guru/berita/{berita}', [BeritaController::class, 'show'])->name('guru.berita.show');
+    Route::get('/guru/daftar-guru', function () {
+        $gurus = \App\Models\User::where('role', 'guru')
+            ->select('id', 'name', 'kelas', 'profile_photo_path', 'email', 'phone')
+            ->orderBy('name')
+            ->get();
+        return view('guru.daftar_guru', compact('gurus'));
+    })->name('guru.daftar-guru');
 });
 
 // Wali Murid routes
