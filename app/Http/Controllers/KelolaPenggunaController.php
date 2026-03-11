@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class KelolaPenggunaController extends Controller
 		if (in_array($role, ['admin', 'guru', 'wali_murid'], true)) {
 			$query->where('role', $role);
 		}
-		$users = $query->get();
+		$users = $query->paginate(10)->withQueryString();
 
 		return view('admin.kelola_pengguna', [
 			'users' => $users,
@@ -102,7 +103,7 @@ class KelolaPenggunaController extends Controller
 	public function destroy(User $user)
 	{
 		// Opsional: cegah admin menghapus dirinya sendiri
-		if (auth()->id() === $user->id) {
+		if (Auth::id() === $user->id) {
 			return redirect()->route('admin.users')->with('status', 'Anda tidak dapat menghapus akun Anda sendiri.');
 		}
 

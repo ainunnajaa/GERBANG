@@ -101,6 +101,12 @@
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 text-center text-gray-600 dark:text-gray-300">Belum ada pengguna terdaftar.</div>
                 @endforelse
             </div>
+
+            @if ($users->hasPages())
+                <div class="mt-6">
+                    {{ $users->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

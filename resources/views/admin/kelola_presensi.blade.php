@@ -1,9 +1,30 @@
 <x-app-layout>
+    @php
+        $initialLatitude = old('latitude', $settings->latitude);
+        $initialLongitude = old('longitude', $settings->longitude);
+        $initialRadius = old('radius_meter', $settings->radius_meter);
+    @endphp
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Kelola Presensi') }}
         </h2>
     </x-slot>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #presensi-map {
+            position: relative;
+            z-index: 0;
+        }
+
+        #presensi-map .leaflet-pane,
+        #presensi-map .leaflet-top,
+        #presensi-map .leaflet-bottom,
+        #presensi-map .leaflet-control {
+            z-index: 10;
+        }
+    </style>
 
     <div class="py-1">
         <div class="px-4 sm:px-6 lg:px-8 space-y-6">
@@ -79,37 +100,52 @@
                             @enderror
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Latitude Lokasi Presensi</label>
-                            <input
-                                type="number"
-                                step="0.0000001"
-                                name="latitude"
-                                value="{{ old('latitude', $settings->latitude) }}"
-                                class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
-                            >
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Masukkan titik lintang (latitude) lokasi sekolah yang diizinkan untuk presensi.
-                            </p>
-                            @error('latitude')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        <div class="md:col-span-2 space-y-4">
+                            <div class="flex items-start justify-between gap-4 flex-wrap">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Titik Lokasi Presensi</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Klik peta untuk memilih titik koordinat lokasi presensi. Marker bisa digeser untuk menyesuaikan posisi.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    id="use-current-location"
+                                    class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-semibold rounded hover:bg-emerald-700"
+                                >
+                                    Gunakan Lokasi Saya
+                                </button>
+                            </div>
 
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Longitude Lokasi Presensi</label>
-                            <input
-                                type="number"
-                                step="0.0000001"
-                                name="longitude"
-                                value="{{ old('longitude', $settings->longitude) }}"
-                                class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
-                            >
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Masukkan garis bujur (longitude) lokasi sekolah.
-                            </p>
+                            <div id="presensi-map" class="relative z-0 h-[400px] w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"></div>
+
+                            <div id="map-status" class="text-xs text-gray-500 dark:text-gray-400">
+                                Pilih lokasi pada peta untuk mengisi koordinat presensi.
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Latitude</p>
+                                    <p id="latitude-display" class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                        {{ $initialLatitude !== null && $initialLatitude !== '' ? number_format((float) $initialLatitude, 7, '.', '') : '-' }}
+                                    </p>
+                                </div>
+                                <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Longitude</p>
+                                    <p id="longitude-display" class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                        {{ $initialLongitude !== null && $initialLongitude !== '' ? number_format((float) $initialLongitude, 7, '.', '') : '-' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="latitude" id="latitude-input" value="{{ $initialLatitude }}">
+                            <input type="hidden" name="longitude" id="longitude-input" value="{{ $initialLongitude }}">
+
+                            @error('latitude')
+                                <p class="text-xs text-red-500">{{ $message }}</p>
+                            @enderror
                             @error('longitude')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -120,7 +156,8 @@
                                 min="10"
                                 step="1"
                                 name="radius_meter"
-                                value="{{ old('radius_meter', $settings->radius_meter) }}"
+                                value="{{ $initialRadius }}"
+                                id="radius-meter-input"
                                 class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900"
                             >
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -208,6 +245,157 @@
                             printWindow.focus();
                             printWindow.print();
                         }
+                    </script>
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const mapElement = document.getElementById('presensi-map');
+                            const latitudeInput = document.getElementById('latitude-input');
+                            const longitudeInput = document.getElementById('longitude-input');
+                            const radiusInput = document.getElementById('radius-meter-input');
+                            const latitudeDisplay = document.getElementById('latitude-display');
+                            const longitudeDisplay = document.getElementById('longitude-display');
+                            const statusElement = document.getElementById('map-status');
+                            const useCurrentLocationButton = document.getElementById('use-current-location');
+
+                            if (!mapElement || !latitudeInput || !longitudeInput) {
+                                return;
+                            }
+
+                            const defaultCenter = [-7.005145, 110.438125];
+                            const savedLatitude = Number.parseFloat(latitudeInput.value);
+                            const savedLongitude = Number.parseFloat(longitudeInput.value);
+                            const hasSavedCoordinates = Number.isFinite(savedLatitude) && Number.isFinite(savedLongitude);
+                            const initialCenter = hasSavedCoordinates
+                                ? [savedLatitude, savedLongitude]
+                                : defaultCenter;
+
+                            const map = L.map('presensi-map').setView(initialCenter, hasSavedCoordinates ? 17 : 13);
+
+                            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                maxZoom: 19,
+                                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            }).addTo(map);
+
+                            let marker = L.marker(initialCenter, { draggable: true }).addTo(map);
+                            let radiusCircle = null;
+
+                            function setStatus(message, isError = false) {
+                                if (!statusElement) {
+                                    return;
+                                }
+
+                                statusElement.textContent = message;
+                                statusElement.className = isError
+                                    ? 'text-xs text-red-500'
+                                    : 'text-xs text-gray-500 dark:text-gray-400';
+                            }
+
+                            function updateDisplay(lat, lng) {
+                                const fixedLat = Number(lat).toFixed(7);
+                                const fixedLng = Number(lng).toFixed(7);
+
+                                latitudeInput.value = fixedLat;
+                                longitudeInput.value = fixedLng;
+
+                                if (latitudeDisplay) {
+                                    latitudeDisplay.textContent = fixedLat;
+                                }
+
+                                if (longitudeDisplay) {
+                                    longitudeDisplay.textContent = fixedLng;
+                                }
+                            }
+
+                            function updateRadiusCircle() {
+                                if (!radiusInput) {
+                                    return;
+                                }
+
+                                const radius = Number.parseFloat(radiusInput.value);
+                                const lat = Number.parseFloat(latitudeInput.value);
+                                const lng = Number.parseFloat(longitudeInput.value);
+
+                                if (!Number.isFinite(radius) || radius <= 0 || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+                                    if (radiusCircle) {
+                                        map.removeLayer(radiusCircle);
+                                        radiusCircle = null;
+                                    }
+                                    return;
+                                }
+
+                                const circleOptions = {
+                                    color: '#2563eb',
+                                    fillColor: '#60a5fa',
+                                    fillOpacity: 0.15,
+                                    radius,
+                                };
+
+                                if (radiusCircle) {
+                                    radiusCircle.setLatLng([lat, lng]);
+                                    radiusCircle.setRadius(radius);
+                                    return;
+                                }
+
+                                radiusCircle = L.circle([lat, lng], circleOptions).addTo(map);
+                            }
+
+                            function setMarkerPosition(lat, lng, shouldPan = true) {
+                                marker.setLatLng([lat, lng]);
+                                updateDisplay(lat, lng);
+                                updateRadiusCircle();
+
+                                if (shouldPan) {
+                                    map.panTo([lat, lng]);
+                                }
+                            }
+
+                            map.on('click', function (event) {
+                                setMarkerPosition(event.latlng.lat, event.latlng.lng);
+                                setStatus('Titik lokasi presensi berhasil dipilih dari peta.');
+                            });
+
+                            marker.on('dragend', function (event) {
+                                const latLng = event.target.getLatLng();
+                                setMarkerPosition(latLng.lat, latLng.lng, false);
+                                setStatus('Marker dipindahkan. Koordinat lokasi presensi sudah diperbarui.');
+                            });
+
+                            if (radiusInput) {
+                                radiusInput.addEventListener('input', updateRadiusCircle);
+                            }
+
+                            if (useCurrentLocationButton) {
+                                useCurrentLocationButton.addEventListener('click', function () {
+                                    if (!navigator.geolocation) {
+                                        setStatus('Browser tidak mendukung akses lokasi.', true);
+                                        return;
+                                    }
+
+                                    setStatus('Mengambil lokasi perangkat...');
+
+                                    navigator.geolocation.getCurrentPosition(
+                                        function (position) {
+                                            const lat = position.coords.latitude;
+                                            const lng = position.coords.longitude;
+                                            map.setView([lat, lng], 18);
+                                            setMarkerPosition(lat, lng, false);
+                                            setStatus('Lokasi perangkat berhasil digunakan sebagai titik presensi.');
+                                        },
+                                        function () {
+                                            setStatus('Gagal mengambil lokasi perangkat. Pastikan izin lokasi diaktifkan.', true);
+                                        },
+                                        {
+                                            enableHighAccuracy: true,
+                                            timeout: 10000,
+                                        }
+                                    );
+                                });
+                            }
+
+                            updateDisplay(initialCenter[0], initialCenter[1]);
+                            updateRadiusCircle();
+                        });
                     </script>
                 </div>
             </div>
