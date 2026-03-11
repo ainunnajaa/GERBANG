@@ -108,12 +108,8 @@
 		@endif
 	</header>
 
-<<<<<<< HEAD
 	<main class="flex-1">
 	<div class="max-w-6xl mx-auto px-4 py-1">
-=======
-	<div class="px-4 sm:px-6 lg:px-8 py-1">
->>>>>>> main
 		<div class="mb-6">
 			<form method="GET" action="{{ route('publik.berita.index') }}" class="flex flex-col sm:flex-row gap-3 sm:items-center">
 				<div class="flex-1">
