@@ -35,81 +35,7 @@
 		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
 	<body id="top" class="bg-gradient-to-b from-blue-50 to-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @elseif (!empty($backgrounds) && $backgrounds->count()) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $backgrounds->first()->path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
-		<header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-primary-blue dark:bg-primary-blue backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
-			<div class="flex items-center gap-3 justify-center md:justify-start">
-				@if (!empty($schoolProfile?->school_logo_path))
-					<a href="#top" class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
-						<img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
-					</a>
-				@endif
-				<nav class="flex items-center gap-2">
-					{{-- Mobile: dropdown --}}
-					<div class="relative md:hidden">
-						<button id="profil_menu_button" type="button" class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium">
-							<span>Profile</span>
-							<svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
-							</svg>
-						</button>
-						<div id="profil_menu" class="absolute left-0 mt-1 w-52 rounded-md shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 z-20 hidden">
-							<a href="#top" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
-							<div class="border-t border-gray-100 dark:border-gray-800 my-1"></div>
-							<a href="#program-unggulan" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
-							<a href="#visi-misi" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
-							<a href="#guru" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
-							<a href="#konten-sosmed" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
-							<a href="#kontak" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
-							<div class="border-t border-gray-100 dark:border-gray-800 my-1"></div>
-							<a href="{{ route('publik.berita.index') }}" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
-						</div>
-					</div>
-
-					{{-- Desktop: full menu --}}
-					<div class="hidden md:flex flex-wrap items-center gap-2">
-						<a href="#top" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
-						<a href="#program-unggulan" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
-						<a href="#visi-misi" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
-						<a href="#guru" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
-						<a href="#konten-sosmed" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
-						<a href="#kontak" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
-						<a href="{{ route('publik.berita.index') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
-					</div>
-				</nav>
-			</div>
-			@if (Route::has('login'))
-				<div class="flex items-center justify-end gap-2 sm:gap-3">
-					<div class="relative">
-						<button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-white/20 text-white hover:bg-white/30 text-sm">
-							<span id="welcome_theme_label" class="mr-2">Tema: Sistem</span>
-							<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
-							</svg>
-						</button>
-						<div id="welcome_theme_menu" class="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 z-20 hidden">
-							<button type="button" data-theme-mode="system" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-								Mengikuti tema sistem
-							</button>
-							<button type="button" data-theme-mode="light" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-								Terang
-							</button>
-							<button type="button" data-theme-mode="dark" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-								Gelap
-							</button>
-						</div>
-					</div>
-					<nav class="flex items-center gap-3">
-						@auth
-								<a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Dashboard</a>
-						@else
-								<a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Log in</a>
-							@if (Route::has('register'))
-									<a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Register</a>
-							@endif
-						@endauth
-					</nav>
-				</div>
-			@endif
-		</header>
+		@include('tampilan.footer_navbar', ['slotPosition' => 'header'])
 
 			<main class="flex-1">
 				<div>
@@ -313,43 +239,114 @@
 				@endif
 @isset($guruCount)
 						@endif
-							</div>
-						</div>
-					</main>
+						@php
+							$waNumber = '';
+							if (!empty($schoolProfile?->contact_phone)) {
+								$waNumber = preg_replace('/[^0-9]/', '', $schoolProfile->contact_phone);
+							}
+						@endphp
+						<div class="mt-10" id="kontak-form" data-wa-number="{{ $waNumber }}">
+							<h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">Contact Me</h2>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+								<div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+									@if (session('success'))
+										<div class="mb-4 rounded-md bg-green-50 text-green-700 border border-green-200 px-4 py-2 text-sm">
+											{{ session('success') }}
+										</div>
+									@endif
+									@if (session('error'))
+										<div class="mb-4 rounded-md bg-red-50 text-red-700 border border-red-200 px-4 py-2 text-sm">
+											{{ session('error') }}
+										</div>
+									@endif
+										<form id="contact_form" class="space-y-4" onsubmit="return false;">
+										<div>
+											<label for="contact_name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
+											<input id="contact_name" name="name" type="text" required value="{{ old('name') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your name" />
+											@error('name')
+												<p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+											@enderror
+										</div>
+										<div>
+											<label for="contact_email" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+											<input id="contact_email" name="email" type="email" required value="{{ old('email') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="you@example.com" />
+											@error('email')
+												<p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+											@enderror
+										</div>
+										<div>
+											<label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Phone</label>
+											<input id="contact_phone" name="phone" type="text" value="{{ old('phone') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your phone number" />
+											@error('phone')
+												<p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+											@enderror
+										</div>
+										<div>
+											<label for="contact_message" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Message</label>
+											<textarea id="contact_message" name="message" rows="4" required class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your message here...">{{ old('message') }}</textarea>
+											@error('message')
+												<p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+											@enderror
+										</div>
+										<button id="contact_whatsapp_button" type="button" class="mt-2 inline-flex items-center justify-center w-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow hover:from-green-400 hover:to-emerald-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+											<span class="mr-2">Kirim</span>
+										
+										</button>
+									</form>
+	<script>
+		(function(){
+			const container = document.getElementById('kontak-form');
+			if (!container) return;
+			const waNumber = container.getAttribute('data-wa-number');
+			const form = document.getElementById('contact_form');
+			const button = document.getElementById('contact_whatsapp_button');
+			if (!form || !button) return;
+			button.addEventListener('click', function(){
+				if (!waNumber) {
+					alert('Nomor WhatsApp sekolah belum dikonfigurasi.');
+					return;
+				}
+				const name = form.querySelector('#contact_name')?.value.trim() || '';
+				const email = form.querySelector('#contact_email')?.value.trim() || '';
+				const phone = form.querySelector('#contact_phone')?.value.trim() || '';
+				const message = form.querySelector('#contact_message')?.value.trim() || '';
 
-					@if (!empty($schoolProfile) && (!empty($schoolProfile->contact_address) || !empty($schoolProfile->contact_email) || !empty($schoolProfile->contact_phone) || !empty($schoolProfile->contact_opening_hours)))
-						<footer id="kontak" class="mt-6 md:mt-10 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200">
-							<div class="px-4 md:px-8 lg:px-16 py-6 md:py-8">
-								<h2 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-100">Kontak Kami</h2>
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-									@if (!empty($schoolProfile->contact_address))
-										<div>
-											<div class="font-medium">Alamat Sekolah</div>
-											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->contact_address }}</p>
-										</div>
-									@endif
-									@if (!empty($schoolProfile->contact_email))
-										<div>
-											<div class="font-medium">Email</div>
-											<a href="mailto:{{ $schoolProfile->contact_email }}" class="mt-1 inline-block text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ $schoolProfile->contact_email }}</a>
-										</div>
-									@endif
-									@if (!empty($schoolProfile->contact_phone))
-										<div>
-											<div class="font-medium">No. Telepon Sekolah</div>
-											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ $schoolProfile->contact_phone }}</p>
-										</div>
-									@endif
-									@if (!empty($schoolProfile->contact_opening_hours))
-										<div>
-											<div class="font-medium">Jam Buka Sekolah</div>
-											<p class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->contact_opening_hours }}</p>
-										</div>
-									@endif
+				if (!name || !email || !message) {
+					alert('Nama, email, dan pesan wajib diisi.');
+					return;
+				}
+
+				const lines = [
+					'Halo, saya ' + name,
+					'Email: ' + email
+				];
+				if (phone) {
+					lines.push('Phone: ' + phone);
+				}
+				lines.push('', 'Pesan:', message);
+				const text = encodeURIComponent(lines.join('\n'));
+				const url = 'https://wa.me/' + waNumber + '?text=' + text;
+				window.open(url, '_blank');
+			});
+		})();
+	</script>
+								</div>
+								<div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 md:h-full min-h-[320px]">
+									<iframe
+										class="w-full h-full"
+										src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.1309112275558!2d110.36249037477106!3d-6.9938590930072575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b28fb7fd66b%3A0xa879527c9597e52!2sTK%20ABA%2054%20SEMARANG!5e0!3m2!1sid!2sid!4v1772675953261!5m2!1sid!2sid"
+										style="border:0;"
+										allowfullscreen=""
+										loading="lazy"
+										referrerpolicy="no-referrer-when-downgrade"></iframe>
 								</div>
 							</div>
-						</footer>
-					@endif
+						</div>
+					</div>
+				</div>
+			</main>
+
+			@include('tampilan.footer_navbar', ['slotPosition' => 'footer'])
 						<script>
 							(function(){
 								const header = document.querySelector('header');

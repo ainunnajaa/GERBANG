@@ -13,6 +13,7 @@ use App\Http\Controllers\RiwayatPresensiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+Route::post('/contact', [WelcomeController::class, 'contact'])->name('contact.send');
 
 // Public berita
 Route::get('/berita', [BeritaPublikController::class, 'index'])->name('publik.berita.index');
