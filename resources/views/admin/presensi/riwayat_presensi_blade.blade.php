@@ -66,25 +66,19 @@
 								</tr>
 							</thead>
 							<tbody>
-								@forelse($presensis as $item)
+								@forelse($attendanceRows as $row)
 									<tr class="border-b border-gray-100 dark:border-gray-700">
-										<td class="px-4 py-2">{{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') : '-' }}</td>
-										<td class="px-4 py-2">{{ optional($item->user)->name ?? '-' }}</td>
-										<td class="px-4 py-2">{{ optional($item->user)->kelas ?? '-' }}</td>
-										<td class="px-4 py-2">{{ $item->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
-										<td class="px-4 py-2">{{ $item->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
 										@php
-											$izin = $izinsByUser[$item->user_id] ?? null;
-											$status = '-';
-											if ($item->jam_masuk && isset($settings) && $settings->jam_masuk_end) {
-												$jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
-												$batasHadir = \Carbon\Carbon::parse($settings->jam_masuk_end);
-												$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-											} elseif ($izin) {
-												$status = 'I';
-											}
+											$item = $row['presensi'];
+											$guru = $row['guru'];
+											$izin = $row['izin'];
 										@endphp
-										<td class="px-4 py-2">{{ $status }}</td>
+										<td class="px-4 py-2">{{ $selectedDate ? \Carbon\Carbon::parse($selectedDate)->format('Y-m-d') : '-' }}</td>
+										<td class="px-4 py-2">{{ $guru->name ?? '-' }}</td>
+										<td class="px-4 py-2">{{ $guru->kelas ?? '-' }}</td>
+										<td class="px-4 py-2">{{ optional($item)->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
+										<td class="px-4 py-2">{{ optional($item)->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
+										<td class="px-4 py-2">{{ $row['status'] }}</td>
 										<td class="px-4 py-2">
 											@if($izin)
 												{{ \Carbon\Carbon::parse($izin->created_at)->format('H:i') }}
@@ -96,7 +90,7 @@
 									</tr>
 								@empty
 									<tr>
-										<td colspan="7" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+										<td colspan="8" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
 											Belum ada data presensi untuk filter ini.
 										</td>
 									</tr>
@@ -106,7 +100,7 @@
 					</div>
 
 					<div class="mt-4">
-						{{ $presensis->links() }}
+						{{ $gurus->links() }}
 					</div>
 				</div>
 			</div>

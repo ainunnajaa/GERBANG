@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/admin/riwayat-presensi-semua', [RiwayatPresensiController::class, 'adminRiwayatSemua'])->name('admin.presensi.all');
     Route::get('/admin/riwayat-presensi-semua/export', [RiwayatPresensiController::class, 'adminExportPresensiSemua'])->name('admin.presensi.all.export');
     Route::get('/admin/riwayat-presensi-bulanan', [RiwayatPresensiController::class, 'adminRiwayatBulanan'])->name('admin.presensi.bulanan');
+    Route::post('/admin/riwayat-presensi/status', [RiwayatPresensiController::class, 'adminUpdateStatus'])->name('admin.presensi.status.update');
     Route::get('/admin/riwayat-presensi/guru/{guru}', [RiwayatPresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
     Route::get('/admin/riwayat-presensi/guru/{guru}/download', [RiwayatPresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [RiwayatPresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
@@ -98,7 +99,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
             ->select('id', 'name', 'kelas', 'profile_photo_path', 'email', 'phone')
             ->orderBy('name')
             ->get();
-        return view('publik.daftar_guru', compact('gurus'));
+        return view('guru.daftar_guru', compact('gurus'));
     })->name('guru.daftar-guru');
 });
 

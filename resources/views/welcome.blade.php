@@ -34,9 +34,9 @@
 
 		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
-	<body id="top" class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col font-sans">
-		<header class="px-3 sm:px-4 md:px-8 lg:px-16 py-2 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur sticky top-0 z-30 transition-transform duration-300">
-			<div class="flex items-center gap-2 sm:gap-3 justify-start">
+	<body id="top" class="bg-gradient-to-b from-blue-50 to-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @elseif (!empty($backgrounds) && $backgrounds->count()) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $backgrounds->first()->path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
+		<header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-primary-blue dark:bg-primary-blue backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
+			<div class="flex items-center gap-3 justify-center md:justify-start">
 				@if (!empty($schoolProfile?->school_logo_path))
 					<a href="#top" class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
 						<img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
@@ -79,13 +79,13 @@
 			@if (Route::has('login'))
 				<div class="flex items-center justify-end gap-2 sm:gap-3">
 					<div class="relative">
-						<button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+						<button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-white/20 text-white hover:bg-white/30 text-sm">
 							<span id="welcome_theme_label" class="mr-2">Tema: Sistem</span>
 							<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
 							</svg>
 						</button>
-						<div id="welcome_theme_menu" class="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-20 hidden">
+						<div id="welcome_theme_menu" class="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 z-20 hidden">
 							<button type="button" data-theme-mode="system" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
 								Mengikuti tema sistem
 							</button>
@@ -99,11 +99,11 @@
 					</div>
 					<nav class="flex items-center gap-3">
 						@auth
-							<a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm">Dashboard</a>
+								<a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Dashboard</a>
 						@else
-							<a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 font-medium text-sm">Log in</a>
+								<a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Log in</a>
 							@if (Route::has('register'))
-								<a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm">Register</a>
+									<a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Register</a>
 							@endif
 						@endauth
 					</nav>
@@ -135,14 +135,14 @@
 						@endif
 						<div class="px-4 md:px-8 lg:px-16">
 				@if (!empty($schoolProfile?->school_name))
-					<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 text-center">
-						<h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ $schoolProfile->school_name }}</h1>
+				<div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6 text-center">
+					<h1 class="text-3xl font-bold text-white">{{ $schoolProfile->school_name }}</h1>
 					</div>
 				@endif
 				@if (!empty($schoolProfile?->welcome_message))
-					<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-						<h2 class="text-2xl font-semibold mb-2 text-gray-800 dark:text-gray-100">Selamat Datang</h2>
-						<p class="text-gray-600 dark:text-gray-300 leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
+				<div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
+					<h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
+					<p class="text-blue-50 leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
 							@if (!empty($schoolProfile->principal_name) || !empty($schoolProfile->principal_photo_path))
 								<div class="mt-6 flex flex-col md:flex-row md:items-start gap-6">
 									@if (!empty($schoolProfile->principal_photo_path))
@@ -152,24 +152,24 @@
 											</div>
 										</div>
 									@endif
-								<div class="text-sm text-gray-600 dark:text-gray-300 space-y-1 md:mt-0">
-									<div>
-										<span class="font-medium">Kepala Sekolah:</span>
-										@if (!empty($schoolProfile->principal_name))
-											<span> {{ $schoolProfile->principal_name }}</span>
-										@endif
-									</div>
-									@if (!empty($schoolProfile->principal_greeting))
-										<p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->principal_greeting }}</p>
+							<div class="text-sm text-white space-y-1 md:mt-0">
+								<div>
+									<span class="font-medium">Kepala Sekolah:</span>
+									@if (!empty($schoolProfile->principal_name))
+										<span> {{ $schoolProfile->principal_name }}</span>
+									@endif
+								</div>
+								@if (!empty($schoolProfile->principal_greeting))
+									<p class="text-sm text-white whitespace-pre-line">{{ $schoolProfile->principal_greeting }}</p>
 									@endif
 								</div>
 							</div>
 						@endif
 					</div>
 				@else
-					<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-						<h2 class="text-2xl font-semibold mb-2 text-gray-800 dark:text-gray-100">Selamat Datang</h2>
-						<p class="text-gray-600 dark:text-gray-300">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
+				<div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
+					<h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
+					<p class="text-blue-50">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
 						@isset($guruCount)
 							<div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
 								<span class="font-medium">Jumlah Guru:</span> {{ $guruCount }}
@@ -179,11 +179,17 @@
 				@endif
 
 				@if (!empty($programs) && $programs->count())
-					<div id="program-unggulan" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-						<h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Program Unggulan</h2>
+				<div id="program-unggulan" class="bg-primary-blue rounded-lg shadow-md p-6">
+					<h2 class="text-2xl font-semibold mb-4 text-white">Program Unggulan</h2>
 						<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 							@foreach ($programs as $program)
-								<div class="rounded-md border border-gray-200 dark:border-gray-700 p-4 flex flex-col">
+							@php
+								$colors = [
+									['bg' => 'bg-white', 'border' => 'border-l-gray-300'],
+								];
+								$color = $colors[0];
+							@endphp
+							<div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-200 p-4 flex flex-col shadow-sm">
 									<div class="flex items-center justify-between mb-2">
 										<div class="font-medium text-gray-800 dark:text-gray-100">{{ $program->title }}</div>
 										@if (!empty($program->icon))
@@ -200,19 +206,19 @@
 				@endif
 
 				@if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-					<div id="visi-misi" class="mt-10 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-						<h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Visi dan Misi Sekolah</h2>
+				<div id="visi-misi" class="mt-10 bg-primary-blue rounded-lg shadow-md p-6">
+					<h2 class="text-2xl font-semibold mb-4 text-white">Visi dan Misi Sekolah</h2>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 							@if (!empty($schoolProfile->vision))
-								<div class="rounded-md border border-gray-200 dark:border-gray-700 p-4">
-									<h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Visi</h3>
-									<p class="text-sm text-gray-600 dark:text-gray-300">{{ $schoolProfile->vision }}</p>
+							<div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
+								<h3 class="font-semibold text-gray-800 mb-2">Visi</h3>
+									<p class="text-sm text-gray-600">{{ $schoolProfile->vision }}</p>
 								</div>
 							@endif
 							@if (!empty($schoolProfile->mission))
-								<div class="rounded-md border border-gray-200 dark:border-gray-700 p-4">
-									<h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Misi</h3>
-									<p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
+							<div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
+								<h3 class="font-semibold text-gray-800 mb-2">Misi</h3>
+									<p class="text-sm text-gray-600 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
 								</div>
 							@endif
 						</div>
@@ -221,18 +227,18 @@
 
 				@if (!empty($gurus) && $gurus->count())
 					<div id="guru" class="mt-10">
-						<div class="flex items-center justify-between mb-4">
-							<div>
-								<h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Guru</h2>
-								<p class="text-gray-500 dark:text-gray-400">Tenaga Pengajar Profesional</p>
-							</div>
-							<button class="bg-blue-500 text-white px-5 py-2 rounded shadow hover:bg-blue-600 font-medium text-sm md:text-base">Selengkapnya</button>
+<div class="flex items-center justify-between mb-4 bg-primary-blue rounded-lg shadow-md p-6">
+						<div>
+							<h2 class="text-3xl font-bold text-white">Guru</h2>
+							<p class="text-blue-50">Tenaga Pengajar Profesional</p>
+						</div>
+						<button class="bg-white text-primary-blue px-5 py-2 rounded shadow-md hover:bg-gray-100 font-medium text-sm md:text-base transition">Selengkapnya</button>
 						</div>
 
 						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 							@foreach ($gurus as $guru)
-								<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
-									<div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
+								<div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
+								<div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
 										@if ($guru->profile_photo_path)
 											<img src="{{ asset('storage/' . $guru->profile_photo_path) }}" alt="Foto {{ $guru->name }}" class="w-full h-full object-cover">
 										@else
@@ -243,19 +249,22 @@
 									</div>
 									<h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ $guru->name }}</h4>
 									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Guru</p>
-									<div class="mt-3 w-8 h-1 bg-yellow-400 mx-auto"></div>
+									<div class="mt-3 w-8 h-1 bg-primary-blue mx-auto"></div>
 								</div>
 							@endforeach
 						</div>
 					</div>
 				@endif
+				@isset($guruCount)
+					
+				@endisset
 
 				@if (!empty($contents) && $contents->count())
 					<div id="konten-sosmed" class="mt-10">
 						<h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Konten</h2>
 						<div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
 							@foreach ($contents as $index => $content)
-								<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif">
+								<div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif">
 									@if ($content->platform === 'instagram')
 										<div class="rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900">
 											<blockquote class="instagram-media w-full" data-instgrm-permalink="{{ $content->url }}" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px rgba(0,0,0,0.15); margin: 0; max-width:none; padding:0; width:100%; "></blockquote>
@@ -272,7 +281,7 @@
 						</div>
 						@if ($contents->count() > 3)
 							<div class="mt-4 text-center">
-								<button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full border border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-transparent text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+								<button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-primary-blue text-white text-sm font-semibold hover:bg-primary-blue-dark shadow-md transition">
 									Selengkapnya
 								</button>
 							</div>

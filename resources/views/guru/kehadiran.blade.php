@@ -24,6 +24,8 @@
                             11 => 'November',
                             12 => 'Desember',
                         ];
+                        $monthNumber = is_numeric($month ?? null) ? (int) $month : now()->month;
+                        $monthLabel = $bulanNames[$monthNumber] ?? $monthNumber;
                     @endphp
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <h3 class="text-lg font-semibold">Riwayat Presensi</h3>
@@ -66,14 +68,14 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                         Filter saat ini:
                         @if($startDate && $endDate)
-                            Minggu ke-{{ $week }} bulan {{ $bulanNames[$month] ?? $month }} {{ $year }}
+                            Minggu ke-{{ $week }} bulan {{ $monthLabel }} {{ $year }}
                             ({{ $startDate }} s.d. {{ $endDate }})
                         @else
                             Tidak ada rentang minggu yang dipilih.
                         @endif
                     </p>
 
-                    @if($presensis->isEmpty())
+                    @if($attendanceRows->isEmpty())
                         <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Belum ada data presensi untuk filter ini.</p>
                     @else
                         <div class="overflow-x-auto mt-2">
@@ -89,33 +91,17 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($presensis as $item)
+                                    @foreach($attendanceRows as $row)
                                         <tr class="border-b border-gray-100 dark:border-gray-700">
                                             @php
-                                                $tanggalKey = $item->tanggal instanceof \Carbon\Carbon
-                                                    ? $item->tanggal->toDateString()
-                                                    : \Carbon\Carbon::parse($item->tanggal)->toDateString();
-                                                $izin = $izinsByDate[$tanggalKey] ?? null;
+                                                $item = $row['presensi'];
+                                                $izin = $row['izin'];
                                             @endphp
 
-                                            <td class="px-4 py-2">{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') }}</td>
-                                            <td class="px-4 py-2">{{ $item->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
-                                            <td class="px-4 py-2">{{ $item->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
-                                            <td class="px-4 py-2">
-                                @php
-                                    $status = '-';
-                                    if ($item->jam_masuk && isset($settings) && $settings->jam_masuk_end) {
-                                        // Hadir atau terlambat
-                                        $jamMasuk = \Carbon\Carbon::parse($item->jam_masuk);
-                                        $batasHadir = \Carbon\Carbon::parse($settings->jam_masuk_end);
-                                        $status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-                                    } elseif ($izin) {
-                                        // Izin tanpa presensi
-                                        $status = 'I';
-                                    }
-                                @endphp
-                                {{ $status }}
-                                            </td>
+                                            <td class="px-4 py-2">{{ $row['date']->format('Y-m-d') }}</td>
+                                                <td class="px-4 py-2">{{ optional($item)->jam_masuk ? \Carbon\Carbon::parse($item->jam_masuk)->format('H:i') : '-' }}</td>
+                                                <td class="px-4 py-2">{{ optional($item)->jam_pulang ? \Carbon\Carbon::parse($item->jam_pulang)->format('H:i') : '-' }}</td>
+                                            <td class="px-4 py-2">{{ $row['status'] }}</td>
                                             <td class="px-4 py-2">
                                                 @if($izin)
                                                     {{ \Carbon\Carbon::parse($izin->created_at)->format('H:i') }}
