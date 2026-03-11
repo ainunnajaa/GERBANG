@@ -20,6 +20,8 @@
 			11 => 'November',
 			12 => 'Desember',
 		];
+		$monthNumber = is_numeric($month ?? null) ? (int) $month : now()->month;
+		$monthLabel = $bulanNames[$monthNumber] ?? $monthNumber;
 	@endphp
 
 	<div class="py-1">
@@ -65,8 +67,8 @@
 					</form>
 
 					<div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-						<span>Bulan ditampilkan: <strong>{{ $bulanNames[$month] ?? $month }} {{ $year }}</strong></span>
-						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, - = Kosong/Alpa</span>
+						<span>Bulan ditampilkan: <strong>{{ $monthLabel }} {{ $year }}</strong></span>
+						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, A = Alpha, - = Belum ada data</span>
 					</div>
 
 					<div class="overflow-x-auto mt-4">

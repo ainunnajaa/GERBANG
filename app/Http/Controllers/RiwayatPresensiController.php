@@ -7,42 +7,39 @@ use App\Exports\RekapBulananExport;
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
 use App\Models\PresensiSetting;
+use App\Models\PresensiStatusOverride;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RiwayatPresensiController extends Controller
 {
+	private const AVAILABLE_STATUSES = ['H', 'T', 'I', 'A', '-'];
+
+	protected array $holidayDateCache = [];
+
 	public function guruKehadiran(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
+		$settings = $this->ensureSettings();
 		$user = Auth::user();
-		$query = Presensi::where('user_id', $user->id);
 
 		$month = (int) $request->input('bulan', now()->month);
 		$year = (int) $request->input('tahun', now()->year);
 		$requestedWeek = (int) $request->input('minggu', 0);
 
-		$dateInMonth = Carbon::createFromDate($year, $month, 1);
-		$daysInMonth = $dateInMonth->daysInMonth;
+		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$maxWeek = 1;
-		for ($d = 1; $d <= $daysInMonth; $d++) {
-			$w = Carbon::create($year, $month, $d)->weekOfMonth;
-			if ($w > $maxWeek) {
-				$maxWeek = $w;
+		for ($day = 1; $day <= $daysInMonth; $day++) {
+			$weekOfMonth = Carbon::create($year, $month, $day)->weekOfMonth;
+			if ($weekOfMonth > $maxWeek) {
+				$maxWeek = $weekOfMonth;
 			}
 		}
 
@@ -50,18 +47,14 @@ class RiwayatPresensiController extends Controller
 			$week = min($requestedWeek, $maxWeek);
 		} else {
 			$today = Carbon::today();
-			if ($today->year === $year && $today->month === $month) {
-				$week = $today->weekOfMonth;
-			} else {
-				$week = 1;
-			}
+			$week = ($today->year === $year && $today->month === $month) ? $today->weekOfMonth : 1;
 		}
 
 		$datesInWeek = [];
-		for ($d = 1; $d <= $daysInMonth; $d++) {
-			$dt = Carbon::create($year, $month, $d);
-			if ($dt->weekOfMonth === $week) {
-				$datesInWeek[] = $dt;
+		for ($day = 1; $day <= $daysInMonth; $day++) {
+			$date = Carbon::create($year, $month, $day);
+			if ($date->weekOfMonth === $week) {
+				$datesInWeek[] = $date;
 			}
 		}
 
@@ -70,39 +63,52 @@ class RiwayatPresensiController extends Controller
 		if (! empty($datesInWeek)) {
 			$startDate = $datesInWeek[0]->toDateString();
 			$endDate = end($datesInWeek)->toDateString();
-			$query->whereBetween('tanggal', [$startDate, $endDate]);
 		}
 
-		$presensis = $query
-			->orderByDesc('tanggal')
-			->paginate(20)
-			->appends($request->query());
-
-		// Ambil data izin untuk tanggal-tanggal yang ada di halaman ini (satu izin per hari)
-		$dates = $presensis->pluck('tanggal')
-			->filter()
-			->map(fn ($tanggal) => $tanggal instanceof Carbon ? $tanggal->toDateString() : Carbon::parse($tanggal)->toDateString())
-			->unique()
+		$dateKeys = collect($datesInWeek)
+			->map(fn (Carbon $date) => $date->toDateString())
 			->values();
 
-		$izinRecords = PresensiIzin::where('user_id', $user->id)
-			->whereIn('tanggal', $dates)
-			->get();
+		$presensisByDate = Presensi::where('user_id', $user->id)
+			->when($startDate && $endDate, fn ($query) => $query->whereBetween('tanggal', [$startDate, $endDate]))
+			->get()
+			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
 
-		$izinsByDate = $izinRecords->keyBy(function ($izin) {
-			return $izin->tanggal instanceof Carbon
-				? $izin->tanggal->toDateString()
-				: Carbon::parse($izin->tanggal)->toDateString();
-		});
+		$izinsByDate = PresensiIzin::where('user_id', $user->id)
+			->when($dateKeys->isNotEmpty(), fn ($query) => $query->whereIn('tanggal', $dateKeys))
+			->get()
+			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
 
-		// Bangun daftar tahun berdasarkan data presensi guru ini
+		$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys->all());
+
+		$attendanceRows = collect($datesInWeek)
+			->sortByDesc(fn (Carbon $date) => $date->timestamp)
+			->values()
+			->map(function (Carbon $date) use ($izinsByDate, $manualStatuses, $presensisByDate, $settings, $user) {
+				$dateKey = $date->toDateString();
+				$presensi = $presensisByDate->get($dateKey);
+				$izin = $izinsByDate->get($dateKey);
+
+				return [
+					'date' => $date,
+					'presensi' => $presensi,
+					'izin' => $izin,
+					'status' => $this->resolveAttendanceStatus(
+						$date,
+						$settings,
+						$presensi,
+						$izin,
+						$manualStatuses[$user->id][$dateKey] ?? null,
+					),
+				];
+			});
+
 		$firstTanggal = Presensi::where('user_id', $user->id)->min('tanggal');
 		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$lastYear = now()->year + 1; // beri 1 tahun ke depan untuk antisipasi
-		$years = range($firstYear, $lastYear);
+		$years = range($firstYear, now()->year + 1);
 
 		return view('guru.kehadiran', [
-			'presensis' => $presensis,
+			'attendanceRows' => $attendanceRows,
 			'settings' => $settings,
 			'startDate' => $startDate,
 			'endDate' => $endDate,
@@ -111,88 +117,52 @@ class RiwayatPresensiController extends Controller
 			'week' => $week,
 			'maxWeek' => $maxWeek,
 			'years' => $years,
-			'izinsByDate' => $izinsByDate,
 		]);
 	}
 
 	public function guruKehadiranBulanan(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
+		$settings = $this->ensureSettings();
 		$user = Auth::user();
 		$month = (int) $request->input('bulan', now()->month);
 		$year = (int) $request->input('tahun', now()->year);
 
-		$date = Carbon::createFromDate($year, $month, 1);
-		$daysInMonth = $date->daysInMonth;
+		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
+		$dateKeys = collect($days)
+			->map(fn (int $day) => Carbon::create($year, $month, $day)->toDateString())
+			->all();
 
-		$presensis = Presensi::where('user_id', $user->id)
+		$presensisByDate = Presensi::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
-			->get();
+			->get()
+			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
 
-		$izins = PresensiIzin::where('user_id', $user->id)
+		$izinsByDate = PresensiIzin::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
-			->get();
+			->get()
+			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
 
-		$izinDays = [];
-		foreach ($izins as $izin) {
-			if (! $izin->tanggal) {
-				continue;
-			}
-
-			$day = $izin->tanggal instanceof Carbon
-				? $izin->tanggal->day
-				: Carbon::parse($izin->tanggal)->day;
-
-			$izinDays[$day] = true;
-		}
+		$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
 
 		$matrix = [];
-		// 1. Isi status dari presensi (H/T)
-		foreach ($presensis as $presensi) {
-			if (! $presensi->tanggal) {
-				continue;
-			}
-
-			$day = $presensi->tanggal instanceof Carbon
-				? $presensi->tanggal->day
-				: Carbon::parse($presensi->tanggal)->day;
-
-			$status = '-';
-			if ($presensi->jam_masuk && $settings && $settings->jam_masuk_end) {
-				$jamMasuk = Carbon::parse($presensi->jam_masuk);
-				$batasHadir = Carbon::parse($settings->jam_masuk_end);
-				$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-			}
-
-			$matrix[$day] = $status;
+		foreach ($days as $day) {
+			$date = Carbon::create($year, $month, $day);
+			$dateKey = $date->toDateString();
+			$matrix[$day] = $this->resolveAttendanceStatus(
+				$date,
+				$settings,
+				$presensisByDate->get($dateKey),
+				$izinsByDate->get($dateKey),
+				$manualStatuses[$user->id][$dateKey] ?? null,
+			);
 		}
 
-		// 2. Hari yang hanya punya izin tanpa presensi
-		foreach ($izinDays as $day => $_) {
-			if (! isset($matrix[$day])) {
-				$matrix[$day] = 'I';
-			}
-		}
-
-		// Daftar tahun berdasarkan data presensi guru ini
 		$firstTanggal = Presensi::where('user_id', $user->id)->min('tanggal');
 		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$lastYear = now()->year + 1;
-		$years = range($firstYear, $lastYear);
+		$years = range($firstYear, now()->year + 1);
 
 		return view('guru.kehadiran_bulanan', [
 			'settings' => $settings,
@@ -207,18 +177,9 @@ class RiwayatPresensiController extends Controller
 
 	public function adminRiwayat()
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
+		$settings = $this->ensureSettings();
 		$today = now()->toDateString();
+
 		$todayPresensis = Presensi::with('user')
 			->whereDate('tanggal', $today)
 			->get();
@@ -243,134 +204,99 @@ class RiwayatPresensiController extends Controller
 
 	public function adminRiwayatSemua(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
+		$settings = $this->ensureSettings();
+		$selectedDate = $request->input('tanggal', Carbon::today()->toDateString());
+		$selectedDateCarbon = Carbon::parse($selectedDate);
 
-		$query = Presensi::with('user');
-
-		$selectedDate = $request->input('tanggal');
-
-		// Jika tidak ada filter tanggal dikirim, default ke hari ini
-		if (! $selectedDate) {
-			$selectedDate = Carbon::today()->toDateString();
-		}
-
-		// Filter hanya untuk satu tanggal
-		$query->whereDate('tanggal', $selectedDate);
-
-		$presensis = $query
-			->orderByDesc('tanggal')
-			->orderBy('user_id')
+		$gurus = User::where('role', 'guru')
+			->orderBy('name')
 			->paginate(50)
 			->appends($request->query());
 
-		// Ambil data izin untuk tanggal yang sama (satu izin per guru per hari)
-		$izinRecords = PresensiIzin::whereDate('tanggal', $selectedDate)->get();
-		$izinsByUser = $izinRecords->keyBy('user_id');
+		$userIds = $gurus->getCollection()->pluck('id');
+		$presensisByUser = Presensi::with('user')
+			->whereDate('tanggal', $selectedDate)
+			->whereIn('user_id', $userIds)
+			->orderBy('user_id')
+			->get()
+			->keyBy('user_id');
+
+		$izinsByUser = PresensiIzin::whereDate('tanggal', $selectedDate)
+			->whereIn('user_id', $userIds)
+			->get()
+			->keyBy('user_id');
+
+		$manualStatuses = $this->getManualStatusOverrides($userIds->all(), [$selectedDateCarbon->toDateString()]);
+
+		$attendanceRows = $gurus->getCollection()->map(function ($guru) use ($izinsByUser, $manualStatuses, $presensisByUser, $selectedDateCarbon, $settings) {
+			$presensi = $presensisByUser->get($guru->id);
+			$izin = $izinsByUser->get($guru->id);
+
+			return [
+				'guru' => $guru,
+				'presensi' => $presensi,
+				'izin' => $izin,
+				'status' => $this->resolveAttendanceStatus(
+					$selectedDateCarbon,
+					$settings,
+					$presensi,
+					$izin,
+					$manualStatuses[$guru->id][$selectedDateCarbon->toDateString()] ?? null,
+				),
+			];
+		});
 
 		return view('admin.presensi.riwayat_presensi_blade', [
-			'presensis' => $presensis,
+			'attendanceRows' => $attendanceRows,
+			'gurus' => $gurus,
 			'settings' => $settings,
 			'selectedDate' => $selectedDate,
-			'izinsByUser' => $izinsByUser,
 		]);
 	}
 
 	public function adminRiwayatBulanan(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
+		$settings = $this->ensureSettings();
 		$month = (int) $request->input('bulan', now()->month);
 		$year = (int) $request->input('tahun', now()->year);
 
-		$date = Carbon::createFromDate($year, $month, 1);
-		$daysInMonth = $date->daysInMonth;
+		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
+		$gurus = User::where('role', 'guru')->orderBy('name')->get();
+		$dateKeys = collect($days)
+			->map(fn (int $day) => Carbon::create($year, $month, $day)->toDateString())
+			->all();
 
-		$gurus = User::where('role', 'guru')
-			->orderBy('name')
-			->get();
-
-		$presensis = Presensi::with('user')
-			->whereYear('tanggal', $year)
-			->whereMonth('tanggal', $month)
-			->get();
-
-		// Ambil data izin untuk bulan yang sama
-		$izins = PresensiIzin::whereYear('tanggal', $year)
-			->whereMonth('tanggal', $month)
-			->get();
-
-		// Susun hari-hari yang memiliki izin per guru
-		$izinDays = [];
-		foreach ($izins as $izin) {
-			if (! $izin->tanggal) {
-				continue;
-			}
-
-			$day = $izin->tanggal instanceof Carbon
-				? $izin->tanggal->day
-				: Carbon::parse($izin->tanggal)->day;
-
-			$izinDays[$izin->user_id][$day] = true;
+		$presensisByUserDate = [];
+		foreach (Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $presensi) {
+			$presensisByUserDate[$presensi->user_id][$this->normalizeDateKey($presensi->tanggal)] = $presensi;
 		}
+
+		$izinsByUserDate = [];
+		foreach (PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $izin) {
+			$izinsByUserDate[$izin->user_id][$this->normalizeDateKey($izin->tanggal)] = $izin;
+		}
+
+		$manualStatuses = $this->getManualStatusOverrides($gurus->pluck('id')->all(), $dateKeys);
 
 		$matrix = [];
-		foreach ($presensis as $presensi) {
-			if (! $presensi->tanggal) {
-				continue;
-			}
-
-			$day = $presensi->tanggal instanceof Carbon
-				? $presensi->tanggal->day
-				: Carbon::parse($presensi->tanggal)->day;
-
-			$status = '-';
-			// Status utama dari presensi jika ada
-			if ($presensi->jam_masuk && $settings && $settings->jam_masuk_end) {
-				$jamMasuk = Carbon::parse($presensi->jam_masuk);
-				$batasHadir = Carbon::parse($settings->jam_masuk_end);
-				$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-			} elseif (isset($izinDays[$presensi->user_id][$day])) {
-				$status = 'I';
-			}
-
-			$matrix[$presensi->user_id][$day] = $status;
-		}
-
-		// Pastikan hari yang hanya punya izin (tanpa record presensi) tetap muncul sebagai I
-		foreach ($izinDays as $userId => $daysWithIzin) {
-			foreach ($daysWithIzin as $day => $_) {
-				if (! isset($matrix[$userId][$day])) {
-					$matrix[$userId][$day] = 'I';
-				}
+		foreach ($gurus as $guru) {
+			foreach ($days as $day) {
+				$date = Carbon::create($year, $month, $day);
+				$dateKey = $date->toDateString();
+				$matrix[$guru->id][$day] = $this->resolveAttendanceStatus(
+					$date,
+					$settings,
+					$presensisByUserDate[$guru->id][$dateKey] ?? null,
+					$izinsByUserDate[$guru->id][$dateKey] ?? null,
+					$manualStatuses[$guru->id][$dateKey] ?? null,
+				);
 			}
 		}
 
-		// Daftar tahun untuk admin: dari tahun pertama data presensi hingga tahun depan
 		$firstTanggal = Presensi::min('tanggal');
 		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$lastYear = now()->year + 1;
-		$years = range($firstYear, $lastYear);
+		$years = range($firstYear, now()->year + 1);
 
 		return view('admin.presensi.riwayat_bulanan', [
 			'settings' => $settings,
@@ -383,114 +309,61 @@ class RiwayatPresensiController extends Controller
 		]);
 	}
 
-	public function adminPresensiGuru(User $guru)
+	public function adminUpdateStatus(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
+		$validated = $request->validate([
+			'user_id' => ['required', 'exists:users,id'],
+			'tanggal' => ['required', 'date'],
+			'status' => ['required', 'in:' . implode(',', self::AVAILABLE_STATUSES)],
+		]);
 
-		$presensis = Presensi::where('user_id', $guru->id)
-			->orderByDesc('tanggal')
-			->orderByDesc('created_at')
-			->paginate(30);
+		PresensiStatusOverride::updateOrCreate(
+			[
+				'user_id' => $validated['user_id'],
+				'tanggal' => Carbon::parse($validated['tanggal'])->toDateString(),
+			],
+			[
+				'status' => $validated['status'],
+				'updated_by' => Auth::id(),
+			],
+		);
 
-		// Ambil data izin untuk tanggal-tanggal yang tampil di halaman ini
-		$dates = $presensis->pluck('tanggal')
-			->filter()
-			->map(fn ($tanggal) => $tanggal instanceof Carbon ? $tanggal->toDateString() : Carbon::parse($tanggal)->toDateString())
-			->unique()
-			->values();
+		return back()->with('success', 'Status kehadiran berhasil diperbarui.');
+	}
 
-		$izinRecords = PresensiIzin::where('user_id', $guru->id)
-			->whereIn('tanggal', $dates)
-			->get();
-
-		$izinsByDate = $izinRecords->keyBy(function ($izin) {
-			return $izin->tanggal instanceof Carbon
-				? $izin->tanggal->toDateString()
-				: Carbon::parse($izin->tanggal)->toDateString();
-		});
+	public function adminPresensiGuru(Request $request, User $guru)
+	{
+		$settings = $this->ensureSettings();
+		$attendanceRows = $this->paginateCollection($this->buildAttendanceRowsForUser($guru, $settings), $request, 30);
 
 		return view('admin.presensi.presensi_guru', [
 			'guru' => $guru,
-			'presensis' => $presensis,
+			'attendanceRows' => $attendanceRows,
 			'settings' => $settings,
-			'izinsByDate' => $izinsByDate,
 		]);
 	}
 
 	public function adminDownloadPresensiGuru(User $guru)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
-		$presensis = Presensi::where('user_id', $guru->id)
-			->orderBy('tanggal')
-			->get();
-
-		// Ambil data izin untuk tanggal-tanggal yang tampil di export
-		$dates = $presensis->pluck('tanggal')
-			->filter()
-			->map(fn ($tanggal) => $tanggal instanceof Carbon ? $tanggal->toDateString() : Carbon::parse($tanggal)->toDateString())
-			->unique()
-			->values();
-		$izinRecords = PresensiIzin::where('user_id', $guru->id)
-			->whereIn('tanggal', $dates)
-			->get();
-		$izinsByDate = $izinRecords->keyBy(function ($izin) {
-			return $izin->tanggal instanceof Carbon
-				? $izin->tanggal->toDateString()
-				: Carbon::parse($izin->tanggal)->toDateString();
-		});
+		$settings = $this->ensureSettings();
+		$attendanceRows = $this->buildAttendanceRowsForUser($guru, $settings)->sortBy('date')->values();
 
 		$sanitizedName = preg_replace('/[^A-Za-z0-9_-]+/', '_', $guru->name ?? 'guru');
 		$fileName = 'riwayat_presensi_' . $sanitizedName . '_' . now()->format('Ymd_His') . '.xlsx';
 
-		// Siapkan data baris untuk export Excel
 		$rows = [];
 		$rows[] = ['Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status', 'Jam Izin', 'Keterangan'];
 
-		$batasHadir = null;
-		if ($settings && $settings->jam_masuk_end) {
-			$batasHadir = Carbon::parse($settings->jam_masuk_end);
-		}
-
-		foreach ($presensis as $item) {
-			$status = '-';
-			if ($item->jam_masuk && $batasHadir) {
-				$jamMasuk = Carbon::parse($item->jam_masuk);
-				$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-			}
-			$tanggalKey = $item->tanggal instanceof Carbon
-				? $item->tanggal->toDateString()
-				: Carbon::parse($item->tanggal)->toDateString();
-			$izin = $izinsByDate[$tanggalKey] ?? null;
-			$jamIzin = $izin ? ($izin->created_at ? Carbon::parse($izin->created_at)->format('H:i') : '') : '';
-			$keterangan = $izin ? ($izin->keterangan ?? '') : '';
+		foreach ($attendanceRows as $row) {
+			$item = $row['presensi'];
+			$izin = $row['izin'];
 			$rows[] = [
-				$item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : '',
-				$item->jam_masuk ? Carbon::parse($item->jam_masuk)->format('H:i') : '',
-				$item->jam_pulang ? Carbon::parse($item->jam_pulang)->format('H:i') : '',
-				$status,
-				$jamIzin,
-				$keterangan,
+				$row['date']->format('Y-m-d'),
+				optional($item)->jam_masuk ? Carbon::parse($item->jam_masuk)->format('H:i') : '',
+				optional($item)->jam_pulang ? Carbon::parse($item->jam_pulang)->format('H:i') : '',
+				$row['status'],
+				$izin && $izin->created_at ? Carbon::parse($izin->created_at)->format('H:i') : '',
+				$izin->keterangan ?? '',
 			];
 		}
 
@@ -500,16 +373,13 @@ class RiwayatPresensiController extends Controller
 	public function adminDeletePresensi(Presensi $presensi)
 	{
 		$guruId = $presensi->user_id;
-		$tanggal = $presensi->tanggal; // tipe Carbon karena cast di model
+		$tanggal = $presensi->tanggal;
 
-
-		// Hapus semua data presensi guru tersebut pada tanggal yang sama (berdasarkan DATE saja)
 		Presensi::where('user_id', $guruId)
 			->whereDate('tanggal', $tanggal)
 			->delete();
 
-		// Hapus juga data izin pada tanggal dan user yang sama
-		\App\Models\PresensiIzin::where('user_id', $guruId)
+		PresensiIzin::where('user_id', $guruId)
 			->whereDate('tanggal', $tanggal)
 			->delete();
 
@@ -520,22 +390,10 @@ class RiwayatPresensiController extends Controller
 
 	public function adminExportPresensiSemua(Request $request)
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_masuk_toleransi' => '07:15:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
-
+		$settings = $this->ensureSettings();
 		$startDate = $request->input('tanggal_mulai');
 		$endDate = $request->input('tanggal_selesai');
 
-		// Default filter: jika tidak ada tanggal dikirim, gunakan hari ini
 		if (! $startDate && ! $endDate) {
 			$today = Carbon::today()->toDateString();
 			$startDate = $today;
@@ -547,19 +405,24 @@ class RiwayatPresensiController extends Controller
 		$year = $start->year;
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
+		$gurus = User::where('role', 'guru')->orderBy('name')->get();
+		$dateKeys = collect($days)
+			->map(fn (int $day) => Carbon::create($year, $month, $day)->toDateString())
+			->all();
 
-		$gurus = User::where('role', 'guru')
-			->orderBy('name')
-			->get();
+		$presensisByUserDate = [];
+		foreach (Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $presensi) {
+			$presensisByUserDate[$presensi->user_id][$this->normalizeDateKey($presensi->tanggal)] = $presensi;
+		}
 
-		$presensis = Presensi::with('user')
-			->whereYear('tanggal', $year)
-			->whereMonth('tanggal', $month)
-			->get();
+		$izinsByUserDate = [];
+		foreach (PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $izin) {
+			$izinsByUserDate[$izin->user_id][$this->normalizeDateKey($izin->tanggal)] = $izin;
+		}
 
+		$manualStatuses = $this->getManualStatusOverrides($gurus->pluck('id')->all(), $dateKeys);
 		$fileName = 'rekap_presensi_bulanan_' . $year . '_' . str_pad((string) $month, 2, '0', STR_PAD_LEFT) . '.xlsx';
 
-		// Bangun array baris matriks seperti tampilan rekap bulanan
 		$rows = [];
 		$header = ['Nama Guru', 'Kelas'];
 		foreach ($days as $day) {
@@ -567,75 +430,244 @@ class RiwayatPresensiController extends Controller
 		}
 		$rows[] = $header;
 
-		$batasHadir = null;
-		if ($settings && $settings->jam_masuk_end) {
-			$batasHadir = Carbon::parse($settings->jam_masuk_end);
-		}
-
-		// Ambil data izin untuk bulan yang sama
-		$izins = PresensiIzin::whereYear('tanggal', $year)
-			->whereMonth('tanggal', $month)
-			->get();
-
-		// Susun hari-hari yang memiliki izin per guru
-		$izinDays = [];
-		foreach ($izins as $izin) {
-			if (! $izin->tanggal) {
-				continue;
-			}
-
-			$day = $izin->tanggal instanceof Carbon
-				? $izin->tanggal->day
-				: Carbon::parse($izin->tanggal)->day;
-
-			$izinDays[$izin->user_id][$day] = true;
-		}
-
-		$matrix = [];
-		foreach ($presensis as $item) {
-			if (! $item->tanggal) {
-				continue;
-			}
-
-			$day = $item->tanggal instanceof Carbon
-				? $item->tanggal->day
-				: Carbon::parse($item->tanggal)->day;
-
-			$status = '-';
-			// Jika ada izin untuk guru & hari ini, status selalu I
-			if (isset($izinDays[$item->user_id][$day])) {
-				$status = 'I';
-			} elseif ($item->jam_masuk && $batasHadir) {
-				$jamMasuk = Carbon::parse($item->jam_masuk);
-				$status = $jamMasuk->lte($batasHadir) ? 'H' : 'T';
-			}
-
-			$matrix[$item->user_id][$day] = $status;
-		}
-
-		// Pastikan hari yang hanya punya izin (tanpa record presensi) tetap muncul sebagai I
-		foreach ($izinDays as $userId => $daysWithIzin) {
-			foreach ($daysWithIzin as $day => $_) {
-				if (! isset($matrix[$userId][$day])) {
-					$matrix[$userId][$day] = 'I';
-				}
-			}
-		}
-
 		foreach ($gurus as $guru) {
-			$row = [
-				$guru->name,
-				$guru->kelas,
-			];
-
+			$row = [$guru->name, $guru->kelas];
 			foreach ($days as $day) {
-				$row[] = $matrix[$guru->id][$day] ?? '-';
+				$date = Carbon::create($year, $month, $day);
+				$dateKey = $date->toDateString();
+				$row[] = $this->resolveAttendanceStatus(
+					$date,
+					$settings,
+					$presensisByUserDate[$guru->id][$dateKey] ?? null,
+					$izinsByUserDate[$guru->id][$dateKey] ?? null,
+					$manualStatuses[$guru->id][$dateKey] ?? null,
+				);
 			}
-
 			$rows[] = $row;
 		}
 
 		return Excel::download(new RekapBulananExport($rows), $fileName);
 	}
-}
 
+	private function ensureSettings(): PresensiSetting
+	{
+		$settings = PresensiSetting::first();
+		if ($settings) {
+			return $settings;
+		}
+
+		return PresensiSetting::create([
+			'jam_masuk_start' => '07:00:00',
+			'jam_masuk_end' => '08:00:00',
+			'jam_masuk_toleransi' => '07:15:00',
+			'jam_pulang_start' => '13:00:00',
+			'jam_pulang_end' => '14:30:00',
+			'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+		]);
+	}
+
+	private function resolveAttendanceStatus(Carbon $date, ?PresensiSetting $settings, ?Presensi $presensi, ?PresensiIzin $izin, ?string $manualStatus = null): string
+	{
+		if ($manualStatus !== null && in_array($manualStatus, self::AVAILABLE_STATUSES, true)) {
+			return $manualStatus;
+		}
+
+		if ($presensi && $presensi->jam_masuk && $settings && $settings->jam_masuk_end) {
+			$jamMasuk = Carbon::parse($presensi->jam_masuk);
+			$batasHadir = Carbon::parse($settings->jam_masuk_end);
+
+			return $jamMasuk->lte($batasHadir) ? 'H' : 'T';
+		}
+
+		if ($izin) {
+			return 'I';
+		}
+
+		return $this->shouldMarkAlpha($date) ? 'A' : '-';
+	}
+
+	private function getManualStatusOverrides(array $userIds, array $dateKeys): array
+	{
+		if (empty($userIds) || empty($dateKeys)) {
+			return [];
+		}
+
+		$records = PresensiStatusOverride::whereIn('user_id', $userIds)
+			->whereIn('tanggal', $dateKeys)
+			->get();
+
+		$overrides = [];
+		foreach ($records as $record) {
+			$overrides[$record->user_id][$this->normalizeDateKey($record->tanggal)] = $record->status;
+		}
+
+		return $overrides;
+	}
+
+	private function buildAttendanceRowsForUser(User $guru, ?PresensiSetting $settings)
+	{
+		$presensisByDate = Presensi::where('user_id', $guru->id)
+			->orderByDesc('tanggal')
+			->get()
+			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
+
+		$izinsByDate = PresensiIzin::where('user_id', $guru->id)
+			->get()
+			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
+
+		$manualStatusesByDate = PresensiStatusOverride::where('user_id', $guru->id)
+			->get()
+			->mapWithKeys(fn ($override) => [$this->normalizeDateKey($override->tanggal) => $override->status]);
+
+		$dateKeys = collect()
+			->merge($presensisByDate->keys())
+			->merge($izinsByDate->keys())
+			->merge($manualStatusesByDate->keys())
+			->unique()
+			->sortDesc()
+			->values();
+
+		return $dateKeys->map(function (string $dateKey) use ($izinsByDate, $manualStatusesByDate, $presensisByDate, $settings) {
+			$date = Carbon::parse($dateKey);
+			$presensi = $presensisByDate->get($dateKey);
+			$izin = $izinsByDate->get($dateKey);
+
+			return [
+				'date' => $date,
+				'presensi' => $presensi,
+				'izin' => $izin,
+				'status' => $this->resolveAttendanceStatus(
+					$date,
+					$settings,
+					$presensi,
+					$izin,
+					$manualStatusesByDate->get($dateKey),
+				),
+			];
+		});
+	}
+
+	private function paginateCollection($items, Request $request, int $perPage): LengthAwarePaginator
+	{
+		$collection = collect($items);
+		$currentPage = LengthAwarePaginator::resolveCurrentPage();
+		$currentItems = $collection->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+		return new LengthAwarePaginator(
+			$currentItems,
+			$collection->count(),
+			$perPage,
+			$currentPage,
+			[
+				'path' => $request->url(),
+				'query' => $request->query(),
+			],
+		);
+	}
+
+	private function normalizeDateKey($date): string
+	{
+		return $date instanceof Carbon
+			? $date->toDateString()
+			: Carbon::parse($date)->toDateString();
+	}
+
+	private function shouldMarkAlpha(Carbon $date): bool
+	{
+		return $date->copy()->startOfDay()->lt(Carbon::today())
+			&& ! $date->isSunday()
+			&& ! $this->isHariLiburNasional($date);
+	}
+
+	private function isHariLiburNasional(Carbon $date): bool
+	{
+		$dateKey = $date->toDateString();
+		$holidayDates = $this->getHariLiburNasionalDates($date->year);
+
+		return isset($holidayDates[$dateKey]);
+	}
+
+	private function getHariLiburNasionalDates(int $year): array
+	{
+		if (isset($this->holidayDateCache[$year])) {
+			return $this->holidayDateCache[$year];
+		}
+
+		$cacheKey = "hari_libur_nasional_{$year}";
+		$cached = Cache::get($cacheKey);
+
+		if (! is_array($cached)) {
+			$cached = $this->fetchHariLiburNasional($year);
+		}
+
+		$dateSet = [];
+		foreach ($cached as $holiday) {
+			$startDate = $holiday['start'] ?? null;
+			if (! $startDate) {
+				continue;
+			}
+
+			$dateSet[Carbon::parse($startDate)->toDateString()] = true;
+		}
+
+		return $this->holidayDateCache[$year] = $dateSet;
+	}
+
+	private function fetchHariLiburNasional(int $year): array
+	{
+		$apiKey = config('services.api_co_id.key');
+
+		if (empty($apiKey)) {
+			Log::warning('API_CO_ID_KEY belum diatur di .env');
+			Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+
+			return [];
+		}
+
+		try {
+			/** @var Response $response */
+			$response = Http::withHeaders([
+				'x-api-co-id' => $apiKey,
+			])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/', [
+				'year' => $year,
+			]);
+
+			if (! $response->successful()) {
+				Log::error('API Holiday gagal: HTTP ' . $response->status());
+				Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+
+				return [];
+			}
+
+			$json = $response->json();
+
+			if (! ($json['is_success'] ?? false) || empty($json['data'])) {
+				Log::warning('API Holiday response tidak berhasil atau data kosong untuk tahun ' . $year);
+				Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+
+				return [];
+			}
+
+			$allowedTypes = ['public holiday', 'national holiday', 'joint holiday'];
+			$holidays = collect($json['data'])
+				->filter(function ($item) use ($allowedTypes) {
+					return in_array(strtolower($item['type'] ?? ''), $allowedTypes, true);
+				})
+				->map(function ($item) {
+					return ['start' => $item['date'] ?? null];
+				})
+				->filter(fn ($item) => ! empty($item['start']))
+				->values()
+				->toArray();
+
+			Cache::put("hari_libur_nasional_{$year}", $holidays, now()->addDays(60));
+
+			return $holidays;
+		} catch (\Exception $e) {
+			Log::error('API Holiday error: ' . $e->getMessage());
+			Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+
+			return [];
+		}
+	}
+}
