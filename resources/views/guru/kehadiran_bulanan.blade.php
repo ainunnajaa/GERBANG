@@ -71,6 +71,16 @@
 						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, A = Alpha, - = Belum ada data</span>
 					</div>
 
+					<div class="flex items-center justify-between mt-2 text-xs">
+						<span></span>
+						<a
+							href="{{ route('guru.kehadiran.bulanan.export', ['bulan' => $month, 'tahun' => $year]) }}"
+							class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700"
+						>
+							Export Excel Bulan Ini
+						</a>
+					</div>
+
 					<div class="overflow-x-auto mt-4">
 						<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
 							<thead>

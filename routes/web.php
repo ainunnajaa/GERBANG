@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
     Route::post('/guru/izin', [PresensiController::class, 'guruIzin'])->name('guru.izin');
     Route::get('/guru/kehadiran', [RiwayatPresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
     Route::get('/guru/kehadiran-bulanan', [RiwayatPresensiController::class, 'guruKehadiranBulanan'])->name('guru.kehadiran.bulanan');
+    Route::get('/guru/kehadiran-bulanan/export', [RiwayatPresensiController::class, 'guruExportKehadiranBulanan'])->name('guru.kehadiran.bulanan.export');
     Route::get('/guru/berita', [BeritaController::class, 'index'])->name('guru.berita.index');
     Route::get('/guru/berita/{berita}', [BeritaController::class, 'show'])->name('guru.berita.show');
     Route::get('/guru/daftar-guru', function () {

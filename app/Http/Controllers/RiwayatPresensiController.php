@@ -175,6 +175,59 @@ class RiwayatPresensiController extends Controller
 		]);
 	}
 
+	public function guruExportKehadiranBulanan(Request $request)
+	{
+		$settings = $this->ensureSettings();
+		$user = Auth::user();
+		$month = (int) $request->input('bulan', now()->month);
+		$year = (int) $request->input('tahun', now()->year);
+
+		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+		$days = range(1, $daysInMonth);
+		$dateKeys = collect($days)
+			->map(fn (int $day) => Carbon::create($year, $month, $day)->toDateString())
+			->all();
+
+		$presensisByDate = Presensi::where('user_id', $user->id)
+			->whereYear('tanggal', $year)
+			->whereMonth('tanggal', $month)
+			->get()
+			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
+
+		$izinsByDate = PresensiIzin::where('user_id', $user->id)
+			->whereYear('tanggal', $year)
+			->whereMonth('tanggal', $month)
+			->get()
+			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
+
+		$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
+
+		$rows = [];
+		$header = ['Nama Guru', 'Kelas'];
+		foreach ($days as $day) {
+			$header[] = $day;
+		}
+		$rows[] = $header;
+
+		$row = [$user->name, $user->kelas ?? '-'];
+		foreach ($days as $day) {
+			$date = Carbon::create($year, $month, $day);
+			$dateKey = $date->toDateString();
+			$row[] = $this->resolveAttendanceStatus(
+				$date,
+				$settings,
+				$presensisByDate->get($dateKey),
+				$izinsByDate->get($dateKey),
+				$manualStatuses[$user->id][$dateKey] ?? null,
+			);
+		}
+		$rows[] = $row;
+
+		$fileName = 'rekap_presensi_saya_' . $year . '_' . str_pad((string) $month, 2, '0', STR_PAD_LEFT) . '.xlsx';
+
+		return Excel::download(new RekapBulananExport($rows), $fileName);
+	}
+
 	public function adminRiwayat()
 	{
 		$settings = $this->ensureSettings();
@@ -334,7 +387,7 @@ class RiwayatPresensiController extends Controller
 	public function adminPresensiGuru(Request $request, User $guru)
 	{
 		$settings = $this->ensureSettings();
-		$attendanceRows = $this->paginateCollection($this->buildAttendanceRowsForUser($guru, $settings), $request, 30);
+		$attendanceRows = $this->paginateCollection($this->buildAttendanceRowsForUser($guru, $settings), $request, 10);
 
 		return view('admin.presensi.presensi_guru', [
 			'guru' => $guru,

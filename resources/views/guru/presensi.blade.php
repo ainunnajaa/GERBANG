@@ -5,34 +5,81 @@
         </h2>
     </x-slot>
 
-    <div class="py-1">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg relative">
+    {{-- Tambahan CSS untuk memperbaiki UI bawaan html5-qrcode --}}
+    <style>
+        /* Menghilangkan border bawaan */
+        #qr-reader {
+            border: none !important;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: transparent;
+        }
+        /* Menyesuaikan dropdown pilih kamera */
+        #qr-reader__dashboard_section_csr select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            color: #111827;
+            font-size: 0.875rem;
+        }
+        /* Menyesuaikan tombol Request Camera & Stop Scanning */
+        #qr-reader__dashboard_section_csr button,
+        #qr-reader__dashboard_section_swaplink {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        #qr-reader__dashboard_section_csr button:hover {
+            background-color: #2563eb; /* Tailwind blue-600 */
+        }
+        /* Menyembunyikan link "Scan an Image File" yang biasanya tidak diperlukan di presensi */
+        #qr-reader__dashboard_section_swaplink {
+            display: none !important; 
+        }
+        /* Dark mode support untuk teks yang di-generate library */
+        #qr-reader__dashboard_section_csr span {
+            color: inherit !important;
+        }
+        @media (prefers-color-scheme: dark) {
+            #qr-reader__dashboard_section_csr select {
+                background-color: #374151; /* gray-700 */
+                border-color: #4b5563; /* gray-600 */
+                color: #f3f4f6; /* gray-100 */
+            }
+        }
+    </style>
+
+    <div class="py-4 sm:py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl sm:rounded-lg relative">
+                
                 {{-- Popup besar untuk notifikasi presensi --}}
                 @if (session('success'))
-                    <div
-                        x-data="{ open: true }"
-                        x-show="open"
-                        x-cloak
-                        class="fixed inset-0 z-50 flex items-center justify-center px-4"
-                    >
-                        <div class="absolute inset-0 bg-black/40"></div>
-                        <div class="relative max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-green-500 px-6 py-6 text-center text-gray-900 dark:text-gray-100">
-                            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <div x-data="{ open: true }" x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center px-4">
+                        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+                        <div class="relative max-w-sm w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-green-500 p-6 text-center text-gray-900 dark:text-gray-100 transform transition-all">
+                            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
                                 <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-bold mb-1">Presensi Berhasil</h3>
-                            <p class="text-sm sm:text-base font-medium mb-2">Presensi masuk Anda hari ini sudah tercatat.</p>
-                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                {{ session('success') }}
-                            </p>
-                            <button
-                                type="button"
-                                @click="open = false"
-                                class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                            >
+                            <h3 class="text-xl font-bold mb-2">Presensi Berhasil</h3>
+                            <p class="text-sm font-medium mb-1">Presensi masuk Anda hari ini sudah tercatat.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">{{ session('success') }}</p>
+                            <button type="button" @click="open = false" class="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
                                 Tutup
                             </button>
                         </div>
@@ -40,92 +87,84 @@
                 @endif
 
                 @if (session('error') && !session('success'))
-                    <div
-                        x-data="{ open: true }"
-                        x-show="open"
-                        x-cloak
-                        class="fixed inset-0 z-50 flex items-center justify-center px-4"
-                    >
-                        <div class="absolute inset-0 bg-black/40"></div>
-                        <div class="relative max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-red-500 px-6 py-6 text-center text-gray-900 dark:text-gray-100">
-                            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <div x-data="{ open: true }" x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center px-4">
+                        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+                        <div class="relative max-w-sm w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-red-500 p-6 text-center text-gray-900 dark:text-gray-100 transform transition-all">
+                            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
                                 <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-bold mb-1">Presensi Gagal</h3>
-                            <p class="text-sm sm:text-base font-medium mb-2">Presensi Anda belum dapat dicatat.</p>
-                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                {{ session('error') }}
-                            </p>
-                            <button
-                                type="button"
-                                @click="open = false"
-                                class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                            >
+                            <h3 class="text-xl font-bold mb-2">Presensi Gagal</h3>
+                            <p class="text-sm font-medium mb-1">Presensi Anda belum dapat dicatat.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">{{ session('error') }}</p>
+                            <button type="button" @click="open = false" class="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
                                 Tutup
                             </button>
                         </div>
                     </div>
                 @endif
 
-                <div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
-
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Pilih jenis kehadiran Anda hari ini, lalu lakukan sesuai petunjuk di bawah.
-                    </p>
-
-                    <div class="mt-2 flex items-center justify-between gap-2 text-xs">
-                        <span class="text-gray-600 dark:text-gray-300">Mode saat ini: Presensi QR</span>
-                        <a href="{{ route('guru.izin.form') }}" class="inline-flex items-center px-3 py-1 rounded-md border border-blue-500 text-blue-600 text-xs font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                            Form Izin
-                        </a>
-                    </div>
-
+                <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">
+                    
                     <div id="section-presensi">
-                        <p class="mt-4 text-sm text-gray-700 dark:text-gray-300">
-                            Lakukan presensi dengan memindai kode QR yang ditampilkan oleh admin.
-                            Jam presensi saat ini:
-                        </p>
-                    <ul class="list-disc list-inside text-sm text-gray-700 dark:text-gray-300">
-                        <li>
-                            Masuk:
-                            {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }}
-                            -
-                            {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}
-                            @if($settings->jam_masuk_toleransi)
-                                (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})
-                            @endif
-                        </li>
-                        <li>
-                            Pulang:
-                            {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }}
-                            -
-                            {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}
-                        </li>
-                    </ul>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-6">
+                            <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">Jadwal Presensi Hari Ini:</h4>
+                            <ul class="space-y-1 text-sm text-blue-700 dark:text-blue-200">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                    <span>Masuk: <span class="font-bold">{{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}</span>
+                                    @if($settings->jam_masuk_toleransi)
+                                        <span class="text-xs opacity-80">(Toleransi {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})</span>
+                                    @endif
+                                    </span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    <span>Pulang: <span class="font-bold">{{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</span></span>
+                                </li>
+                            </ul>
+                        </div>
 
-                    <div class="mt-4 space-y-2">
-                        <p class="text-xs text-gray-600 dark:text-gray-400">
-                            Presensi hanya bisa dilakukan ketika Anda berada di lokasi yang ditentukan oleh admin.
-                            Aktifkan izin lokasi (GPS) pada browser/HP Anda.
-                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-100 dark:border-yellow-800">
+                                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <p id="location-info" class="text-xs text-yellow-800 dark:text-yellow-300 leading-relaxed">
+                                    Mengambil data lokasi (GPS)... Pastikan izin lokasi aktif pada browser Anda.
+                                </p>
+                            </div>
 
-                        <div id="location-info" class="text-xs text-gray-600 dark:text-gray-400"></div>
+                            {{-- Container Kamera Scanner --}}
+                            <div class="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                <div id="qr-reader" class="w-full"></div>
+                            </div>
+                        </div>
 
-                        <div id="qr-reader" class="mt-2"></div>
+                        <form id="scan-form" method="POST" action="{{ route('guru.presensi.scan') }}">
+                            @csrf
+                            <input type="hidden" name="qr_code" id="qr_code_input">
+                            <input type="hidden" name="latitude" id="lat_input">
+                            <input type="hidden" name="longitude" id="lng_input">
+                        </form>
+
+                        <div class="mt-4 text-center">
+                            <p id="scan-status" class="text-sm font-medium text-gray-600 dark:text-gray-400 animate-pulse">Arahkan kamera ke kode QR...</p>
+                        </div>
+                        
+                        {{-- Dipindahkan ke sini: Mode & Tombol Izin --}}
+                        <div class="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block uppercase tracking-wider font-semibold">Mode Saat Ini</span>
+                                <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Presensi QR Scanner</span>
+                            </div>
+                            <a href="{{ route('guru.izin.form') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-blue-500 text-blue-600 dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-center">
+                                Isi Form Izin
+                            </a>
+                        </div>
+                        
                     </div>
 
-                    <form id="scan-form" method="POST" action="{{ route('guru.presensi.scan') }}">
-                        @csrf
-                        <input type="hidden" name="qr_code" id="qr_code_input">
-                        <input type="hidden" name="latitude" id="lat_input">
-                        <input type="hidden" name="longitude" id="lng_input">
-                    </form>
-
-                    <p id="scan-status" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
                 </div>
-
             </div>
         </div>
     </div>
@@ -133,8 +172,6 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Halaman ini sekarang hanya untuk Presensi QR.
-
             const qrRegionId = "qr-reader";
             const statusEl = document.getElementById('scan-status');
             const inputEl = document.getElementById('qr_code_input');
@@ -146,24 +183,17 @@
             let currentLat = null;
             let currentLng = null;
 
-            // Info awal agar terlihat bahwa script berjalan
-            if (statusEl) {
-                statusEl.textContent = 'Arahkan kamera ke kode QR untuk presensi.';
-            }
-
-            // Data geofence dari setting admin
             const centerLat = @json($settings->latitude);
             const centerLng = @json($settings->longitude);
             const radiusMeter = @json($settings->radius_meter);
             const hasGeofence = centerLat !== null && centerLng !== null && radiusMeter !== null;
-            let isInsideRadius = !hasGeofence; // jika tidak ada geofence, dianggap boleh
 
             function toRad(value) {
                 return value * Math.PI / 180;
             }
 
             function computeDistanceMeters(lat1, lon1, lat2, lon2) {
-                const earthRadius = 6371000; // meter
+                const earthRadius = 6371000;
                 const dLat = toRad(lat2 - lat1);
                 const dLon = toRad(lon2 - lon1);
                 const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -173,77 +203,95 @@
                 return earthRadius * c;
             }
 
-            // Ambil koordinat perangkat guru
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function (position) {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
                     latInput.value = currentLat;
                     lngInput.value = currentLng;
+                    
                     if (hasGeofence) {
-                        const distance = computeDistanceMeters(currentLat, currentLng, centerLat, centerLng);
-                        const distanceRounded = Math.round(distance);
+                        const distance = Math.round(computeDistanceMeters(currentLat, currentLng, centerLat, centerLng));
                         if (distance <= radiusMeter) {
-                            isInsideRadius = true;
-                            locationInfoEl.textContent = 'Lokasi terdeteksi: ' + currentLat.toFixed(6) + ', ' + currentLng.toFixed(6) +
-                                ' (Dalam radius, jarak ~' + distanceRounded + ' m, batas ' + radiusMeter + ' m)';
+                            locationInfoEl.innerHTML = `Lokasi valid. Jarak Anda <strong>${distance} meter</strong> (Batas: ${radiusMeter}m).`;
+                            locationInfoEl.parentElement.classList.replace('bg-yellow-50', 'bg-green-50');
+                            locationInfoEl.parentElement.classList.replace('border-yellow-100', 'border-green-200');
+                            locationInfoEl.parentElement.querySelector('svg').classList.replace('text-yellow-600', 'text-green-600');
+                            locationInfoEl.classList.replace('text-yellow-800', 'text-green-800');
                         } else {
-                            isInsideRadius = false;
-                            locationInfoEl.textContent = 'Lokasi terdeteksi: ' + currentLat.toFixed(6) + ', ' + currentLng.toFixed(6) +
-                                ' (DI LUAR radius, jarak ~' + distanceRounded + ' m, batas ' + radiusMeter + ' m). Presensi akan diblok.';
+                            locationInfoEl.innerHTML = `<strong>Di luar jangkauan.</strong> Jarak Anda ${distance}m (Batas: ${radiusMeter}m). Presensi akan ditolak.`;
+                            locationInfoEl.parentElement.classList.replace('bg-yellow-50', 'bg-red-50');
+                            locationInfoEl.parentElement.classList.replace('border-yellow-100', 'border-red-200');
+                            locationInfoEl.parentElement.querySelector('svg').classList.replace('text-yellow-600', 'text-red-600');
+                            locationInfoEl.classList.replace('text-yellow-800', 'text-red-800');
                         }
                     } else {
-                        locationInfoEl.textContent = 'Lokasi terdeteksi: ' + currentLat.toFixed(6) + ', ' + currentLng.toFixed(6);
+                        locationInfoEl.innerHTML = 'Lokasi terdeteksi. Silakan lakukan scan.';
                     }
                 }, function (error) {
-                    locationInfoEl.textContent = 'Tidak dapat mengakses lokasi: ' + error.message;
-                });
+                    locationInfoEl.innerHTML = 'Gagal mengakses GPS. Pastikan izin lokasi aktif.';
+                }, { enableHighAccuracy: true });
             } else {
-                locationInfoEl.textContent = 'Perangkat ini tidak mendukung geolokasi.';
+                locationInfoEl.innerHTML = 'Perangkat ini tidak mendukung geolokasi.';
             }
 
             let scanSubmitted = false;
-            function onScanSuccess(decodedText, decodedResult) {
+            function onScanSuccess(decodedText) {
                 if (scanSubmitted) {
-                    statusEl.textContent = 'Presensi sedang diproses, mohon tunggu...';
+                    statusEl.textContent = 'Memproses...';
                     return;
                 }
-                // Jika geofence diaktifkan, pastikan lokasi sudah terdeteksi sebelum kirim
                 if (hasGeofence && (!currentLat || !currentLng)) {
-                    statusEl.textContent = 'Lokasi belum terdeteksi. Tunggu sampai lokasi muncul, lalu coba scan lagi.';
+                    statusEl.textContent = 'Menunggu kordinat GPS...';
                     return;
                 }
 
                 if (hasGeofence) {
-                    // Pastikan nilai terakhir lokasi ikut terkirim ke server
                     latInput.value = currentLat;
                     lngInput.value = currentLng;
                 }
 
-                statusEl.textContent = 'QR berhasil dibaca, mengirim presensi...';
+                statusEl.textContent = 'QR Valid, sedang mengirim...';
+                statusEl.classList.replace('text-gray-600', 'text-green-600');
                 inputEl.value = decodedText;
                 scanSubmitted = true;
+                
+                // Matikan kamera setelah scan berhasil
+                if(html5QrcodeScanner) {
+                    html5QrcodeScanner.clear();
+                }
+                
                 formEl.submit();
             }
 
-            function onScanFailure(error) {
-                // Bisa diabaikan agar tidak terlalu berisik di console
+            // Fungsi agar ukuran kotak scan dinamis mengikuti lebar layar HP
+            let qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                let minEdgePercentage = 0.7; // 70% dari layar untuk kotak scannya
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
             }
 
-            // Pastikan library html5-qrcode berhasil dimuat
+            let html5QrcodeScanner;
             if (window.Html5QrcodeScanner) {
-                const html5QrcodeScanner = new Html5QrcodeScanner(
+                html5QrcodeScanner = new Html5QrcodeScanner(
                     qrRegionId,
-                    { fps: 10, qrbox: 250 },
+                    { 
+                        fps: 10, 
+                        qrbox: qrboxFunction,
+                        aspectRatio: 1.0, // Membuat kamera menjadi kotak (lebih bagus di HP)
+                    },
                     false
                 );
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                html5QrcodeScanner.render(onScanSuccess, function(){});
             } else {
                 if (statusEl) {
-                    statusEl.textContent = 'Scanner QR tidak dapat dimuat. Periksa koneksi internet atau muat ulang halaman.';
+                    statusEl.textContent = 'Scanner QR gagal dimuat. Muat ulang halaman.';
                 }
             }
         });
     </script>
 </x-app-layout>
-
