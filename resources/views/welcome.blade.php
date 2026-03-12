@@ -52,7 +52,7 @@
                 right: 0;
                 bottom: 0;
                 width: 100%;
-                background-color: #0A11D0;
+                background-color: #0C2C55;
                 z-index: 1;
                 clip-path: polygon(35% 0, 100% 0, 100% 100%, 10% 100%);
             }
@@ -190,16 +190,46 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body id="top" class="bg-gradient-to-b from-blue-50 to-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @elseif (!empty($backgrounds) && $backgrounds->count()) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $backgrounds->first()->path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
+    <body id="top" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
         @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
 
             <main class="flex-1">
                 <div>
                         @if (!empty($backgrounds) && $backgrounds->count())
+                            {{-- HERO SECTION: Background + Logo + Text Overlay --}}
                             <div class="relative w-full aspect-[21/7.5] mb-6 rounded-lg overflow-hidden">
+                                {{-- Background Image --}}
                                 @foreach ($backgrounds as $idx => $bg)
                                     <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style="background-image: url('{{ asset('storage/' . $bg->path) }}'); opacity: {{ $loop->first ? '1' : '0' }};" data-slide-index="{{ $idx }}"></div>
                                 @endforeach
+                                
+                                {{-- Dark Overlay --}}
+                                <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
+                                
+                                {{-- Content Overlay: Logo + Text (Centered, Side by Side) --}}
+                                <div class="absolute inset-0 flex items-center justify-center rounded-lg">
+                                    <div class="flex flex-row items-center gap-6 md:gap-8 text-center text-white max-w-3xl px-4">
+                                        {{-- Logo with White Frame --}}
+                                        @if (!empty($schoolProfile?->school_logo_path))
+                                            <div class="flex-shrink-0 bg-white rounded-full overflow-hidden p-3 md:p-4 shadow-lg">
+                                                <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-20 h-20 md:w-28 md:h-28 object-cover">
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- School Name + Tagline (Text Column) --}}
+                                        <div class="flex flex-col items-start text-left flex-1">
+                                            {{-- School Name --}}
+                                            @if (!empty($schoolProfile?->school_name))
+                                                <h1 class="text-3xl md:text-4xl font-black drop-shadow-lg leading-tight">{{ $schoolProfile->school_name }}</h1>
+                                            @endif
+                                            
+                                            {{-- Tagline/Vision --}}
+                                            @if (!empty($schoolProfile?->vision))
+                                                <p class="text-sm md:text-base drop-shadow-lg italic font-semibold mt-2">{{ $schoolProfile->vision }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <script>
                                 (function(){
@@ -218,18 +248,12 @@
                         
                         <div class="px-4 md:px-8 lg:px-16">
                 
-                @if (!empty($schoolProfile?->school_name))
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6 text-center">
-                        <h1 class="text-3xl font-bold text-white">{{ $schoolProfile->school_name }}</h1>
-                    </div>
-                @endif
-                
                 @if (!empty($schoolProfile?->welcome_message))
                 
                     {{-- CARD 1: SELAMAT DATANG --}}
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
-                        <p class="text-blue-50 leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">{{ $schoolProfile->welcome_message }}</p>
                     </div>
 
                     {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (GAYA DIAGONAL) --}}
@@ -277,9 +301,9 @@
 
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
-                        <p class="text-blue-50">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
+                        <p class="text-gray-700 dark:text-gray-300 mt-4">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
                         @isset($guruCount)
                             <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                 <span class="font-medium">Jumlah Guru:</span> {{ $guruCount }}
@@ -289,25 +313,30 @@
                 @endif
 
                 @if (!empty($programs) && $programs->count())
-                <div id="program-unggulan" class="bg-primary-blue rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-white">Program Unggulan</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div id="program-unggulan" class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Program Unggulan</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             @foreach ($programs as $program)
                             @php
-                                $colors = [
-                                    ['bg' => 'bg-white', 'border' => 'border-l-gray-300'],
-                                ];
-                                $color = $colors[0];
+                                // White background with colored lis atas (border-l)
+                                // Odd cards (1st, 3rd, 5th...): blue lis, dark text
+                                // Even cards (2nd, 4th, 6th...): yellow lis, dark text
+                                if ($loop->odd) {
+                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-blue-400', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'];
+                                } else {
+                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-yellow-500', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200'];
+                                }
+                                $color = $colors;
                             @endphp
-                            <div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-200 p-4 flex flex-col shadow-sm">
+                            <div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-300 dark:border-gray-600 p-4 flex flex-col shadow-md">
                                     <div class="flex items-center justify-between mb-2">
-                                        <div class="font-medium text-gray-800 dark:text-gray-100">{{ $program->title }}</div>
+                                        <div class="font-medium {{ $color['text'] }}">{{ $program->title }}</div>
                                         @if (!empty($program->icon))
-                                            <span class="inline-block text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-100">{{ $program->icon }}</span>
+                                            <span class="inline-block text-xs px-2 py-1 rounded {{ $color['icon'] }}">{{ $program->icon }}</span>
                                         @endif
                                     </div>
                                     @if (!empty($program->description))
-                                        <p class="text-sm text-gray-600 dark:text-gray-300">{{ $program->description }}</p>
+                                        <p class="text-sm {{ $color['desc'] }}">{{ $program->description }}</p>
                                     @endif
                                 </div>
                             @endforeach
@@ -316,19 +345,19 @@
                 @endif
 
                 @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-                <div id="visi-misi" class="mt-10 bg-primary-blue rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-white">Visi dan Misi Sekolah</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             @if (!empty($schoolProfile->vision))
-                            <div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
-                                <h3 class="font-semibold text-gray-800 mb-2">Visi</h3>
-                                    <p class="text-sm text-gray-600">{{ $schoolProfile->vision }}</p>
+                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-yellow-500 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
+                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Visi</h3>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $schoolProfile->vision }}</p>
                                 </div>
                             @endif
                             @if (!empty($schoolProfile->mission))
-                            <div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
-                                <h3 class="font-semibold text-gray-800 mb-2">Misi</h3>
-                                    <p class="text-sm text-gray-600 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
+                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-blue-400 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
+                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Misi</h3>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
                                 </div>
                             @endif
                         </div>
@@ -336,16 +365,14 @@
                 @endif
 
                 @if (!empty($gurus) && $gurus->count())
-                    <div id="guru" class="mt-10">
-<div class="flex items-center justify-between mb-4 bg-primary-blue rounded-lg shadow-md p-6">
-                        <div>
-                            <h2 class="text-3xl font-bold text-white">Guru</h2>
-                            <p class="text-blue-50">Tenaga Pengajar Profesional</p>
-                        </div>
-                        <button class="bg-white text-primary-blue px-5 py-2 rounded shadow-md hover:bg-gray-100 font-medium text-sm md:text-base transition">Selengkapnya</button>
+                    <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Guru</h2>
+<div class="flex items-center justify-between">
+                        <p class="text-gray-600 dark:text-gray-400">Tenaga Pengajar Profesional</p>
+                        <button class="bg-[#0C2C55] text-white px-5 py-2 rounded shadow-md hover:shadow-lg hover:bg-[#0A1F3C] font-medium text-sm md:text-base transition">Selengkapnya</button>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-6">
                             @foreach ($gurus as $guru)
                                 <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
                                 <div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
@@ -359,7 +386,7 @@
                                     </div>
                                     <h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ $guru->name }}</h4>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Guru</p>
-                                    <div class="mt-3 w-8 h-1 bg-primary-blue mx-auto"></div>
+                                    <div class="mt-3 w-8 h-1 bg-[#0C2C55] mx-auto"></div>
                                 </div>
                             @endforeach
                         </div>
@@ -367,9 +394,9 @@
                 @endif
 
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mt-10">
-                        <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Konten</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                    <div id="konten-sosmed" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Konten</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mt-6">
                             @foreach ($contents as $index => $content)
                                 <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif">
                                     @if ($content->platform === 'instagram')
@@ -388,7 +415,7 @@
                         </div>
                         @if ($contents->count() > 3)
                             <div class="mt-4 text-center">
-                                <button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-primary-blue text-white text-sm font-semibold hover:bg-primary-blue-dark shadow-md transition">
+                                <button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-[#0C2C55] text-white text-sm font-semibold hover:shadow-lg hover:bg-[#0A1F3C] shadow-md transition">
                                     Selengkapnya
                                 </button>
                             </div>

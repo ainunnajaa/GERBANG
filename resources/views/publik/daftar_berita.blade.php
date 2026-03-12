@@ -100,15 +100,22 @@
                     @endif
                 </div>
 
-                <div class="border-t pt-6 mt-6 lg:mt-0 lg:pt-0 lg:border-t-0 lg:border-l lg:pl-6 border-gray-200 dark:border-gray-700">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Posts</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 pb-3 border-b-4 border-orange-500 inline-block mb-6">Recent Posts</h3>
+                    
                     @if(isset($recentBeritas) && $recentBeritas->isNotEmpty())
-                        <ul class="space-y-3 text-sm">
+                        <ul class="space-y-0">
                             @foreach($recentBeritas as $recent)
-                                <li>
-                                    <a href="{{ route('publik.berita.show', $recent) }}" class="block hover:text-indigo-600 dark:hover:text-indigo-400">
-                                        <p class="font-medium line-clamp-2">{{ $recent->judul }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($recent->tanggal_berita)->format('d M Y') }}</p>
+                                <li class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                                    <a href="{{ route('publik.berita.show', $recent) }}" class="flex items-start gap-3 py-4 hover:text-orange-600 dark:hover:text-orange-400 transition">
+                                        <!-- Orange pointer icon -->
+                                        <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                                        
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{{ $recent->judul }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ \Carbon\Carbon::parse($recent->tanggal_berita)->format('d M Y') }}</p>
+                                        </div>
                                     </a>
                                 </li>
                             @endforeach

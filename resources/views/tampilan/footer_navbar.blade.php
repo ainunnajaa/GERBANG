@@ -3,7 +3,7 @@
 @endphp
 
 @if ($position === 'header' || $position === 'both')
-    <header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-primary-blue dark:bg-primary-blue backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
+    <header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-[#0C2C55] dark:bg-[#0A1F3C] backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
         <div class="flex items-center gap-3 justify-center md:justify-start">
             @if (!empty($schoolProfile?->school_logo_path))
                 <a href="{{ url('/') }}" class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -67,11 +67,11 @@
                 </div>
                 <nav class="flex items-center gap-3">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Dashboard</a>
+                        <a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-md bg-white text-gray-800 hover:bg-gray-100 font-medium text-sm">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Log in</a>
+                        <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md bg-white text-gray-800 hover:bg-gray-100 font-medium text-sm">Log in</a>
                         @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-white text-primary-blue hover:bg-blue-50 font-medium text-sm">Register</a>
+                            <a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-white text-gray-800 hover:bg-gray-100 font-medium text-sm">Register</a>
                         @endif
                     @endauth
                 </nav>

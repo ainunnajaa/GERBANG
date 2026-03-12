@@ -72,7 +72,7 @@
                 <!-- Top Navbar (fixed pada semua ukuran layar) -->
                 <header
                     id="top-navbar"
-                    class="fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-[3.570rem] px-4 sm:px-6 lg:px-8 bg-[#0000F4] dark:bg-[#0000F4] transform translate-y-0 transition-all duration-300 ease-in-out"
+                    class="fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-[3.570rem] px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-[#0C2C55] to-purple-800 dark:from-[#0C2C55] dark:to-purple-900 transform translate-y-0 transition-all duration-300 ease-in-out"
                     x-bind:style="(windowWidth >= 768) ? (sidebarCollapsed ? 'padding-left: 5.5rem;' : 'padding-left: 17rem;') : 'padding-left: 0;'"
                 >
                     <div class="flex items-center gap-2">
