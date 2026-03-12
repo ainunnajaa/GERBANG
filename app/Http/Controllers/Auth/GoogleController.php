@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
@@ -28,6 +30,10 @@ class GoogleController extends Controller
             return redirect()->route('login')->with('status', 'Gagal login dengan Google. Silakan coba lagi.');
         }
 
+        if (! $googleUser->getEmail()) {
+            return redirect()->route('register')->with('status', 'Akun Google yang dipilih tidak memiliki email yang dapat digunakan untuk registrasi.');
+        }
+
         // Cari user berdasarkan google_id atau email
         $user = User::where('google_id', $googleUser->getId())
                     ->orWhere('email', $googleUser->getEmail())
@@ -39,11 +45,25 @@ class GoogleController extends Controller
                 $user->update(['google_id' => $googleUser->getId()]);
             }
 
+            if (! $user->email_verified_at) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
+
             Auth::login($user, remember: true);
             return redirect()->intended(route('dashboard'));
         }
 
-        // Jika user belum terdaftar, redirect ke login dengan pesan
-        return redirect()->route('login')->with('status', 'Akun dengan email ' . $googleUser->getEmail() . ' belum terdaftar di sistem. Silakan hubungi admin.');
+        $user = User::create([
+            'name' => $googleUser->getName() ?: Str::before($googleUser->getEmail(), '@'),
+            'email' => $googleUser->getEmail(),
+            'password' => Hash::make(Str::random(32)),
+            'google_id' => $googleUser->getId(),
+            'email_verified_at' => now(),
+            'role' => 'guru',
+        ]);
+
+        Auth::login($user, remember: true);
+
+        return redirect()->intended(route('dashboard'));
     }
 }

@@ -18,17 +18,17 @@ class DatabaseSeeder extends Seeder
         // Sample users for roles
         User::updateOrCreate(
             ['email' => 'admin@example.com'],
-            ['name' => 'Admin User', 'role' => 'admin', 'password' => bcrypt('password')]
+            ['name' => 'Admin User', 'role' => 'admin', 'password' => bcrypt('password'), 'email_verified_at' => now()]
         );
 
         User::updateOrCreate(
             ['email' => 'guru@example.com'],
-            ['name' => 'Guru User', 'role' => 'guru', 'password' => bcrypt('password')]
+            ['name' => 'Guru User', 'role' => 'guru', 'password' => bcrypt('password'), 'email_verified_at' => now()]
         );
 
         User::updateOrCreate(
             ['email' => 'wali@example.com'],
-            ['name' => 'Wali Murid User', 'role' => 'wali_murid', 'password' => bcrypt('password')]
+            ['name' => 'Wali Murid User', 'role' => 'wali_murid', 'password' => bcrypt('password'), 'email_verified_at' => now()]
         );
 
         // Ensure requested user gets admin role

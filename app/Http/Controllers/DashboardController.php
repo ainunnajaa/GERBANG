@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Berita;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    private const HOLIDAY_CACHE_MONTHS = 2;
+
     public function index(Request $request)
     {
         $role = $request->user()->role ?? 'wali_murid';
@@ -223,7 +226,7 @@ class DashboardController extends Controller
 
     /**
      * Ambil data hari libur nasional Indonesia dari API api.co.id.
-     * Data di-cache selama 60 hari agar sangat hemat limit API.
+     * Data di-cache selama 2 bulan agar sangat hemat limit API.
      */
     protected function getHariLiburNasional(int $year): array
     {
@@ -239,10 +242,13 @@ class DashboardController extends Controller
 
         if (empty($apiKey)) {
             Log::warning('API_CO_ID_KEY belum diatur di .env');
+            Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+
             return [];
         }
 
         try {
+			/** @var Response $response */
             $response = Http::withHeaders([
                 'x-api-co-id' => $apiKey,
             ])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/', [
@@ -251,6 +257,8 @@ class DashboardController extends Controller
 
             if (! $response->successful()) {
                 Log::error('API Holiday gagal: HTTP ' . $response->status());
+                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+
                 return [];
             }
 
@@ -260,8 +268,7 @@ class DashboardController extends Controller
             if (! ($json['is_success'] ?? false) || empty($json['data'])) {
                 Log::warning('API Holiday response tidak berhasil atau data kosong untuk tahun ' . $year);
                 
-                // Simpan memori KOSONG selama 60 hari agar tidak memanggil API terus menerus
-                Cache::put($cacheKey, [], now()->addDays(60)); 
+                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
                 return [];
             }
 
@@ -287,19 +294,18 @@ class DashboardController extends Controller
                 ->values()
                 ->toArray();
 
-            // Jika datanya ADA, simpan di ingatan selama 60 hari
             if (count($holidays) > 0) {
-                Cache::put($cacheKey, $holidays, now()->addDays(60));
-            } 
-            // Jika setelah difilter ternyata KOSONG, tetap simpan ingatan kosong selama 60 hari
-            else {
-                Cache::put($cacheKey, [], now()->addDays(60)); 
+                Cache::put($cacheKey, $holidays, now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+            } else {
+                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
             }
 
             return $holidays;
 
         } catch (\Exception $e) {
             Log::error('API Holiday error: ' . $e->getMessage());
+            Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+
             return [];
         }
     }

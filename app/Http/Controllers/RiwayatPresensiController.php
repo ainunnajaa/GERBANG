@@ -22,6 +22,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class RiwayatPresensiController extends Controller
 {
 	private const AVAILABLE_STATUSES = ['H', 'T', 'I', 'A', '-'];
+	private const HOLIDAY_CACHE_MONTHS = 2;
 
 	protected array $holidayDateCache = [];
 
@@ -668,11 +669,12 @@ class RiwayatPresensiController extends Controller
 
 	private function fetchHariLiburNasional(int $year): array
 	{
+		$cacheKey = "hari_libur_nasional_{$year}";
 		$apiKey = config('services.api_co_id.key');
 
 		if (empty($apiKey)) {
 			Log::warning('API_CO_ID_KEY belum diatur di .env');
-			Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+			Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 			return [];
 		}
@@ -687,7 +689,7 @@ class RiwayatPresensiController extends Controller
 
 			if (! $response->successful()) {
 				Log::error('API Holiday gagal: HTTP ' . $response->status());
-				Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+				Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 				return [];
 			}
@@ -696,7 +698,7 @@ class RiwayatPresensiController extends Controller
 
 			if (! ($json['is_success'] ?? false) || empty($json['data'])) {
 				Log::warning('API Holiday response tidak berhasil atau data kosong untuk tahun ' . $year);
-				Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+				Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 				return [];
 			}
@@ -713,12 +715,12 @@ class RiwayatPresensiController extends Controller
 				->values()
 				->toArray();
 
-			Cache::put("hari_libur_nasional_{$year}", $holidays, now()->addDays(60));
+			Cache::put($cacheKey, $holidays, now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 			return $holidays;
 		} catch (\Exception $e) {
 			Log::error('API Holiday error: ' . $e->getMessage());
-			Cache::put("hari_libur_nasional_{$year}", [], now()->addDays(60));
+			Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 			return [];
 		}

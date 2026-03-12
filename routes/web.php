@@ -34,7 +34,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 // Admin routes
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/kelola-pengguna', [KelolaPenggunaController::class, 'index'])->name('admin.users');
     
         Route::get('/admin/pengguna/create', [KelolaPenggunaController::class, 'create'])->name('admin.users.create');
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
 
 // Guru routes
-Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
+Route::middleware(['auth', 'role:guru'])->group(function () {
     Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
     Route::get('/guru/izin', fn() => view('guru.Izin_guru'))->name('guru.izin.form');
@@ -105,7 +105,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->group(function () {
 });
 
 // Wali Murid routes
-Route::middleware(['auth', 'verified', 'role:wali_murid'])->group(function () {
+Route::middleware(['auth', 'role:wali_murid'])->group(function () {
     Route::get('/wali/daftar', fn() => view('wali_murid.daftar'))->name('wali.daftar');
     Route::get('/wali/aktivitas', fn() => view('wali_murid.aktivitas'))->name('wali.aktivitas');
 });

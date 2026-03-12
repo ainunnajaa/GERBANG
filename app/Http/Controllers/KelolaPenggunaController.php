@@ -47,6 +47,7 @@ class KelolaPenggunaController extends Controller
 			'name' => $validated['name'],
 			'email' => $validated['email'],
 			'password' => Hash::make($validated['password']),
+			'email_verified_at' => now(),
 			'role' => $validated['role'],
 			'employee_number' => $validated['employee_number'] ?? null,
 			'kelas' => $validated['kelas'] ?? null,
@@ -84,6 +85,7 @@ class KelolaPenggunaController extends Controller
 		$data = [
 			'name' => $validated['name'],
 			'email' => $validated['email'],
+			'email_verified_at' => $user->email === $validated['email'] ? $user->email_verified_at : now(),
 			'role' => $validated['role'],
 			'employee_number' => $validated['employee_number'] ?? null,
 			'kelas' => $validated['kelas'] ?? null,
