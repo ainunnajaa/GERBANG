@@ -128,7 +128,7 @@
         </div>
     </main>
 
-    @include('tampilan.footer_navbar', ['slotPosition' => 'footer'])
+    @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
 
     <script>
         (function(){

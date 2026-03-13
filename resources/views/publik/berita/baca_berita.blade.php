@@ -32,7 +32,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body id="top" class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-    @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
+    @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
     <main class="flex-1">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -137,7 +137,7 @@
         </div>
     </main>
 
-    @include('tampilan.footer_navbar', ['slotPosition' => 'footer'])
+    @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
 
     <script>
         (function(){

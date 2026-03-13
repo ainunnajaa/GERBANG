@@ -30,7 +30,7 @@ class BeritaPublikController extends Controller
 
 		$schoolProfile = SchoolProfile::first();
 
-		return view('publik.daftar_berita', [
+		return view('publik.berita.daftar_berita', [
 			'beritas' => $beritas,
 			'recentBeritas' => $recentBeritas,
 			'schoolProfile' => $schoolProfile,
@@ -47,7 +47,7 @@ class BeritaPublikController extends Controller
 			->limit(5)
 			->get();
 
-		return view('publik.baca_berita', [
+		return view('publik.berita.baca_berita', [
 			'berita' => $berita,
 			'schoolProfile' => $schoolProfile,
 			'recentBeritas' => $recentBeritas,
