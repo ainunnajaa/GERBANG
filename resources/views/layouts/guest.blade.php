@@ -17,7 +17,7 @@
     @php
         $schoolProfile = \App\Models\SchoolProfile::first();
     @endphp
-    <body>
+    <body class="font-sans text-gray-900 antialiased" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1));" @endif>
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
             <div class="mb-6">
                 <a href="/" class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-lg hover:shadow-xl transition-shadow overflow-hidden">

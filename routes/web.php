@@ -14,6 +14,8 @@ use App\Http\Controllers\RiwayatPresensiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.visi_misi');
+Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
 Route::post('/contact', [WelcomeController::class, 'contact'])->name('contact.send');
 
 // Public berita

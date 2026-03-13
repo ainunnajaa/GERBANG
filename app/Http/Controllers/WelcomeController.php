@@ -37,6 +37,24 @@ class WelcomeController extends Controller
 		]);
 	}
 
+	public function visiMisi()
+	{
+		$profile = SchoolProfile::first();
+
+		return view('publik.visi_misi.visi_misi', [
+			'schoolProfile' => $profile,
+		]);
+	}
+
+	public function kontak()
+	{
+		$profile = SchoolProfile::first();
+
+		return view('publik.kontak.kontak', [
+			'schoolProfile' => $profile,
+		]);
+	}
+
 	public function contact(Request $request)
 	{
 		$data = $request->validate([

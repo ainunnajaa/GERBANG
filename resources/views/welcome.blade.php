@@ -52,7 +52,7 @@
                 right: 0;
                 bottom: 0;
                 width: 100%;
-                background-color: #0A11D0;
+                background-color: #0C2C55;
                 z-index: 1;
                 clip-path: polygon(35% 0, 100% 0, 100% 100%, 10% 100%);
             }
@@ -190,16 +190,46 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body>
-        @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
+    <body id="top" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
+        @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
             <main class="flex-1">
                 <div>
                         @if (!empty($backgrounds) && $backgrounds->count())
+                            {{-- HERO SECTION: Background + Logo + Text Overlay --}}
                             <div class="relative w-full aspect-[21/7.5] mb-6 rounded-lg overflow-hidden">
+                                {{-- Background Image --}}
                                 @foreach ($backgrounds as $idx => $bg)
                                     <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style="background-image: url('{{ asset('storage/' . $bg->path) }}'); opacity: {{ $loop->first ? '1' : '0' }};" data-slide-index="{{ $idx }}"></div>
                                 @endforeach
+                                
+                                {{-- Dark Overlay --}}
+                                <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
+                                
+                                {{-- Content Overlay: Logo + Text (Centered, Side by Side) --}}
+                                <div class="absolute inset-0 flex items-center justify-center rounded-lg">
+                                    <div class="flex flex-row items-center gap-6 md:gap-8 text-center text-white max-w-3xl px-4">
+                                        {{-- Logo with White Frame --}}
+                                        @if (!empty($schoolProfile?->school_logo_path))
+                                            <div class="flex-shrink-0 bg-white rounded-full overflow-hidden p-3 md:p-4 shadow-lg">
+                                                <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-20 h-20 md:w-28 md:h-28 object-cover">
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- School Name + Tagline (Text Column) --}}
+                                        <div class="flex flex-col items-start text-left flex-1">
+                                            {{-- School Name --}}
+                                            @if (!empty($schoolProfile?->school_name))
+                                                <h1 class="text-3xl md:text-4xl font-black drop-shadow-lg leading-tight">{{ $schoolProfile->school_name }}</h1>
+                                            @endif
+                                            
+                                            {{-- Tagline/Vision --}}
+                                            @if (!empty($schoolProfile?->vision))
+                                                <p class="text-sm md:text-base drop-shadow-lg italic font-semibold mt-2">{{ $schoolProfile->vision }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <script>
                                 (function(){
@@ -218,18 +248,12 @@
                         
                         <div class="px-4 md:px-8 lg:px-16">
                 
-                @if (!empty($schoolProfile?->school_name))
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6 text-center">
-                        <h1 class="text-3xl font-bold text-white">{{ $schoolProfile->school_name }}</h1>
-                    </div>
-                @endif
-                
                 @if (!empty($schoolProfile?->welcome_message))
                 
                     {{-- CARD 1: SELAMAT DATANG --}}
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
-                        <p class="text-blue-50 leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">{{ $schoolProfile->welcome_message }}</p>
                     </div>
 
                     {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (GAYA DIAGONAL) --}}
@@ -277,9 +301,9 @@
 
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="bg-primary-blue rounded-lg shadow-md p-6 mb-6">
-                        <h2 class="text-2xl font-semibold mb-2 text-white">Selamat Datang</h2>
-                        <p class="text-blue-50">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
+                        <p class="text-gray-700 dark:text-gray-300 mt-4">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
                         @isset($guruCount)
                             <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                 <span class="font-medium">Jumlah Guru:</span> {{ $guruCount }}
@@ -289,25 +313,30 @@
                 @endif
 
                 @if (!empty($programs) && $programs->count())
-                <div id="program-unggulan" class="bg-primary-blue rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-white">Program Unggulan</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div id="program-unggulan" class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Program Unggulan</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             @foreach ($programs as $program)
                             @php
-                                $colors = [
-                                    ['bg' => 'bg-white', 'border' => 'border-l-gray-300'],
-                                ];
-                                $color = $colors[0];
+                                // White background with colored lis atas (border-l)
+                                // Odd cards (1st, 3rd, 5th...): blue lis, dark text
+                                // Even cards (2nd, 4th, 6th...): yellow lis, dark text
+                                if ($loop->odd) {
+                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-blue-400', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'];
+                                } else {
+                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-yellow-500', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200'];
+                                }
+                                $color = $colors;
                             @endphp
-                            <div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-200 p-4 flex flex-col shadow-sm">
+                            <div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-300 dark:border-gray-600 p-4 flex flex-col shadow-md">
                                     <div class="flex items-center justify-between mb-2">
-                                        <div class="font-medium text-gray-800 dark:text-gray-100">{{ $program->title }}</div>
+                                        <div class="font-medium {{ $color['text'] }}">{{ $program->title }}</div>
                                         @if (!empty($program->icon))
-                                            <span class="inline-block text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-100">{{ $program->icon }}</span>
+                                            <span class="inline-block text-xs px-2 py-1 rounded {{ $color['icon'] }}">{{ $program->icon }}</span>
                                         @endif
                                     </div>
                                     @if (!empty($program->description))
-                                        <p class="text-sm text-gray-600 dark:text-gray-300">{{ $program->description }}</p>
+                                        <p class="text-sm {{ $color['desc'] }}">{{ $program->description }}</p>
                                     @endif
                                 </div>
                             @endforeach
@@ -315,37 +344,35 @@
                     </div>
                 @endif
 
-                @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-                <div id="visi-misi" class="mt-10 bg-primary-blue rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-white">Visi dan Misi Sekolah</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
+                <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             @if (!empty($schoolProfile->vision))
-                            <div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
-                                <h3 class="font-semibold text-gray-800 mb-2">Visi</h3>
-                                    <p class="text-sm text-gray-600">{{ $schoolProfile->vision }}</p>
+                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-yellow-500 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
+                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Visi</h3>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $schoolProfile->vision }}</p>
                                 </div>
                             @endif
                             @if (!empty($schoolProfile->mission))
-                            <div class="bg-white rounded-md border-l-4 border-l-gray-300 border border-gray-200 p-4 shadow-sm">
-                                <h3 class="font-semibold text-gray-800 mb-2">Misi</h3>
-                                    <p class="text-sm text-gray-600 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
+                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-blue-400 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
+                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Misi</h3>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
                                 </div>
                             @endif
                         </div>
                     </div>
-                @endif
+                @endif --}}
 
                 @if (!empty($gurus) && $gurus->count())
-                    <div id="guru" class="mt-10">
-<div class="flex items-center justify-between mb-4 bg-primary-blue rounded-lg shadow-md p-6">
-                        <div>
-                            <h2 class="text-3xl font-bold text-white">Guru</h2>
-                            <p class="text-blue-50">Tenaga Pengajar Profesional</p>
-                        </div>
-                        <button class="bg-white text-primary-blue px-5 py-2 rounded shadow-md hover:bg-gray-100 font-medium text-sm md:text-base transition">Selengkapnya</button>
+                    <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Guru</h2>
+<div class="flex items-center justify-between">
+                        <p class="text-gray-600 dark:text-gray-400">Tenaga Pengajar Profesional</p>
+                        <button class="bg-[#0C2C55] text-white px-5 py-2 rounded shadow-md hover:shadow-lg hover:bg-[#0A1F3C] font-medium text-sm md:text-base transition">Selengkapnya</button>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-6">
                             @foreach ($gurus as $guru)
                                 <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
                                 <div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
@@ -359,7 +386,7 @@
                                     </div>
                                     <h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ $guru->name }}</h4>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Guru</p>
-                                    <div class="mt-3 w-8 h-1 bg-primary-blue mx-auto"></div>
+                                    <div class="mt-3 w-8 h-1 bg-[#0C2C55] mx-auto"></div>
                                 </div>
                             @endforeach
                         </div>
@@ -367,9 +394,9 @@
                 @endif
 
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mt-10">
-                        <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Konten</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                    <div id="konten-sosmed" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Konten</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mt-6">
                             @foreach ($contents as $index => $content)
                                 <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif">
                                     @if ($content->platform === 'instagram')
@@ -388,7 +415,7 @@
                         </div>
                         @if ($contents->count() > 3)
                             <div class="mt-4 text-center">
-                                <button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-primary-blue text-white text-sm font-semibold hover:bg-primary-blue-dark shadow-md transition">
+                                <button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-[#0C2C55] text-white text-sm font-semibold hover:shadow-lg hover:bg-[#0A1F3C] shadow-md transition">
                                     Selengkapnya
                                 </button>
                             </div>
@@ -419,113 +446,11 @@
                     </div>
                 @endif
 
-                        @php
-                            $waNumber = '';
-                            if (!empty($schoolProfile?->contact_phone)) {
-                                $waNumber = preg_replace('/[^0-9]/', '', $schoolProfile->contact_phone);
-                            }
-                        @endphp
-                        <div class="mt-10" id="kontak-form" data-wa-number="{{ $waNumber }}">
-                            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">Contact Me</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                                    @if (session('success'))
-                                        <div class="mb-4 rounded-md bg-green-50 text-green-700 border border-green-200 px-4 py-2 text-sm">
-                                            {{ session('success') }}
-                                        </div>
-                                    @endif
-                                    @if (session('error'))
-                                        <div class="mb-4 rounded-md bg-red-50 text-red-700 border border-red-200 px-4 py-2 text-sm">
-                                            {{ session('error') }}
-                                        </div>
-                                    @endif
-                                        <form id="contact_form" class="space-y-4" onsubmit="return false;">
-                                        <div>
-                                            <label for="contact_name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
-                                            <input id="contact_name" name="name" type="text" required value="{{ old('name') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your name" />
-                                            @error('name')
-                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label for="contact_email" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
-                                            <input id="contact_email" name="email" type="email" required value="{{ old('email') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="you@example.com" />
-                                            @error('email')
-                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Phone</label>
-                                            <input id="contact_phone" name="phone" type="text" value="{{ old('phone') }}" class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your phone number" />
-                                            @error('phone')
-                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label for="contact_message" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Message</label>
-                                            <textarea id="contact_message" name="message" rows="4" required class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Your message here...">{{ old('message') }}</textarea>
-                                            @error('message')
-                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <button id="contact_whatsapp_button" type="button" class="mt-2 inline-flex items-center justify-center w-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow hover:from-green-400 hover:to-emerald-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            <span class="mr-2">Kirim</span>
-                                        </button>
-                                    </form>
-    <script>
-        (function(){
-            const container = document.getElementById('kontak-form');
-            if (!container) return;
-            const waNumber = container.getAttribute('data-wa-number');
-            const form = document.getElementById('contact_form');
-            const button = document.getElementById('contact_whatsapp_button');
-            if (!form || !button) return;
-            button.addEventListener('click', function(){
-                if (!waNumber) {
-                    alert('Nomor WhatsApp sekolah belum dikonfigurasi.');
-                    return;
-                }
-                const name = form.querySelector('#contact_name')?.value.trim() || '';
-                const email = form.querySelector('#contact_email')?.value.trim() || '';
-                const phone = form.querySelector('#contact_phone')?.value.trim() || '';
-                const message = form.querySelector('#contact_message')?.value.trim() || '';
-
-                if (!name || !email || !message) {
-                    alert('Nama, email, dan pesan wajib diisi.');
-                    return;
-                }
-
-                const lines = [
-                    'Halo, saya ' + name,
-                    'Email: ' + email
-                ];
-                if (phone) {
-                    lines.push('Phone: ' + phone);
-                }
-                lines.push('', 'Pesan:', message);
-                const text = encodeURIComponent(lines.join('\n'));
-                const url = 'https://wa.me/' + waNumber + '?text=' + text;
-                window.open(url, '_blank');
-            });
-        })();
-    </script>
-                                </div>
-                                <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 md:h-full min-h-[320px]">
-                                    <iframe
-                                        class="w-full h-full"
-                                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.1309112275558!2d110.36249037477106!3d-6.9938590930072575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b28fb7fd66b%3A0xa879527c9597e52!2sTK%20ABA%2054%20SEMARANG!5e0!3m2!1sid!2sid!4v1772675953261!5m2!1sid!2sid"
-                                        style="border:0;"
-                                        allowfullscreen=""
-                                        loading="lazy"
-                                        referrerpolicy="no-referrer-when-downgrade"></iframe>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>
 
-            @include('tampilan.footer_navbar', ['slotPosition' => 'footer'])
+            @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
                         <script>
                             (function(){
                                 const header = document.querySelector('header');
