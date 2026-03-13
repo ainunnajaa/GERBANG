@@ -3,8 +3,8 @@
 @endphp
 
 @if ($position === 'header' || $position === 'both')
-    <header class="px-4 md:px-8 lg:px-16 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-primary-blue dark:bg-primary-blue backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
-        <div class="flex items-center gap-3 justify-center md:justify-start">
+    <header class="px-4 md:px-8 lg:px-16 py-2 flex items-center justify-between gap-2 bg-[#d0d0de] dark:bg-[#d0d0de] backdrop-blur sticky top-0 z-30 transition-transform duration-300 shadow-md">
+        <div class="flex items-center gap-3">
             @if (!empty($schoolProfile?->school_logo_path))
                 <a href="{{ url('/') }}" class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
@@ -49,7 +49,7 @@
         @if (Route::has('login'))
             <div class="flex items-center gap-2 sm:gap-3">
                 <div class="relative">
-                    <button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white/20 text-white hover:bg-white/30 text-sm font-medium">
+                    <button id="welcome_theme_button" type="button" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white/70 text-gray-700 hover:bg-white text-sm font-medium">
                         <span id="welcome_theme_label" class="mr-2 hidden sm:inline-block">Tema: Sistem</span>
                         <span id="welcome_theme_icon" class="sm:hidden">
                             {{-- Ikon palet warna untuk mobile agar tidak terlalu padat --}}
