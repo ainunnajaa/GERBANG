@@ -31,7 +31,7 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1)); color-scheme: light;" data-theme="light" @endif>
+<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" style="background-color: #ffffff; color-scheme: light;" data-theme="light">
     @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
 
 	<main class="flex-1">
@@ -101,15 +101,14 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 pb-3 border-b-4 border-orange-500 inline-block mb-6">Recent Posts</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 pb-3 border-b-4 border-yellow-400 inline-block mb-6">Recent Posts</h3>
                     
                     @if(isset($recentBeritas) && $recentBeritas->isNotEmpty())
                         <ul class="space-y-0">
                             @foreach($recentBeritas as $recent)
                                 <li class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                                    <a href="{{ route('publik.berita.show', $recent) }}" class="flex items-start gap-3 py-4 hover:text-orange-600 dark:hover:text-orange-400 transition">
-                                        <!-- Orange pointer icon -->
-                                        <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <a href="{{ route('publik.berita.show', $recent) }}" class="flex items-start gap-3 py-4 hover:text-[#0C2C55] dark:hover:text-blue-300 transition">
+                                        <div class="w-2 h-2 bg-yellow-400 dark:bg-yellow-300 rounded-full mt-2 flex-shrink-0"></div>
                                         
                                         <!-- Content -->
                                         <div class="flex-1 min-w-0">

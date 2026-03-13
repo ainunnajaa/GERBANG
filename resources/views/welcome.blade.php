@@ -251,7 +251,7 @@
                 @if (!empty($schoolProfile?->welcome_message))
                 
                     {{-- CARD 1: SELAMAT DATANG --}}
-                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
                         <p class="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">{{ $schoolProfile->welcome_message }}</p>
                     </div>
@@ -301,7 +301,7 @@
 
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
                         <p class="text-gray-700 dark:text-gray-300 mt-4">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
                         @isset($guruCount)
@@ -313,7 +313,7 @@
                 @endif
 
                 @if (!empty($programs) && $programs->count())
-                <div id="program-unggulan" class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                <div id="program-unggulan" class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Program Unggulan</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             @foreach ($programs as $program)
@@ -345,7 +345,7 @@
                 @endif
 
                 @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-                <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             @if (!empty($schoolProfile->vision))
@@ -365,7 +365,7 @@
                 @endif
 
                 @if (!empty($gurus) && $gurus->count())
-                    <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Guru</h2>
 <div class="flex items-center justify-between">
                         <p class="text-gray-600 dark:text-gray-400">Tenaga Pengajar Profesional</p>
@@ -394,7 +394,7 @@
                 @endif
 
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-yellow-400/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-yellow-900/20">
+                    <div id="konten-sosmed" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Konten</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mt-6">
                             @foreach ($contents as $index => $content)
