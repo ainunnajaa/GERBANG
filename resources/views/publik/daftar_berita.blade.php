@@ -31,7 +31,7 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" style="background-color: #ffffff; color-scheme: light;" data-theme="light">
+<body id="top" class="min-h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
 
 	<main class="flex-1">
@@ -133,8 +133,8 @@
     <script>
         (function(){
             const themeButton = document.getElementById('welcome_theme_button');
-            const themeMenu = document.getElementById('welcome_theme_menu');
-            const themeLabel = document.getElementById('welcome_theme_label');
+            const sunIcon = document.getElementById('welcome_theme_icon_sun');
+            const moonIcon = document.getElementById('welcome_theme_icon_moon');
             function getInitialTheme() {
                 return localStorage.getItem('theme') || 'system';
             }
@@ -143,54 +143,31 @@
                 if (mode === 'dark') return true;
                 return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
-            function updateThemeLabel(mode) {
-                if (!themeLabel) return;
-                if (mode === 'light') {
-                    themeLabel.textContent = 'Tema: Terang';
-                } else if (mode === 'dark') {
-                    themeLabel.textContent = 'Tema: Gelap';
-                } else {
-                    themeLabel.textContent = 'Tema: Sistem';
+            function updateThemeIcons(isDark) {
+                if (sunIcon) {
+                    sunIcon.classList.toggle('hidden', isDark);
+                }
+                if (moonIcon) {
+                    moonIcon.classList.toggle('hidden', !isDark);
                 }
             }
             function applyTheme(mode, persist = true) {
                 if (persist) {
-                    localStorage.setItem('theme', mode);
+                    if (mode === 'system') {
+                        localStorage.removeItem('theme');
+                    } else {
+                        localStorage.setItem('theme', mode);
+                    }
                 }
                 const dark = isDarkFromMode(mode);
                 document.documentElement.classList.toggle('dark', dark);
-                updateThemeLabel(mode);
+                updateThemeIcons(dark);
             }
-            if (themeButton && themeMenu) {
+            if (themeButton) {
                 applyTheme(getInitialTheme(), false);
-                let menuOpen = false;
-                function closeMenu() {
-                    if (!themeMenu) return;
-                    themeMenu.classList.add('hidden');
-                    menuOpen = false;
-                }
-                themeButton.addEventListener('click', function(e){
-                    e.stopPropagation();
-                    if (menuOpen) {
-                        closeMenu();
-                    } else {
-                        themeMenu.classList.remove('hidden');
-                        menuOpen = true;
-                    }
-                });
-                const options = themeMenu.querySelectorAll('[data-theme-mode]');
-                options.forEach(function(btn){
-                    btn.addEventListener('click', function(e){
-                        e.stopPropagation();
-                        const mode = this.getAttribute('data-theme-mode');
-                        if (!mode) return;
-                        applyTheme(mode, true);
-                        closeMenu();
-                    });
-                });
-                document.addEventListener('click', function(){
-                    if (!menuOpen) return;
-                    closeMenu();
+                themeButton.addEventListener('click', function(){
+                    const currentlyDark = document.documentElement.classList.contains('dark');
+                    applyTheme(currentlyDark ? 'light' : 'dark', true);
                 });
                 const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
                 if (media && media.addEventListener) {
