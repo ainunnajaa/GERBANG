@@ -202,6 +202,19 @@
                                 @foreach ($backgrounds as $idx => $bg)
                                     <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style="background-image: url('{{ asset('storage/' . $bg->path) }}'); opacity: {{ $loop->first ? '1' : '0' }};" data-slide-index="{{ $idx }}"></div>
                                 @endforeach
+
+                                @if ($backgrounds->count() > 1)
+                                    <button type="button" id="slide_prev" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 text-white hover:bg-black/50 transition" aria-label="Slide sebelumnya">
+                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" id="slide_next" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 text-white hover:bg-black/50 transition" aria-label="Slide berikutnya">
+                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                @endif
                                 
                                 {{-- Dark Overlay --}}
                                 <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
@@ -235,13 +248,45 @@
                                 (function(){
                                     const slides = document.querySelectorAll('[data-slide-index]');
                                     let current = 0;
-                                    if (slides.length > 1) {
-                                        setInterval(() => {
-                                            slides[current].style.opacity = '0';
-                                            current = (current + 1) % slides.length;
-                                            slides[current].style.opacity = '1';
+
+                                    if (slides.length <= 1) {
+                                        return;
+                                    }
+
+                                    const prevButton = document.getElementById('slide_prev');
+                                    const nextButton = document.getElementById('slide_next');
+                                    let autoSlideTimer = null;
+
+                                    function showSlide(nextIndex) {
+                                        slides[current].style.opacity = '0';
+                                        current = (nextIndex + slides.length) % slides.length;
+                                        slides[current].style.opacity = '1';
+                                    }
+
+                                    function restartAutoSlide() {
+                                        if (autoSlideTimer) {
+                                            clearInterval(autoSlideTimer);
+                                        }
+                                        autoSlideTimer = setInterval(function(){
+                                            showSlide(current + 1);
                                         }, 4000);
                                     }
+
+                                    if (prevButton) {
+                                        prevButton.addEventListener('click', function(){
+                                            showSlide(current - 1);
+                                            restartAutoSlide();
+                                        });
+                                    }
+
+                                    if (nextButton) {
+                                        nextButton.addEventListener('click', function(){
+                                            showSlide(current + 1);
+                                            restartAutoSlide();
+                                        });
+                                    }
+
+                                    restartAutoSlide();
                                 })();
                             </script>
                         @endif
@@ -601,8 +646,8 @@
                                 });
                                 // Theme toggle for welcome navbar
                                 const themeButton = document.getElementById('welcome_theme_button');
-                                const themeMenu = document.getElementById('welcome_theme_menu');
-                                const themeLabel = document.getElementById('welcome_theme_label');
+                                const sunIcon = document.getElementById('welcome_theme_icon_sun');
+                                const moonIcon = document.getElementById('welcome_theme_icon_moon');
                                 function getInitialTheme() {
                                     return localStorage.getItem('theme') || 'system';
                                 }
@@ -611,59 +656,33 @@
                                     if (mode === 'dark') return true;
                                     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                                 }
-                                function updateThemeLabel(mode) {
-                                    if (!themeLabel) return;
-                                    if (mode === 'light') {
-                                        themeLabel.textContent = 'Tema: Terang';
-                                    } else if (mode === 'dark') {
-                                        themeLabel.textContent = 'Tema: Gelap';
-                                    } else {
-                                        themeLabel.textContent = 'Tema: Sistem';
+                                function updateThemeIcons(isDark) {
+                                    if (sunIcon) {
+                                        sunIcon.classList.toggle('hidden', isDark);
+                                    }
+                                    if (moonIcon) {
+                                        moonIcon.classList.toggle('hidden', !isDark);
                                     }
                                 }
                                 function applyTheme(mode, persist = true) {
                                     if (persist) {
-                                        localStorage.setItem('theme', mode);
+                                        if (mode === 'system') {
+                                            localStorage.removeItem('theme');
+                                        } else {
+                                            localStorage.setItem('theme', mode);
+                                        }
                                     }
                                     const dark = isDarkFromMode(mode);
                                     document.documentElement.classList.toggle('dark', dark);
-                                    updateThemeLabel(mode);
+                                    updateThemeIcons(dark);
                                 }
-                                if (themeButton && themeMenu) {
-                                    // init label and theme from saved value
+                                if (themeButton) {
                                     applyTheme(getInitialTheme(), false);
-                                    let menuOpen = false;
-                                    function closeMenu() {
-                                        if (!themeMenu) return;
-                                        themeMenu.classList.add('hidden');
-                                        menuOpen = false;
-                                    }
-                                    themeButton.addEventListener('click', function(e){
-                                        e.stopPropagation();
-                                        if (!themeMenu) return;
-                                        if (menuOpen) {
-                                            closeMenu();
-                                        } else {
-                                            themeMenu.classList.remove('hidden');
-                                            menuOpen = true;
-                                        }
+                                    themeButton.addEventListener('click', function(){
+                                        const currentlyDark = document.documentElement.classList.contains('dark');
+                                        applyTheme(currentlyDark ? 'light' : 'dark', true);
                                     });
-                                    const options = themeMenu.querySelectorAll('[data-theme-mode]');
-                                    options.forEach(function(btn){
-                                        btn.addEventListener('click', function(e){
-                                            e.stopPropagation();
-                                            const mode = this.getAttribute('data-theme-mode');
-                                            if (!mode) return;
-                                            applyTheme(mode, true);
-                                            closeMenu();
-                                        });
-                                    });
-                                    // close on click outside
-                                    document.addEventListener('click', function(){
-                                        if (!menuOpen) return;
-                                        closeMenu();
-                                    });
-                                    // update when system theme changes and mode is system
+
                                     const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
                                     if (media && media.addEventListener) {
                                         media.addEventListener('change', function(){
