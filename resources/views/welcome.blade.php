@@ -190,7 +190,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body id="top" class="bg-gradient-to-b from-blue-50 to-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @elseif (!empty($backgrounds) && $backgrounds->count()) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $backgrounds->first()->path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
+    <body>
         @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
 
             <main class="flex-1">

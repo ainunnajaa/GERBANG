@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
+use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
+use App\Models\PresensiStatusOverride;
 use App\Models\User;
 use App\Models\Berita;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Log;
 class DashboardController extends Controller
 {
     private const HOLIDAY_CACHE_MONTHS = 2;
+    private const AVAILABLE_STATUSES = ['H', 'T', 'I', 'A', '-'];
+
+    protected array $holidayDateSetCache = [];
 
     public function index(Request $request)
     {
@@ -26,7 +30,11 @@ class DashboardController extends Controller
         return match ($role) {
             'admin' => view('dashboard.admin', [
                 'jumlahGuru' => User::where('role', 'guru')->count(),
+                'jumlahWaliMurid' => User::where('role', 'wali_murid')->count(),
                 'jumlahBerita' => Berita::count(),
+                'jumlahPeriode' => PresensiPeriod::count(),
+                'activePeriod' => PresensiPeriod::query()->active()->orderByDesc('start_date')->first(),
+                'periodTypeOptions' => PresensiPeriod::TYPE_OPTIONS,
             ]),
             'guru' => $this->guruDashboard($request),
             default => view('dashboard.wali_murid'),
@@ -37,6 +45,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $today = Carbon::today();
+        $activePeriod = PresensiPeriod::query()->active()->orderByDesc('start_date')->first();
 
         $settings = PresensiSetting::first();
         if (! $settings) {
@@ -49,132 +58,118 @@ class DashboardController extends Controller
             ]);
         }
 
-        $presensis = Presensi::where('user_id', $user->id)
-            ->whereDate('tanggal', '<=', $today)
-            ->get();
-
-        $tol = null;
-        if ($settings) {
-            $tol = $settings->jam_masuk_toleransi
-                ? Carbon::parse($settings->jam_masuk_toleransi)
-                : ($settings->jam_masuk_end ? Carbon::parse($settings->jam_masuk_end) : null);
-        }
-
-        // Hitung jumlah hadir: tanggal unik dengan jam masuk < toleransi
-        $jumlahHadir = $presensis
-            ->filter(function ($presensi) use ($tol) {
-                if (! $presensi->jam_masuk || ! $tol) return false;
-                $jamMasuk = Carbon::parse($presensi->jam_masuk);
-                return $jamMasuk->lt($tol);
-            })
-            ->pluck('tanggal')
-            ->unique()
-            ->count();
-
-        // Hitung jumlah terlambat: tanggal unik dengan jam masuk >= toleransi
-        $jumlahTerlambat = $presensis
-            ->filter(function ($presensi) use ($tol) {
-                if (! $presensi->jam_masuk || ! $tol) return false;
-                $jamMasuk = Carbon::parse($presensi->jam_masuk);
-                return $jamMasuk->gte($tol);
-            })
-            ->pluck('tanggal')
-            ->unique()
-            ->count();
-
-        // Hitung jumlah izin berdasarkan tabel presensi_izins
-        $jumlahIzin = PresensiIzin::where('user_id', $user->id)
-            ->whereDate('tanggal', '<=', $today)
-            ->count();
-
+        $jumlahHadir = 0;
+        $jumlahTerlambat = 0;
+        $jumlahIzin = 0;
         $jumlahTidakHadir = 0;
         $bulanOptions = [];
-        $years = [];
-        $selectedMonth = $request->query('bulan');
-        $selectedYear = $request->query('tahun');
+        $selectedMonthKey = null;
         $selectedMonthLabel = null;
         $weeklyLabels = [];
         $weeklyValues = [];
 
-        if ($presensis->isNotEmpty()) {
-            // Daftar bulan (1-12) dan tahun dinamis berdasarkan data presensi
-            $bulanOptions = [
-                1 => 'Januari',
-                2 => 'Februari',
-                3 => 'Maret',
-                4 => 'April',
-                5 => 'Mei',
-                6 => 'Juni',
-                7 => 'Juli',
-                8 => 'Agustus',
-                9 => 'September',
-                10 => 'Oktober',
-                11 => 'November',
-                12 => 'Desember',
-            ];
+        if ($activePeriod) {
+            $periodStart = Carbon::parse($activePeriod->start_date)->startOfDay();
+            $periodEnd = Carbon::parse($activePeriod->end_date)->endOfDay();
+            $effectiveEnd = $today->lte($periodEnd) ? $today->copy()->endOfDay() : $periodEnd->copy();
 
-            $firstDate = Carbon::parse($presensis->min('tanggal'));
-            $firstYear = $firstDate->year;
-            $lastYear = $today->year + 1;
-            $years = range($firstYear, $lastYear);
+            $bulanOptions = $this->getMonthOptionsForPeriod($activePeriod);
+            $selectedMonthKey = $this->resolveSelectedMonthKey($request->query('month_key'), $activePeriod, $today);
+            $selectedMonthLabel = $bulanOptions[$selectedMonthKey] ?? null;
 
-            if (! $selectedMonth) {
-                $selectedMonth = $today->month;
-            }
-            if (! $selectedYear) {
-                $selectedYear = $today->year;
-            }
+            if ($effectiveEnd->gte($periodStart)) {
+                $dateRange = [$periodStart->toDateString(), $effectiveEnd->toDateString()];
+                $presensisByDate = Presensi::where('user_id', $user->id)
+                    ->whereBetween('tanggal', $dateRange)
+                    ->get()
+                    ->keyBy(fn ($presensi) => Carbon::parse($presensi->tanggal)->toDateString());
 
-            $selectedMonth = max(1, min(12, (int) $selectedMonth));
-            if (! in_array((int) $selectedYear, $years, true)) {
-                $selectedYear = $today->year;
-            }
+                $izinByDate = PresensiIzin::where('user_id', $user->id)
+                    ->whereBetween('tanggal', $dateRange)
+                    ->get()
+                    ->keyBy(fn ($izin) => Carbon::parse($izin->tanggal)->toDateString());
 
-            $monthDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+                $overrideByDate = PresensiStatusOverride::where('user_id', $user->id)
+                    ->whereBetween('tanggal', $dateRange)
+                    ->get()
+                    ->mapWithKeys(fn ($override) => [Carbon::parse($override->tanggal)->toDateString() => $override->status]);
 
-            $selectedMonthLabel = $monthDate->translatedFormat('F Y');
-            $startOfMonth = $monthDate->copy()->startOfMonth();
-            $endOfMonth = $monthDate->copy()->endOfMonth();
+                $operationalDates = $this->getOperationalDatesForPeriod($activePeriod, $periodStart, $effectiveEnd);
+                $statusByDate = [];
 
-            // Hitung tidak hadir berdasarkan hari kerja dari tanggal pertama sampai hari ini
-            $period = CarbonPeriod::create($presensis->min('tanggal'), $today);
-            $jumlahHariKerja = collect($period)
-                ->filter(fn (Carbon $date) => $date->isWeekday())
-                ->count();
+                foreach ($operationalDates as $date) {
+                    $dateKey = $date->toDateString();
+                    $status = $this->resolveDashboardAttendanceStatus(
+                        $date,
+                        $settings,
+                        $presensisByDate->get($dateKey),
+                        $izinByDate->get($dateKey),
+                        $overrideByDate->get($dateKey),
+                    );
 
-            $hariHadir = $presensis
-                ->filter(fn ($p) => $p->jam_masuk)
-                ->pluck('tanggal')
-                ->unique()
-                ->count();
+                    $statusByDate[$dateKey] = $status;
 
-            $jumlahTidakHadir = max(0, $jumlahHariKerja - $hariHadir);
-
-            // Data grafik batang: jumlah hadir (H+T) per minggu dalam bulan terpilih
-            $presensiBulan = Presensi::where('user_id', $user->id)
-                ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-                ->get();
-
-            // Jika bulan terpilih tidak punya data presensi, biarkan grafik kosong
-            if ($presensiBulan->isNotEmpty()) {
-                $daysInMonth = $endOfMonth->day;
-                // Minggu 1-4 selalu ada, Minggu 5 hanya jika bulan > 28 hari
-                $totalWeeks = $daysInMonth > 28 ? 5 : 4;
-
-                $weeklyCounts = array_fill(1, $totalWeeks, 0);
-                foreach ($presensiBulan as $p) {
-                    if (! $p->jam_masuk) {
-                        continue;
-                    }
-                    $day = Carbon::parse($p->tanggal)->day;
-                    // 1-7 = Minggu 1, 8-14 = Minggu 2, 15-21 = Minggu 3, 22-28 = Minggu 4, 29+ = Minggu 5
-                    $week = min($totalWeeks, (int) ceil($day / 7));
-                    $weeklyCounts[$week]++;
+                    match ($status) {
+                        'H' => $jumlahHadir++,
+                        'T' => $jumlahTerlambat++,
+                        'I' => $jumlahIzin++,
+                        'A' => $jumlahTidakHadir++,
+                        default => null,
+                    };
                 }
 
-                for ($w = 1; $w <= $totalWeeks; $w++) {
-                    $weeklyLabels[] = 'Minggu ' . $w;
-                    $weeklyValues[] = $weeklyCounts[$w];
+                if ($selectedMonthKey) {
+                    $monthDate = Carbon::createFromFormat('Y-m', $selectedMonthKey)->startOfMonth();
+                    $monthStart = $monthDate->copy()->startOfMonth()->lt($periodStart) ? $periodStart->copy() : $monthDate->copy()->startOfMonth();
+                    $monthEnd = $monthDate->copy()->endOfMonth()->gt($periodEnd) ? $periodEnd->copy() : $monthDate->copy()->endOfMonth();
+                    $totalWeeks = 1;
+                    for ($day = 1; $day <= $monthDate->daysInMonth; $day++) {
+                        $weekOfMonth = Carbon::create($monthDate->year, $monthDate->month, $day)->weekOfMonth;
+                        if ($weekOfMonth > $totalWeeks) {
+                            $totalWeeks = $weekOfMonth;
+                        }
+                    }
+                    $weeklyCounts = array_fill(1, $totalWeeks, 0);
+                    $chartDateRange = [$monthStart->toDateString(), $monthEnd->toDateString()];
+                    $chartPresensisByDate = Presensi::where('user_id', $user->id)
+                        ->whereBetween('tanggal', $chartDateRange)
+                        ->get()
+                        ->keyBy(fn ($presensi) => Carbon::parse($presensi->tanggal)->toDateString());
+
+                    $chartIzinByDate = PresensiIzin::where('user_id', $user->id)
+                        ->whereBetween('tanggal', $chartDateRange)
+                        ->get()
+                        ->keyBy(fn ($izin) => Carbon::parse($izin->tanggal)->toDateString());
+
+                    $chartOverrideByDate = PresensiStatusOverride::where('user_id', $user->id)
+                        ->whereBetween('tanggal', $chartDateRange)
+                        ->get()
+                        ->mapWithKeys(fn ($override) => [Carbon::parse($override->tanggal)->toDateString() => $override->status]);
+
+                    $chartOperationalDates = $this->getOperationalDatesForPeriod($activePeriod, $monthStart, $monthEnd);
+
+                    foreach ($chartOperationalDates as $date) {
+                        $dateKey = $date->toDateString();
+                        $chartStatus = $this->resolveDashboardAttendanceStatus(
+                            $date,
+                            $settings,
+                            $chartPresensisByDate->get($dateKey),
+                            $chartIzinByDate->get($dateKey),
+                            $chartOverrideByDate->get($dateKey),
+                        );
+
+                        if (! in_array($chartStatus, ['H', 'T'], true)) {
+                            continue;
+                        }
+
+                        $week = $date->weekOfMonth;
+                        $weeklyCounts[$week]++;
+                    }
+
+                    for ($w = 1; $w <= $totalWeeks; $w++) {
+                        $weeklyLabels[] = 'Minggu ' . $w;
+                        $weeklyValues[] = $weeklyCounts[$w];
+                    }
                 }
             }
         }
@@ -205,14 +200,13 @@ class DashboardController extends Controller
         );
 
         return view('dashboard.guru', [
+            'activePeriod' => $activePeriod,
             'jumlahHadir' => $jumlahHadir,
             'jumlahIzin' => $jumlahIzin,
             'jumlahTerlambat' => $jumlahTerlambat,
             'jumlahTidakHadir' => $jumlahTidakHadir,
             'bulanOptions' => $bulanOptions,
-            'years' => $years,
-            'selectedMonth' => $selectedMonth,
-            'selectedYear' => $selectedYear,
+            'selectedMonthKey' => $selectedMonthKey,
             'selectedMonthLabel' => $selectedMonthLabel,
             'weeklyLabels' => $weeklyLabels,
             'weeklyValues' => $weeklyValues,
@@ -222,6 +216,99 @@ class DashboardController extends Controller
             'instagramContents' => $instagramContents,
             'hariLibur' => $hariLibur,
         ]);
+    }
+
+    protected function getMonthOptionsForPeriod(PresensiPeriod $period): array
+    {
+        $options = [];
+        $cursor = Carbon::parse($period->start_date)->startOfMonth();
+        $end = Carbon::parse($period->end_date)->startOfMonth();
+
+        while ($cursor->lte($end)) {
+            $options[$cursor->format('Y-m')] = $cursor->translatedFormat('F Y');
+            $cursor->addMonthNoOverflow();
+        }
+
+        return $options;
+    }
+
+    protected function resolveSelectedMonthKey(?string $requestedMonthKey, PresensiPeriod $period, Carbon $today): string
+    {
+        $options = $this->getMonthOptionsForPeriod($period);
+
+        if ($requestedMonthKey && array_key_exists($requestedMonthKey, $options)) {
+            return $requestedMonthKey;
+        }
+
+        $todayKey = $today->format('Y-m');
+        if (array_key_exists($todayKey, $options)) {
+            return $todayKey;
+        }
+
+        $periodStart = Carbon::parse($period->start_date);
+
+        return $today->lt($periodStart)
+            ? array_key_first($options)
+            : array_key_last($options);
+    }
+
+    protected function getOperationalDatesForPeriod(PresensiPeriod $period, Carbon $rangeStart, Carbon $rangeEnd)
+    {
+        $dates = collect();
+        $periodStart = Carbon::parse($period->start_date)->startOfDay();
+        $periodEnd = Carbon::parse($period->end_date)->startOfDay();
+        $cursor = $rangeStart->copy()->startOfDay()->lt($periodStart) ? $periodStart : $rangeStart->copy()->startOfDay();
+        $end = $rangeEnd->copy()->startOfDay()->gt($periodEnd) ? $periodEnd : $rangeEnd->copy()->startOfDay();
+
+        while ($cursor->lte($end)) {
+            if ($period->isOperationalOn($cursor) && ! $this->isHariLiburNasionalDate($cursor)) {
+                $dates->push($cursor->copy());
+            }
+
+            $cursor->addDay();
+        }
+
+        return $dates;
+    }
+
+    protected function resolveDashboardAttendanceStatus(Carbon $date, ?PresensiSetting $settings, ?Presensi $presensi, ?PresensiIzin $izin, ?string $manualStatus = null): string
+    {
+        if ($manualStatus !== null && in_array($manualStatus, self::AVAILABLE_STATUSES, true)) {
+            return $manualStatus;
+        }
+
+        if ($presensi && $presensi->jam_masuk) {
+            if (! $settings || ! $settings->jam_masuk_end) {
+                return 'H';
+            }
+
+            $jamMasuk = Carbon::parse($presensi->jam_masuk);
+            $batasHadir = Carbon::parse($settings->jam_masuk_end);
+
+            return $jamMasuk->lte($batasHadir) ? 'H' : 'T';
+        }
+
+        if ($izin) {
+            return 'I';
+        }
+
+        return $date->copy()->startOfDay()->lt(Carbon::today()) ? 'A' : '-';
+    }
+
+    protected function isHariLiburNasionalDate(Carbon $date): bool
+    {
+        $year = $date->year;
+
+        if (! isset($this->holidayDateSetCache[$year])) {
+            $this->holidayDateSetCache[$year] = collect($this->getHariLiburNasional($year))
+                ->pluck('start')
+                ->filter()
+                ->map(fn ($holidayDate) => Carbon::parse($holidayDate)->toDateString())
+                ->flip()
+                ->all();
+        }
+
+        return isset($this->holidayDateSetCache[$year][$date->toDateString()]);
     }
 
     /**

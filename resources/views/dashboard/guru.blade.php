@@ -9,7 +9,7 @@
                 <h2 class="text-2xl font-bold text-white">Dashboard Guru</h2>
             </div>
             <p class="text-white/80 text-sm mb-3">Selamat datang, {{ auth()->user()->name }}</p>
-            <a href="{{ route('guru.presensi') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 dark:bg-gray-800 dark:hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition shadow-sm backdrop-blur-sm border border-white/20 dark:border-gray-700">
+            <a href="{{ route('guru.presensi') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition shadow-sm backdrop-blur-sm border border-white/20">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
@@ -19,9 +19,19 @@
     </div>
 
     <div class="px-4 sm:px-6 lg:px-8 space-y-4 relative z-[1] pb-10">
+        @if($activePeriod)
+            <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                Dashboard ini dihitung berdasarkan periode presensi aktif: <span class="font-semibold">{{ $activePeriod->name }}</span>
+                ({{ $activePeriod->start_date->format('d M Y') }} - {{ $activePeriod->end_date->format('d M Y') }}).
+            </div>
+        @else
+            <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                Belum ada periode presensi aktif. Ringkasan kehadiran dan grafik belum dapat dihitung.
+            </div>
+        @endif
         
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <a href="{{ route('guru.kehadiran') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
+            <a href="{{ route('guru.kehadiran.periods') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Hadir</p>
@@ -34,7 +44,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('guru.kehadiran') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
+            <a href="{{ route('guru.kehadiran.periods') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Izin</p>
@@ -47,7 +57,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('guru.kehadiran') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
+            <a href="{{ route('guru.kehadiran.periods') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Terlambat</p>
@@ -60,10 +70,10 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('guru.kehadiran') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
+            <a href="{{ route('guru.kehadiran.periods') }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Tidak Hadir</p>
+                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Alpha</p>
                         <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $jumlahTidakHadir ?? 0 }}</p>
                     </div>
                     <div class="shrink-0">
@@ -81,20 +91,13 @@
                     <div id="attendanceChartHeader" class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
                         <div>
                             <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Grafik Kehadiran per Minggu</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Bulan: {{ $selectedMonthLabel }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Bulan periode aktif: {{ $selectedMonthLabel }}</p>
                         </div>
                         <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-2 text-sm">
                             <div>
-                                <select id="bulan" name="bulan" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500">
-                                    @foreach($bulanOptions as $num => $label)
-                                        <option value="{{ $num }}" @selected(($selectedMonth ?? now()->month) == $num)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <select id="tahun" name="tahun" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-w-[5rem] focus:ring-blue-500 focus:border-blue-500">
-                                    @foreach($years as $year)
-                                        <option value="{{ $year }}" @selected(($selectedYear ?? now()->year) == $year)>{{ $year }}</option>
+                                <select id="month_key" name="month_key" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500">
+                                    @foreach($bulanOptions as $monthKey => $label)
+                                        <option value="{{ $monthKey }}" @selected(($selectedMonthKey ?? now()->format('Y-m')) === $monthKey)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -143,7 +146,7 @@
                                     data: { 
                                         labels: weeklyLabels, 
                                         datasets: [{ 
-                                            label: 'Jumlah Hadir', 
+                                            label: 'Jumlah Hadir/Terlambat', 
                                             data: weeklyValues, 
                                             backgroundColor: themeColors.barBg, 
                                             borderColor: themeColors.barBorder, 
@@ -214,6 +217,10 @@
                             if (document.readyState === 'complete') start(); else window.addEventListener('load', start, { once: true });
                         }
                     </script>
+                @else
+                    <div class="flex h-full items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                        Grafik akan tampil setelah ada periode presensi aktif.
+                    </div>
                 @endif
             </div>
 
@@ -279,14 +286,14 @@
                                     <span class="w-2.5 h-2.5 rounded-full bg-gray-800 dark:bg-gray-300 shrink-0"></span><span class="text-gray-700 dark:text-gray-300 font-medium">Terlambat</span>
                                 </div>
                                 <div class="flex items-center gap-2 text-xs">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></span><span class="text-gray-700 dark:text-gray-300 font-medium">Tidak Hadir</span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></span><span class="text-gray-700 dark:text-gray-300 font-medium">Alpha</span>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700">
                             <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
-                                <span class="font-semibold text-gray-700 dark:text-gray-200">Dihitung</span> saat akun terdaftar & presensi pertama.
+                                <span class="font-semibold text-gray-700 dark:text-gray-200">Dihitung</span> berdasarkan seluruh hari operasional pada periode presensi yang sedang aktif.
                             </p>
                         </div>
                         <script>
@@ -302,7 +309,7 @@
                                     window.__doughnutChart = new Chart(canvas.getContext('2d'), {
                                         type: 'pie',
                                         data: {
-                                            labels: ['Hadir', 'Izin', 'Terlambat', 'Tidak Hadir'],
+                                            labels: ['Hadir', 'Izin', 'Terlambat', 'Alpha'],
                                             datasets: [{
                                                 data: totalData > 0 ? [channelData.hadir, channelData.izin, channelData.terlambat, channelData.tidakHadir] : [1, 1, 1, 1],
                                                 backgroundColor: ['#3B82F6', '#93C5FD', isDark ? '#D1D5DB' : '#1F2937', isDark ? '#4B5563' : '#D1D5DB'],

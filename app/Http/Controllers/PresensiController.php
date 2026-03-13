@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\GuruRiwayatExport;
-use App\Exports\RekapBulananExport;
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
+use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -38,29 +37,30 @@ class PresensiController extends Controller
 
 	public function guruIndex()
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-				'latitude' => null,
-				'longitude' => null,
-				'radius_meter' => null,
-			]);
-		}
+		$settings = $this->getOrCreateSettings();
+		$activePeriod = $this->getActivePeriod();
 
 		return view('guru.presensi', [
 			'settings' => $settings,
+			'activePeriod' => $activePeriod,
+			'activePeriodDayLabels' => $activePeriod?->activeDayLabels() ?? [],
 		]);
 	}
 
 	public function guruIzin(Request $request)
 	{
 		$user = Auth::user();
-		$today = now()->toDateString();
+		$now = now();
+		$today = $now->toDateString();
+		$activePeriod = $this->getActivePeriod();
+
+		if (! $activePeriod) {
+			return back()->with('error', 'Belum ada periode presensi aktif. Hubungi admin untuk mengatur periode presensi.');
+		}
+
+		if (! $activePeriod->isOperationalOn($now)) {
+			return back()->with('error', 'Hari ini berada di luar periode atau hari operasional presensi yang aktif.');
+		}
 
 		$data = $request->validate([
 			'keterangan' => ['required', 'string', 'max:1000'],
@@ -108,16 +108,8 @@ class PresensiController extends Controller
 
 	public function adminIndex()
 	{
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-			]);
-		}
+		$settings = $this->getOrCreateSettings();
+		$activePeriod = $this->getActivePeriod();
 
 		$qrCodeText = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
 
@@ -130,17 +122,23 @@ class PresensiController extends Controller
 			->orderBy('name')
 			->get();
 
-		return view('admin.kelola_presensi', [
+		return view('admin.presensi.kelola_presensi', [
 			'qrCodeText' => $qrCodeText,
 			'presensis' => $presensis,
 			'today' => $today,
 			'settings' => $settings,
 			'gurus' => $gurus,
+			'activePeriod' => $activePeriod,
+			'activePeriodDayLabels' => $activePeriod?->activeDayLabels() ?? [],
 		]);
 	}
 
 	public function updateSettings(Request $request)
 	{
+		if (! $this->getActivePeriod()) {
+			return back()->withInput()->with('error', 'Atur dan aktifkan periode presensi terlebih dahulu sebelum menyimpan jam presensi.');
+		}
+
 		$data = $request->validate([
 			'jam_masuk_start' => ['required', 'date_format:H:i'],
 			'jam_masuk_end' => ['required', 'date_format:H:i'],
@@ -153,7 +151,7 @@ class PresensiController extends Controller
 			'radius_meter' => ['nullable', 'integer', 'min:10'],
 		]);
 
-		$settings = PresensiSetting::first() ?? new PresensiSetting();
+		$settings = $this->getOrCreateSettings();
 		$settings->jam_masuk_start = $data['jam_masuk_start'] . ':00';
 		$settings->jam_masuk_end = $data['jam_masuk_end'] . ':00';
 		$settings->jam_masuk_toleransi = $data['jam_masuk_toleransi']
@@ -182,20 +180,21 @@ class PresensiController extends Controller
 		$now = Carbon::now();
 		$currentTime = $now->format('H:i');
 		$today = $now->toDateString();
+		$activePeriod = $this->getActivePeriod();
 
-		$settings = PresensiSetting::first();
-		if (! $settings) {
-			$settings = PresensiSetting::create([
-				'jam_masuk_start' => '07:00:00',
-				'jam_masuk_end' => '08:00:00',
-				'jam_pulang_start' => '13:00:00',
-				'jam_pulang_end' => '14:30:00',
-				'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
-				'latitude' => null,
-				'longitude' => null,
-				'radius_meter' => null,
-			]);
+		if (! $activePeriod) {
+			return back()->with('error', 'Presensi belum dapat digunakan karena belum ada periode presensi aktif.');
 		}
+
+		if (! $activePeriod->includesDate($now)) {
+			return back()->with('error', 'Tanggal hari ini berada di luar rentang periode presensi aktif: ' . $activePeriod->name . '.');
+		}
+
+		if (! $activePeriod->isOperationalOn($now)) {
+			return back()->with('error', 'Hari ini tidak termasuk hari operasional presensi. Hari aktif: ' . implode(', ', $activePeriod->activeDayLabels()) . '.');
+		}
+
+		$settings = $this->getOrCreateSettings();
 
 		// Jika admin mengatur batas lokasi, cek apakah guru berada dalam radius
 		if ($settings->latitude !== null && $settings->longitude !== null && $settings->radius_meter !== null) {
@@ -310,6 +309,31 @@ class PresensiController extends Controller
 		}
 
 		return back()->with('error', 'Terjadi kesalahan saat mencatat presensi.');
+	}
+
+	private function getOrCreateSettings(): PresensiSetting
+	{
+		$settings = PresensiSetting::first();
+
+		if ($settings) {
+			return $settings;
+		}
+
+		return PresensiSetting::create([
+			'jam_masuk_start' => '07:00:00',
+			'jam_masuk_end' => '08:00:00',
+			'jam_pulang_start' => '13:00:00',
+			'jam_pulang_end' => '14:30:00',
+			'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
+			'latitude' => null,
+			'longitude' => null,
+			'radius_meter' => null,
+		]);
+	}
+
+	private function getActivePeriod(): ?PresensiPeriod
+	{
+		return PresensiPeriod::query()->active()->orderByDesc('start_date')->first();
 	}
 }
 

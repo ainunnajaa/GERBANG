@@ -7,6 +7,7 @@ use App\Http\Controllers\KelolaBeritaController;
 use App\Http\Controllers\BeritaPublikController;
 use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\KelolaPenggunaController;
+use App\Http\Controllers\PresensiPeriodController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\RiwayatPresensiController;
@@ -45,11 +46,21 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/kelola-presensi', [PresensiController::class, 'adminIndex'])->name('admin.presensi');
     Route::post('/admin/kelola-presensi/jam', [PresensiController::class, 'updateSettings'])->name('admin.presensi.settings.update');
+    Route::get('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'index'])->name('admin.presensi.periods.index');
+    Route::get('/admin/kelola-presensi/periode/create', [PresensiPeriodController::class, 'create'])->name('admin.presensi.periods.create');
+    Route::post('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'store'])->name('admin.presensi.periods.store');
+    Route::get('/admin/kelola-presensi/periode/{period}/edit', [PresensiPeriodController::class, 'edit'])->name('admin.presensi.periods.edit');
+    Route::patch('/admin/kelola-presensi/periode/{period}', [PresensiPeriodController::class, 'update'])->name('admin.presensi.periods.update');
+    Route::delete('/admin/kelola-presensi/periode/{period}', [PresensiPeriodController::class, 'destroy'])->name('admin.presensi.periods.destroy');
+    Route::post('/admin/kelola-presensi/periode/{period}/activate', [PresensiPeriodController::class, 'activate'])->name('admin.presensi.periods.activate');
+    Route::post('/admin/kelola-presensi/periode/{period}/deactivate', [PresensiPeriodController::class, 'deactivate'])->name('admin.presensi.periods.deactivate');
     Route::get('/admin/riwayat-presensi', [RiwayatPresensiController::class, 'adminRiwayat'])->name('admin.riwayat');
+    Route::get('/admin/riwayat-presensi/periode/{period}', [RiwayatPresensiController::class, 'adminRiwayatPeriode'])->name('admin.riwayat.period');
     Route::get('/admin/riwayat-presensi-semua', [RiwayatPresensiController::class, 'adminRiwayatSemua'])->name('admin.presensi.all');
     Route::get('/admin/riwayat-presensi-semua/export', [RiwayatPresensiController::class, 'adminExportPresensiSemua'])->name('admin.presensi.all.export');
     Route::get('/admin/riwayat-presensi-bulanan', [RiwayatPresensiController::class, 'adminRiwayatBulanan'])->name('admin.presensi.bulanan');
     Route::post('/admin/riwayat-presensi/status', [RiwayatPresensiController::class, 'adminUpdateStatus'])->name('admin.presensi.status.update');
+    Route::post('/admin/riwayat-presensi/status/bulk', [RiwayatPresensiController::class, 'adminBulkUpdateStatus'])->name('admin.presensi.status.bulk-update');
     Route::get('/admin/riwayat-presensi/guru/{guru}', [RiwayatPresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
     Route::get('/admin/riwayat-presensi/guru/{guru}/download', [RiwayatPresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [RiwayatPresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
@@ -90,6 +101,7 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
     Route::get('/guru/izin', fn() => view('guru.Izin_guru'))->name('guru.izin.form');
     Route::post('/guru/izin', [PresensiController::class, 'guruIzin'])->name('guru.izin');
+    Route::get('/guru/kehadiran/periode', [RiwayatPresensiController::class, 'guruKehadiranPeriods'])->name('guru.kehadiran.periods');
     Route::get('/guru/kehadiran', [RiwayatPresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
     Route::get('/guru/kehadiran-bulanan', [RiwayatPresensiController::class, 'guruKehadiranBulanan'])->name('guru.kehadiran.bulanan');
     Route::get('/guru/kehadiran-bulanan/export', [RiwayatPresensiController::class, 'guruExportKehadiranBulanan'])->name('guru.kehadiran.bulanan.export');

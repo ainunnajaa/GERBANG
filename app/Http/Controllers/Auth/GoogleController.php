@@ -59,7 +59,7 @@ class GoogleController extends Controller
             'password' => Hash::make(Str::random(32)),
             'google_id' => $googleUser->getId(),
             'email_verified_at' => now(),
-            'role' => 'guru',
+            'role' => 'wali_murid',
         ]);
 
         Auth::login($user, remember: true);

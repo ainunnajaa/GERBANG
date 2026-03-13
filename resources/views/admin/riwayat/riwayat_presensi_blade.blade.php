@@ -9,17 +9,23 @@
 		<div class="px-4 sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
+					@if(session('error'))
+						<div class="p-3 bg-red-100 text-red-800 rounded text-sm">
+							{{ session('error') }}
+						</div>
+					@endif
+
 					<div class="flex items-center justify-between">
 						<h3 class="text-lg font-semibold">Riwayat Presensi Harian</h3>
 						<div class="flex items-center gap-2">
 							<a
-								href="{{ route('admin.riwayat') }}"
+								href="{{ route('admin.riwayat.period', $selectedPeriod) }}"
 								class="inline-flex items-center px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600"
 							>
 								&larr; Kembali ke Daftar Guru
 							</a>
 							<a
-								href="{{ route('admin.presensi.bulanan') }}"
+								href="{{ route('admin.presensi.bulanan', array_filter(['period_id' => $selectedPeriod?->id])) }}"
 								class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700"
 							>
 								Rekap Bulanan
@@ -27,10 +33,15 @@
 						</div>
 					</div>
 
+					<div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+						Periode ditampilkan: {{ $selectedPeriod->name }} ({{ $selectedPeriod->start_date->format('d M Y') }} - {{ $selectedPeriod->end_date->format('d M Y') }})
+					</div>
+
 					<form method="GET" action="{{ route('admin.presensi.all') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+						<input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
 						<div>
 							<label class="block text-sm font-medium mb-1">Tanggal</label>
-							<input type="date" name="tanggal" value="{{ $selectedDate }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<input type="date" name="tanggal" value="{{ $selectedDate }}" min="{{ $dateMin }}" max="{{ $dateMax }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 						</div>
 						<div class="flex items-center gap-2">
 							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
@@ -43,10 +54,15 @@
 					<div class="flex items-center justify-between mt-4">
 						<p class="text-xs text-gray-500 dark:text-gray-400">
 							Filter saat ini:
-							@if($selectedDate)
+							@if($selectedPeriod)
+								Periode {{ $selectedPeriod->name }}
+								@if($selectedDate)
+									, Tanggal {{ $selectedDate }}
+								@endif
+							@elseif($selectedDate)
 								Tanggal {{ $selectedDate }}
 							@else
-								Semua tanggal
+								Pilih periode terlebih dahulu
 							@endif
 						</p>
 					</div>

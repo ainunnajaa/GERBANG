@@ -6,6 +6,7 @@ use App\Exports\GuruRiwayatExport;
 use App\Exports\RekapBulananExport;
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
+use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
 use App\Models\PresensiStatusOverride;
 use App\Models\User;
@@ -25,14 +26,32 @@ class RiwayatPresensiController extends Controller
 	private const HOLIDAY_CACHE_MONTHS = 2;
 
 	protected array $holidayDateCache = [];
+	protected $presensiPeriods = null;
+
+	public function guruKehadiranPeriods()
+	{
+		$periods = $this->getPresensiPeriods();
+
+		return view('guru.riwayat_kehadiran.periode', [
+			'periods' => $periods,
+		]);
+	}
 
 	public function guruKehadiran(Request $request)
 	{
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
+		$selectedPeriod = $this->getSelectedGuruPeriod($request);
 
-		$month = (int) $request->input('bulan', now()->month);
-		$year = (int) $request->input('tahun', now()->year);
+		if (! $selectedPeriod) {
+			return redirect()->route('guru.kehadiran.periods')->with('error', 'Pilih periode kehadiran terlebih dahulu.');
+		}
+
+		$monthOptions = $this->getMonthOptionsForPeriod($selectedPeriod);
+		$selectedMonthKey = $this->resolveSelectedMonthKey($request->input('month_key'), $selectedPeriod);
+		$monthRange = $this->getMonthDateRangeWithinPeriod($selectedMonthKey, $selectedPeriod);
+		$month = (int) substr($selectedMonthKey, 5, 2);
+		$year = (int) substr($selectedMonthKey, 0, 4);
 		$requestedWeek = (int) $request->input('minggu', 0);
 
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
@@ -54,7 +73,7 @@ class RiwayatPresensiController extends Controller
 		$datesInWeek = [];
 		for ($day = 1; $day <= $daysInMonth; $day++) {
 			$date = Carbon::create($year, $month, $day);
-			if ($date->weekOfMonth === $week) {
+			if ($date->weekOfMonth === $week && $date->betweenIncluded($monthRange['start'], $monthRange['end'])) {
 				$datesInWeek[] = $date;
 			}
 		}
@@ -85,7 +104,7 @@ class RiwayatPresensiController extends Controller
 		$attendanceRows = collect($datesInWeek)
 			->sortByDesc(fn (Carbon $date) => $date->timestamp)
 			->values()
-			->map(function (Carbon $date) use ($izinsByDate, $manualStatuses, $presensisByDate, $settings, $user) {
+			->map(function (Carbon $date) use ($izinsByDate, $manualStatuses, $presensisByDate, $selectedPeriod, $settings, $user) {
 				$dateKey = $date->toDateString();
 				$presensi = $presensisByDate->get($dateKey);
 				$izin = $izinsByDate->get($dateKey);
@@ -100,15 +119,12 @@ class RiwayatPresensiController extends Controller
 						$presensi,
 						$izin,
 						$manualStatuses[$user->id][$dateKey] ?? null,
+						$selectedPeriod,
 					),
 				];
 			});
 
-		$firstTanggal = Presensi::where('user_id', $user->id)->min('tanggal');
-		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$years = range($firstYear, now()->year + 1);
-
-		return view('guru.kehadiran', [
+		return view('guru.riwayat_kehadiran.kehadiran', [
 			'attendanceRows' => $attendanceRows,
 			'settings' => $settings,
 			'startDate' => $startDate,
@@ -117,7 +133,9 @@ class RiwayatPresensiController extends Controller
 			'year' => $year,
 			'week' => $week,
 			'maxWeek' => $maxWeek,
-			'years' => $years,
+			'selectedPeriod' => $selectedPeriod,
+			'monthOptions' => $monthOptions,
+			'selectedMonthKey' => $selectedMonthKey,
 		]);
 	}
 
@@ -125,8 +143,16 @@ class RiwayatPresensiController extends Controller
 	{
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
-		$month = (int) $request->input('bulan', now()->month);
-		$year = (int) $request->input('tahun', now()->year);
+		$selectedPeriod = $this->getSelectedGuruPeriod($request);
+
+		if (! $selectedPeriod) {
+			return redirect()->route('guru.kehadiran.periods')->with('error', 'Pilih periode kehadiran terlebih dahulu.');
+		}
+
+		$monthOptions = $this->getMonthOptionsForPeriod($selectedPeriod);
+		$selectedMonthKey = $this->resolveSelectedMonthKey($request->input('month_key'), $selectedPeriod);
+		$month = (int) substr($selectedMonthKey, 5, 2);
+		$year = (int) substr($selectedMonthKey, 0, 4);
 
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
@@ -137,12 +163,14 @@ class RiwayatPresensiController extends Controller
 		$presensisByDate = Presensi::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
+			->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()])
 			->get()
 			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
 
 		$izinsByDate = PresensiIzin::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
+			->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()])
 			->get()
 			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
 
@@ -158,21 +186,20 @@ class RiwayatPresensiController extends Controller
 				$presensisByDate->get($dateKey),
 				$izinsByDate->get($dateKey),
 				$manualStatuses[$user->id][$dateKey] ?? null,
+				$selectedPeriod,
 			);
 		}
 
-		$firstTanggal = Presensi::where('user_id', $user->id)->min('tanggal');
-		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$years = range($firstYear, now()->year + 1);
-
-		return view('guru.kehadiran_bulanan', [
+		return view('guru.riwayat_kehadiran.kehadiran_bulanan', [
 			'settings' => $settings,
 			'days' => $days,
 			'month' => $month,
 			'year' => $year,
 			'matrix' => $matrix,
-			'years' => $years,
 			'user' => $user,
+			'selectedPeriod' => $selectedPeriod,
+			'monthOptions' => $monthOptions,
+			'selectedMonthKey' => $selectedMonthKey,
 		]);
 	}
 
@@ -180,8 +207,15 @@ class RiwayatPresensiController extends Controller
 	{
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
-		$month = (int) $request->input('bulan', now()->month);
-		$year = (int) $request->input('tahun', now()->year);
+		$selectedPeriod = $this->getSelectedGuruPeriod($request);
+
+		if (! $selectedPeriod) {
+			return back()->with('error', 'Pilih periode kehadiran terlebih dahulu sebelum export.');
+		}
+
+		$selectedMonthKey = $this->resolveSelectedMonthKey($request->input('month_key'), $selectedPeriod);
+		$month = (int) substr($selectedMonthKey, 5, 2);
+		$year = (int) substr($selectedMonthKey, 0, 4);
 
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
@@ -192,12 +226,14 @@ class RiwayatPresensiController extends Controller
 		$presensisByDate = Presensi::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
+			->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()])
 			->get()
 			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
 
 		$izinsByDate = PresensiIzin::where('user_id', $user->id)
 			->whereYear('tanggal', $year)
 			->whereMonth('tanggal', $month)
+			->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()])
 			->get()
 			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
 
@@ -220,6 +256,7 @@ class RiwayatPresensiController extends Controller
 				$presensisByDate->get($dateKey),
 				$izinsByDate->get($dateKey),
 				$manualStatuses[$user->id][$dateKey] ?? null,
+				$selectedPeriod,
 			);
 		}
 		$rows[] = $row;
@@ -229,43 +266,56 @@ class RiwayatPresensiController extends Controller
 		return Excel::download(new RekapBulananExport($rows), $fileName);
 	}
 
+	private function getSelectedGuruPeriod(Request $request): ?PresensiPeriod
+	{
+		$periodId = $request->integer('period_id');
+
+		if (! $periodId) {
+			return null;
+		}
+
+		return $this->getPresensiPeriods()->firstWhere('id', $periodId);
+	}
+
 	public function adminRiwayat()
 	{
-		$settings = $this->ensureSettings();
-		$today = now()->toDateString();
+		$periods = $this->getPresensiPeriods();
 
-		$todayPresensis = Presensi::with('user')
-			->whereDate('tanggal', $today)
-			->get();
+		return view('admin.riwayat.riwayat_periode', [
+			'periods' => $periods,
+		]);
+	}
 
+	public function adminRiwayatPeriode(PresensiPeriod $period)
+	{
 		$gurus = User::where('role', 'guru')
 			->orderBy('name')
 			->get();
 
-		$presensis = Presensi::with('user')
-			->orderByDesc('tanggal')
-			->orderBy('user_id')
-			->paginate(20);
-
-		return view('admin.riwayat_presensi', [
-			'presensis' => $presensis,
-			'todayPresensis' => $todayPresensis,
-			'today' => $today,
-			'settings' => $settings,
+		return view('admin.riwayat.riwayat_presensi', [
 			'gurus' => $gurus,
+			'selectedPeriod' => $period,
 		]);
 	}
 
 	public function adminRiwayatSemua(Request $request)
 	{
 		$settings = $this->ensureSettings();
-		$selectedDate = $request->input('tanggal', Carbon::today()->toDateString());
-		$selectedDateCarbon = Carbon::parse($selectedDate);
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
+		$selectedDate = null;
+		$selectedDateCarbon = null;
+
+		if (! $selectedPeriod) {
+			return redirect()->route('admin.riwayat')->with('error', 'Pilih periode presensi terlebih dahulu dari halaman riwayat periode.');
+		}
 
 		$gurus = User::where('role', 'guru')
 			->orderBy('name')
 			->paginate(50)
 			->appends($request->query());
+
+		$selectedDateCarbon = $this->resolveSelectedDateWithinPeriod($request->input('tanggal'), $selectedPeriod);
+		$selectedDate = $selectedDateCarbon->toDateString();
 
 		$userIds = $gurus->getCollection()->pluck('id');
 		$presensisByUser = Presensi::with('user')
@@ -282,7 +332,7 @@ class RiwayatPresensiController extends Controller
 
 		$manualStatuses = $this->getManualStatusOverrides($userIds->all(), [$selectedDateCarbon->toDateString()]);
 
-		$attendanceRows = $gurus->getCollection()->map(function ($guru) use ($izinsByUser, $manualStatuses, $presensisByUser, $selectedDateCarbon, $settings) {
+		$attendanceRows = $gurus->getCollection()->map(function ($guru) use ($izinsByUser, $manualStatuses, $presensisByUser, $selectedDateCarbon, $selectedPeriod, $settings) {
 			$presensi = $presensisByUser->get($guru->id);
 			$izin = $izinsByUser->get($guru->id);
 
@@ -296,23 +346,36 @@ class RiwayatPresensiController extends Controller
 					$presensi,
 					$izin,
 					$manualStatuses[$guru->id][$selectedDateCarbon->toDateString()] ?? null,
+					$selectedPeriod,
 				),
 			];
 		});
 
-		return view('admin.presensi.riwayat_presensi_blade', [
+		return view('admin.riwayat.riwayat_presensi_blade', [
 			'attendanceRows' => $attendanceRows,
 			'gurus' => $gurus,
 			'settings' => $settings,
 			'selectedDate' => $selectedDate,
+			'selectedPeriod' => $selectedPeriod,
+			'dateMin' => Carbon::parse($selectedPeriod->start_date)->format('Y-m-d'),
+			'dateMax' => Carbon::parse($selectedPeriod->end_date)->format('Y-m-d'),
 		]);
 	}
 
 	public function adminRiwayatBulanan(Request $request)
 	{
 		$settings = $this->ensureSettings();
-		$month = (int) $request->input('bulan', now()->month);
-		$year = (int) $request->input('tahun', now()->year);
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
+
+		if (! $selectedPeriod) {
+			return redirect()->route('admin.riwayat')->with('error', 'Pilih periode presensi terlebih dahulu dari halaman riwayat periode.');
+		}
+
+		$monthOptions = $selectedPeriod ? $this->getMonthOptionsForPeriod($selectedPeriod) : [];
+		$selectedMonthKey = $selectedPeriod ? $this->resolveSelectedMonthKey($request->input('month_key'), $selectedPeriod) : null;
+		$monthRange = $selectedPeriod && $selectedMonthKey ? $this->getMonthDateRangeWithinPeriod($selectedMonthKey, $selectedPeriod) : null;
+		$month = $selectedMonthKey ? (int) substr($selectedMonthKey, 5, 2) : (int) now()->month;
+		$year = $selectedMonthKey ? (int) substr($selectedMonthKey, 0, 4) : (int) now()->year;
 
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 		$days = range(1, $daysInMonth);
@@ -322,12 +385,20 @@ class RiwayatPresensiController extends Controller
 			->all();
 
 		$presensisByUserDate = [];
-		foreach (Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $presensi) {
+		$presensiQuery = Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month);
+		$izinQuery = PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month);
+
+		if ($selectedPeriod) {
+			$presensiQuery->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()]);
+			$izinQuery->whereBetween('tanggal', [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()]);
+		}
+
+		foreach ($presensiQuery->get() as $presensi) {
 			$presensisByUserDate[$presensi->user_id][$this->normalizeDateKey($presensi->tanggal)] = $presensi;
 		}
 
 		$izinsByUserDate = [];
-		foreach (PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $izin) {
+		foreach ($izinQuery->get() as $izin) {
 			$izinsByUserDate[$izin->user_id][$this->normalizeDateKey($izin->tanggal)] = $izin;
 		}
 
@@ -344,22 +415,23 @@ class RiwayatPresensiController extends Controller
 					$presensisByUserDate[$guru->id][$dateKey] ?? null,
 					$izinsByUserDate[$guru->id][$dateKey] ?? null,
 					$manualStatuses[$guru->id][$dateKey] ?? null,
+					$selectedPeriod,
 				);
 			}
 		}
 
-		$firstTanggal = Presensi::min('tanggal');
-		$firstYear = $firstTanggal ? Carbon::parse($firstTanggal)->year : now()->year;
-		$years = range($firstYear, now()->year + 1);
-
-		return view('admin.presensi.riwayat_bulanan', [
+		return view('admin.riwayat.riwayat_bulanan', [
 			'settings' => $settings,
 			'gurus' => $gurus,
 			'days' => $days,
 			'month' => $month,
 			'year' => $year,
 			'matrix' => $matrix,
-			'years' => $years,
+			'selectedPeriod' => $selectedPeriod,
+			'monthOptions' => $monthOptions,
+			'selectedMonthKey' => $selectedMonthKey,
+			'monthStartDate' => $monthRange['start'] ?? Carbon::create($year, $month, 1)->startOfMonth(),
+			'monthEndDate' => $monthRange['end'] ?? Carbon::create($year, $month, 1)->endOfMonth(),
 		]);
 	}
 
@@ -385,37 +457,155 @@ class RiwayatPresensiController extends Controller
 		return back()->with('success', 'Status kehadiran berhasil diperbarui.');
 	}
 
+	public function adminBulkUpdateStatus(Request $request)
+	{
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
+
+		if (! $selectedPeriod) {
+			return redirect()->route('admin.riwayat')->with('error', 'Pilih periode presensi terlebih dahulu dari halaman riwayat periode.');
+		}
+
+		$validated = $request->validate([
+			'period_id' => ['required', 'integer'],
+			'month_key' => ['nullable', 'string'],
+			'apply_scope' => ['required', 'in:all,selected'],
+			'user_ids' => ['nullable', 'array'],
+			'user_ids.*' => ['integer', 'exists:users,id'],
+			'tanggal_mulai' => ['required', 'date'],
+			'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
+			'status' => ['required', 'in:' . implode(',', self::AVAILABLE_STATUSES)],
+		]);
+
+		$selectedMonthKey = $this->resolveSelectedMonthKey($validated['month_key'] ?? null, $selectedPeriod);
+		$monthRange = $this->getMonthDateRangeWithinPeriod($selectedMonthKey, $selectedPeriod);
+		$rangeStart = Carbon::parse($validated['tanggal_mulai'])->startOfDay();
+		$rangeEnd = Carbon::parse($validated['tanggal_selesai'])->startOfDay();
+		$allowedStart = $monthRange['start']->copy()->startOfDay();
+		$allowedEnd = $monthRange['end']->copy()->startOfDay();
+
+		if ($rangeStart->lt($allowedStart) || $rangeEnd->gt($allowedEnd)) {
+			return back()
+				->withErrors(['tanggal_mulai' => 'Rentang tanggal harus berada di dalam bulan periode yang sedang ditampilkan.'])
+				->withInput();
+		}
+
+		$userIds = $validated['apply_scope'] === 'all'
+			? User::where('role', 'guru')->pluck('id')->all()
+			: User::where('role', 'guru')->whereIn('id', $validated['user_ids'] ?? [])->pluck('id')->all();
+
+		if (empty($userIds)) {
+			return back()
+				->withErrors(['user_ids' => 'Pilih minimal satu guru atau gunakan opsi semua guru.'])
+				->withInput();
+		}
+
+		$updatedCount = 0;
+		$skippedCount = 0;
+		$cursor = $rangeStart->copy();
+
+		while ($cursor->lte($rangeEnd)) {
+			$canApplyStatus = $this->canApplyBulkStatusOnDate($cursor, $selectedPeriod);
+
+			foreach ($userIds as $userId) {
+				if (! $canApplyStatus) {
+					PresensiStatusOverride::where('user_id', $userId)
+						->whereDate('tanggal', $cursor->toDateString())
+						->delete();
+
+					$skippedCount++;
+					continue;
+				}
+
+				PresensiStatusOverride::updateOrCreate(
+					[
+						'user_id' => $userId,
+						'tanggal' => $cursor->toDateString(),
+					],
+					[
+						'status' => $validated['status'],
+						'updated_by' => Auth::id(),
+					],
+				);
+
+				$updatedCount++;
+			}
+
+			$cursor->addDay();
+		}
+
+		$message = 'Bulk update status berhasil diterapkan ke ' . $updatedCount . ' entri kehadiran.';
+
+		if ($skippedCount > 0) {
+			$message .= ' ' . $skippedCount . ' entri dilewati karena hari Minggu, hari non-operasional, atau hari libur nasional.';
+		}
+
+		return redirect()->route('admin.presensi.bulanan', [
+			'period_id' => $selectedPeriod->id,
+			'month_key' => $selectedMonthKey,
+		])->with('success', $message);
+	}
+
 	public function adminPresensiGuru(Request $request, User $guru)
 	{
 		$settings = $this->ensureSettings();
-		$attendanceRows = $this->paginateCollection($this->buildAttendanceRowsForUser($guru, $settings), $request, 10);
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
 
-		return view('admin.presensi.presensi_guru', [
+		if (! $selectedPeriod) {
+			return redirect()->route('admin.riwayat')->with('error', 'Pilih periode presensi terlebih dahulu dari halaman riwayat periode.');
+		}
+
+		$monthOptions = $this->getMonthOptionsForPeriod($selectedPeriod);
+		$selectedMonthKey = $this->resolveSelectedMonthKeyForRequest($request, $selectedPeriod);
+		$monthRange = $this->getMonthDateRangeWithinPeriod($selectedMonthKey, $selectedPeriod);
+
+		$attendanceRows = $this->buildAttendanceRowsForUser($guru, $settings, $selectedPeriod)
+			->filter(function (array $row) use ($monthRange) {
+				$date = data_get($row, 'date');
+
+				return $date instanceof Carbon
+					&& $date->betweenIncluded($monthRange['start'], $monthRange['end']);
+			})
+			->sortBy(fn (array $row) => data_get($row, 'date')?->timestamp)
+			->values();
+
+		return view('admin.riwayat.presensi_guru', [
 			'guru' => $guru,
 			'attendanceRows' => $attendanceRows,
 			'settings' => $settings,
+			'selectedPeriod' => $selectedPeriod,
+			'monthOptions' => $monthOptions,
+			'selectedMonthKey' => $selectedMonthKey,
+			'monthStartDate' => $monthRange['start'],
+			'monthEndDate' => $monthRange['end'],
 		]);
 	}
 
-	public function adminDownloadPresensiGuru(User $guru)
+	public function adminDownloadPresensiGuru(Request $request, User $guru)
 	{
 		$settings = $this->ensureSettings();
-		$attendanceRows = $this->buildAttendanceRowsForUser($guru, $settings)->sortBy('date')->values();
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
+
+		if (! $selectedPeriod) {
+			return back()->with('error', 'Pilih periode presensi terlebih dahulu sebelum mengunduh riwayat.');
+		}
+
+		$attendanceRows = $this->buildAttendanceRowsForUser($guru, $settings, $selectedPeriod)->sortBy('date')->values();
 
 		$sanitizedName = preg_replace('/[^A-Za-z0-9_-]+/', '_', $guru->name ?? 'guru');
-		$fileName = 'riwayat_presensi_' . $sanitizedName . '_' . now()->format('Ymd_His') . '.xlsx';
+		$fileName = 'riwayat_presensi_' . $sanitizedName . '_' . Carbon::parse($selectedPeriod->start_date)->format('Ymd') . '_' . Carbon::parse($selectedPeriod->end_date)->format('Ymd') . '.xlsx';
 
 		$rows = [];
 		$rows[] = ['Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status', 'Jam Izin', 'Keterangan'];
 
 		foreach ($attendanceRows as $row) {
-			$item = $row['presensi'];
-			$izin = $row['izin'];
+			$item = data_get($row, 'presensi');
+			$izin = data_get($row, 'izin');
+			$date = Carbon::parse(data_get($row, 'date'));
 			$rows[] = [
-				$row['date']->format('Y-m-d'),
+				$date->format('Y-m-d'),
 				optional($item)->jam_masuk ? Carbon::parse($item->jam_masuk)->format('H:i') : '',
 				optional($item)->jam_pulang ? Carbon::parse($item->jam_pulang)->format('H:i') : '',
-				$row['status'],
+				data_get($row, 'status'),
 				$izin && $izin->created_at ? Carbon::parse($izin->created_at)->format('H:i') : '',
 				$izin->keterangan ?? '',
 			];
@@ -437,24 +627,28 @@ class RiwayatPresensiController extends Controller
 			->whereDate('tanggal', $tanggal)
 			->delete();
 
-		return redirect()
-			->route('admin.presensi.guru', $guruId)
-			->with('success', 'Riwayat presensi untuk tanggal tersebut berhasil dihapus.');
+		return back()->with('success', 'Riwayat presensi untuk tanggal tersebut berhasil dihapus.');
 	}
 
 	public function adminExportPresensiSemua(Request $request)
 	{
 		$settings = $this->ensureSettings();
+		$selectedPeriod = $this->getSelectedAdminPeriod($request);
+
+		if (! $selectedPeriod) {
+			return back()->with('error', 'Pilih periode presensi terlebih dahulu sebelum export riwayat.');
+		}
+
 		$startDate = $request->input('tanggal_mulai');
 		$endDate = $request->input('tanggal_selesai');
 
 		if (! $startDate && ! $endDate) {
-			$today = Carbon::today()->toDateString();
-			$startDate = $today;
-			$endDate = $today;
+			$startDate = Carbon::parse($selectedPeriod->start_date)->toDateString();
+			$endDate = Carbon::parse($selectedPeriod->end_date)->toDateString();
 		}
 
-		$start = Carbon::parse($startDate);
+		$start = $this->resolveSelectedDateWithinPeriod($startDate, $selectedPeriod);
+		$end = $this->resolveSelectedDateWithinPeriod($endDate, $selectedPeriod);
 		$month = $start->month;
 		$year = $start->year;
 		$daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
@@ -465,12 +659,12 @@ class RiwayatPresensiController extends Controller
 			->all();
 
 		$presensisByUserDate = [];
-		foreach (Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $presensi) {
+		foreach (Presensi::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])->get() as $presensi) {
 			$presensisByUserDate[$presensi->user_id][$this->normalizeDateKey($presensi->tanggal)] = $presensi;
 		}
 
 		$izinsByUserDate = [];
-		foreach (PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->get() as $izin) {
+		foreach (PresensiIzin::whereYear('tanggal', $year)->whereMonth('tanggal', $month)->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])->get() as $izin) {
 			$izinsByUserDate[$izin->user_id][$this->normalizeDateKey($izin->tanggal)] = $izin;
 		}
 
@@ -495,6 +689,7 @@ class RiwayatPresensiController extends Controller
 					$presensisByUserDate[$guru->id][$dateKey] ?? null,
 					$izinsByUserDate[$guru->id][$dateKey] ?? null,
 					$manualStatuses[$guru->id][$dateKey] ?? null,
+					$selectedPeriod,
 				);
 			}
 			$rows[] = $row;
@@ -520,8 +715,12 @@ class RiwayatPresensiController extends Controller
 		]);
 	}
 
-	private function resolveAttendanceStatus(Carbon $date, ?PresensiSetting $settings, ?Presensi $presensi, ?PresensiIzin $izin, ?string $manualStatus = null): string
+	private function resolveAttendanceStatus(Carbon $date, ?PresensiSetting $settings, ?Presensi $presensi, ?PresensiIzin $izin, ?string $manualStatus = null, ?PresensiPeriod $selectedPeriod = null): string
 	{
+		if ($selectedPeriod && ! $selectedPeriod->includesDate($date)) {
+			return '-';
+		}
+
 		if ($manualStatus !== null && in_array($manualStatus, self::AVAILABLE_STATUSES, true)) {
 			return $manualStatus;
 		}
@@ -537,7 +736,7 @@ class RiwayatPresensiController extends Controller
 			return 'I';
 		}
 
-		return $this->shouldMarkAlpha($date) ? 'A' : '-';
+		return $this->shouldMarkAlpha($date, $selectedPeriod) ? 'A' : '-';
 	}
 
 	private function getManualStatusOverrides(array $userIds, array $dateKeys): array
@@ -558,30 +757,53 @@ class RiwayatPresensiController extends Controller
 		return $overrides;
 	}
 
-	private function buildAttendanceRowsForUser(User $guru, ?PresensiSetting $settings)
+	private function buildAttendanceRowsForUser(User $guru, ?PresensiSetting $settings, ?PresensiPeriod $selectedPeriod = null)
 	{
-		$presensisByDate = Presensi::where('user_id', $guru->id)
+		$presensiQuery = Presensi::where('user_id', $guru->id);
+		$izinQuery = PresensiIzin::where('user_id', $guru->id);
+		$overrideQuery = PresensiStatusOverride::where('user_id', $guru->id);
+
+		if ($selectedPeriod) {
+			$dateRange = [Carbon::parse($selectedPeriod->start_date)->toDateString(), Carbon::parse($selectedPeriod->end_date)->toDateString()];
+			$presensiQuery->whereBetween('tanggal', $dateRange);
+			$izinQuery->whereBetween('tanggal', $dateRange);
+			$overrideQuery->whereBetween('tanggal', $dateRange);
+		}
+
+		$presensisByDate = $presensiQuery
 			->orderByDesc('tanggal')
 			->get()
 			->keyBy(fn ($presensi) => $this->normalizeDateKey($presensi->tanggal));
 
-		$izinsByDate = PresensiIzin::where('user_id', $guru->id)
+		$izinsByDate = $izinQuery
 			->get()
 			->keyBy(fn ($izin) => $this->normalizeDateKey($izin->tanggal));
 
-		$manualStatusesByDate = PresensiStatusOverride::where('user_id', $guru->id)
+		$manualStatusesByDate = $overrideQuery
 			->get()
 			->mapWithKeys(fn ($override) => [$this->normalizeDateKey($override->tanggal) => $override->status]);
 
+		$periodDateKeys = $selectedPeriod
+			? collect($this->getOperationalDateKeysForPeriod($selectedPeriod))
+			: collect();
+
 		$dateKeys = collect()
+			->merge($periodDateKeys)
 			->merge($presensisByDate->keys())
 			->merge($izinsByDate->keys())
 			->merge($manualStatusesByDate->keys())
 			->unique()
+			->filter(function (string $dateKey) use ($selectedPeriod) {
+				if (! $selectedPeriod) {
+					return true;
+				}
+
+				return $selectedPeriod->includesDate(Carbon::parse($dateKey));
+			})
 			->sortDesc()
 			->values();
 
-		return $dateKeys->map(function (string $dateKey) use ($izinsByDate, $manualStatusesByDate, $presensisByDate, $settings) {
+		return $dateKeys->map(function (string $dateKey) use ($izinsByDate, $manualStatusesByDate, $presensisByDate, $selectedPeriod, $settings) {
 			$date = Carbon::parse($dateKey);
 			$presensi = $presensisByDate->get($dateKey);
 			$izin = $izinsByDate->get($dateKey);
@@ -596,6 +818,7 @@ class RiwayatPresensiController extends Controller
 					$presensi,
 					$izin,
 					$manualStatusesByDate->get($dateKey),
+					$selectedPeriod,
 				),
 			];
 		});
@@ -626,11 +849,168 @@ class RiwayatPresensiController extends Controller
 			: Carbon::parse($date)->toDateString();
 	}
 
-	private function shouldMarkAlpha(Carbon $date): bool
+	private function shouldMarkAlpha(Carbon $date, ?PresensiPeriod $selectedPeriod = null): bool
 	{
+		$period = $selectedPeriod;
+
+		if ($period && ! $period->includesDate($date)) {
+			return false;
+		}
+
+		$period ??= $this->getPresensiPeriodForDate($date);
+
 		return $date->copy()->startOfDay()->lt(Carbon::today())
-			&& ! $date->isSunday()
+			&& $period !== null
+			&& $period->isOperationalOn($date)
 			&& ! $this->isHariLiburNasional($date);
+	}
+
+	private function canApplyBulkStatusOnDate(Carbon $date, PresensiPeriod $period): bool
+	{
+		return $period->includesDate($date)
+			&& ! $date->isSunday()
+			&& $period->isOperationalOn($date)
+			&& ! $this->isHariLiburNasional($date);
+	}
+
+	private function getSelectedAdminPeriod(Request $request): ?PresensiPeriod
+	{
+		$periodId = $request->integer('period_id');
+
+		if (! $periodId) {
+			return null;
+		}
+
+		return $this->getPresensiPeriods()->firstWhere('id', $periodId);
+	}
+
+	private function resolveSelectedDateWithinPeriod(?string $requestedDate, PresensiPeriod $period): Carbon
+	{
+		if ($requestedDate) {
+			$date = Carbon::parse($requestedDate);
+		} else {
+			$today = Carbon::today();
+			$date = $period->includesDate($today) ? $today : Carbon::parse($period->start_date);
+		}
+
+		$startDate = Carbon::parse($period->start_date)->startOfDay();
+		$endDate = Carbon::parse($period->end_date)->endOfDay();
+
+		if ($date->lt($startDate)) {
+			return $startDate;
+		}
+
+		if ($date->gt($endDate)) {
+			return $endDate;
+		}
+
+		return $date;
+	}
+
+	private function getMonthOptionsForPeriod(PresensiPeriod $period): array
+	{
+		$options = [];
+		$cursor = Carbon::parse($period->start_date)->startOfMonth();
+		$end = Carbon::parse($period->end_date)->startOfMonth();
+
+		while ($cursor->lte($end)) {
+			$key = $cursor->format('Y-m');
+			$options[$key] = $cursor->translatedFormat('F Y');
+			$cursor->addMonthNoOverflow();
+		}
+
+		return $options;
+	}
+
+	private function resolveSelectedMonthKey(?string $requestedMonthKey, PresensiPeriod $period): string
+	{
+		$options = $this->getMonthOptionsForPeriod($period);
+		$todayKey = Carbon::today()->format('Y-m');
+
+		if ($requestedMonthKey && array_key_exists($requestedMonthKey, $options)) {
+			return $requestedMonthKey;
+		}
+
+		if (array_key_exists($todayKey, $options)) {
+			return $todayKey;
+		}
+
+		return array_key_last($options);
+	}
+
+	private function resolveSelectedMonthKeyForRequest(Request $request, PresensiPeriod $period): string
+	{
+		return $this->resolveSelectedMonthKey($request->input('month_key'), $period);
+	}
+
+	private function paginateMonthOptions(array $monthOptions, string $selectedMonthKey, Request $request): LengthAwarePaginator
+	{
+		$monthKeys = array_keys($monthOptions);
+		$currentPage = array_search($selectedMonthKey, $monthKeys, true);
+		$currentPage = $currentPage === false ? 1 : $currentPage + 1;
+
+		return new LengthAwarePaginator(
+			[$selectedMonthKey],
+			count($monthKeys),
+			1,
+			$currentPage,
+			[
+				'path' => $request->url(),
+				'query' => collect($request->query())
+					->except(['page', 'month_key'])
+					->all(),
+			],
+		);
+	}
+
+	private function getMonthDateRangeWithinPeriod(string $monthKey, PresensiPeriod $period): array
+	{
+		$monthDate = Carbon::createFromFormat('Y-m', $monthKey)->startOfMonth();
+		$periodStart = Carbon::parse($period->start_date)->startOfDay();
+		$periodEnd = Carbon::parse($period->end_date)->endOfDay();
+		$monthStart = $monthDate->copy()->startOfMonth();
+		$monthEnd = $monthDate->copy()->endOfMonth();
+
+		return [
+			'start' => $monthStart->lt($periodStart) ? $periodStart : $monthStart,
+			'end' => $monthEnd->gt($periodEnd) ? $periodEnd : $monthEnd,
+		];
+	}
+
+	private function getOperationalDateKeysForPeriod(PresensiPeriod $period): array
+	{
+		$dateKeys = [];
+		$cursor = Carbon::parse($period->start_date)->startOfDay();
+		$end = Carbon::parse($period->end_date)->startOfDay();
+
+		while ($cursor->lte($end)) {
+			if ($period->isOperationalOn($cursor)) {
+				$dateKeys[] = $cursor->toDateString();
+			}
+
+			$cursor->addDay();
+		}
+
+		return $dateKeys;
+	}
+
+	private function getPresensiPeriodForDate(Carbon $date): ?PresensiPeriod
+	{
+		return $this->getPresensiPeriods()->first(function (PresensiPeriod $period) use ($date) {
+			return $period->includesDate($date);
+		});
+	}
+
+	private function getPresensiPeriods()
+	{
+		if ($this->presensiPeriods !== null) {
+			return $this->presensiPeriods;
+		}
+
+		return $this->presensiPeriods = PresensiPeriod::query()
+			->orderByDesc('is_active')
+			->orderByDesc('start_date')
+			->get();
 	}
 
 	private function isHariLiburNasional(Carbon $date): bool
