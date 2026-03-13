@@ -25,7 +25,7 @@ class WebProfilController extends Controller
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
 
-		return view('admin.kelola_web_profil', [
+		return view('admin.profile_sekolah.kelola_web_profil', [
 			'profile' => $profile,
 			'programs' => $programs,
 			'contents' => $contents,

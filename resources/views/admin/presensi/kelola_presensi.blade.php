@@ -30,11 +30,40 @@
         <div class="px-4 sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
+                    @if (session('error'))
+                        <div class="p-3 bg-red-100 text-red-800 rounded text-sm">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
                     @if (session('success'))
                         <div class="p-3 bg-green-100 text-green-800 rounded text-sm">
                             {{ session('success') }}
                         </div>
                     @endif
+
+                    <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div class="space-y-2">
+                                <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100">Periode Presensi Aktif</h3>
+                                @if ($activePeriod)
+                                    <div class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                                        <p><span class="font-semibold">Nama:</span> {{ $activePeriod->name }}</p>
+                                        <p><span class="font-semibold">Jenis:</span> {{ \App\Models\PresensiPeriod::TYPE_OPTIONS[$activePeriod->period_type] ?? $activePeriod->period_type }}</p>
+                                        <p><span class="font-semibold">Periode:</span> {{ $activePeriod->start_date->format('d M Y') }} - {{ $activePeriod->end_date->format('d M Y') }}</p>
+                                        <p><span class="font-semibold">Hari Presensi:</span> {{ implode(', ', $activePeriodDayLabels) }}</p>
+                                    </div>
+                                @else
+                                    <p class="text-sm text-red-700 dark:text-red-300">
+                                        Belum ada periode presensi aktif. Atur periode lebih dulu sebelum menyimpan jam presensi.
+                                    </p>
+                                @endif
+                            </div>
+                            <a href="{{ route('admin.presensi.periods.index') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                Kelola Tahun Ajar Presensi
+                            </a>
+                        </div>
+                    </div>
 
                     <h3 class="text-lg font-semibold mb-2">Pengaturan Jam Presensi</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-300">
@@ -169,7 +198,7 @@
                         </div>
 
                         <div class="md:col-span-2 flex justify-end mt-2">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
+                            <button type="submit" @disabled(! $activePeriod) class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded {{ $activePeriod ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-600 cursor-not-allowed' }}">
                                 Simpan Pengaturan
                             </button>
                         </div>

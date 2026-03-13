@@ -41,7 +41,10 @@
                 
                 <div class="min-w-0">
                     <div class="mb-4 flex items-center justify-between">
-                        <a href="{{ route('publik.berita.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">&larr; Kembali ke Daftar Berita</a>
+                        {{-- Class border sudah diterapkan di sini --}}
+                        <a href="{{ route('publik.berita.index') }}" class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            &larr; Kembali ke Daftar Berita
+                        </a>
                         <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($berita->tanggal_berita)->format('d M Y') }}</span>
                     </div>
 

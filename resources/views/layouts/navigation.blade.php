@@ -85,8 +85,8 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('guru.kehadiran') }}" class="flex items-center rounded-md transition group {{ request()->routeIs('guru.kehadiran*') ? 'bg-[#0000F4]/10 dark:bg-[#0000F4]/20 border-l-4 border-yellow-500' : 'bg-gray-200/30 dark:bg-gray-700/30 hover:bg-gray-200/50 dark:hover:bg-gray-700/50' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kehadiran' : ''">
-                    <svg class="w-5 h-5 {{ request()->routeIs('guru.kehadiran*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('guru.kehadiran.periods') }}" class="flex items-center rounded-md transition {{ request()->routeIs('guru.kehadiran*') ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kehadiran' : ''">
+                    <svg class="w-5 h-5 text-cyan-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('guru.kehadiran*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kehadiran</span>

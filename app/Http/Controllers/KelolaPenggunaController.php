@@ -19,7 +19,7 @@ class KelolaPenggunaController extends Controller
 		}
 		$users = $query->paginate(10)->withQueryString();
 
-		return view('admin.kelola_pengguna', [
+		return view('admin.pengguna.kelola_pengguna', [
 			'users' => $users,
 			'currentRole' => $role,
 		]);
@@ -34,8 +34,10 @@ class KelolaPenggunaController extends Controller
 	{
 		$validated = $request->validate([
 			'name' => ['required', 'string', 'max:255'],
+			'username' => ['nullable', 'string', 'max:255', 'alpha_dash:ascii', 'unique:users,username'],
 			'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
 			'password' => ['required', 'string', 'min:8'],
+			'tanggal_lahir' => ['nullable', 'date'],
 			'employee_number' => ['nullable', 'string', 'max:100'],
 			'kelas' => ['nullable', 'string', 'max:255'],
 			'role' => ['required', 'in:admin,guru,wali_murid'],
@@ -45,8 +47,11 @@ class KelolaPenggunaController extends Controller
 
 		User::create([
 			'name' => $validated['name'],
+			'username' => $validated['username'] ?? null,
 			'email' => $validated['email'],
 			'password' => Hash::make($validated['password']),
+			'email_verified_at' => now(),
+			'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
 			'role' => $validated['role'],
 			'employee_number' => $validated['employee_number'] ?? null,
 			'kelas' => $validated['kelas'] ?? null,
@@ -66,6 +71,13 @@ class KelolaPenggunaController extends Controller
 	{
 		$validated = $request->validate([
 			'name' => ['required', 'string', 'max:255'],
+			'username' => [
+				'nullable',
+				'string',
+				'max:255',
+				'alpha_dash:ascii',
+				Rule::unique('users', 'username')->ignore($user->id),
+			],
 			'email' => [
 				'required',
 				'string',
@@ -74,6 +86,7 @@ class KelolaPenggunaController extends Controller
 				Rule::unique('users', 'email')->ignore($user->id),
 			],
 			'password' => ['nullable', 'string', 'min:8'],
+			'tanggal_lahir' => ['nullable', 'date'],
 			'employee_number' => ['nullable', 'string', 'max:100'],
 			'kelas' => ['nullable', 'string', 'max:255'],
 			'role' => ['required', 'in:admin,guru,wali_murid'],
@@ -83,7 +96,10 @@ class KelolaPenggunaController extends Controller
 
 		$data = [
 			'name' => $validated['name'],
+			'username' => $validated['username'] ?? null,
 			'email' => $validated['email'],
+			'email_verified_at' => $user->email === $validated['email'] ? $user->email_verified_at : now(),
+			'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
 			'role' => $validated['role'],
 			'employee_number' => $validated['employee_number'] ?? null,
 			'kelas' => $validated['kelas'] ?? null,

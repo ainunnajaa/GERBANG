@@ -19,20 +19,25 @@
         x-data="{
             themeMode: 'system',
             isDark: false,
-            openTheme: false,
+            lastSystemDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
             sidebarOpen: false,
             sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
             windowWidth: window.innerWidth,
             init() {
-                const saved = localStorage.getItem('theme') || 'system';
-                this.setTheme(saved, false);
+                const saved = localStorage.getItem('theme');
+                this.setTheme(saved ?? 'system', false);
 
                 const media = window.matchMedia('(prefers-color-scheme: dark)');
                 media.addEventListener('change', (e) => {
-                    if (this.themeMode === 'system') {
-                        this.isDark = e.matches;
-                        document.documentElement.classList.toggle('dark', this.isDark);
+                    this.lastSystemDark = e.matches;
+
+                    if (this.themeMode !== 'system') {
+                        localStorage.removeItem('theme');
+                        this.themeMode = 'system';
                     }
+
+                    this.isDark = e.matches;
+                    document.documentElement.classList.toggle('dark', this.isDark);
                 });
 
                 window.addEventListener('resize', () => {
@@ -41,8 +46,13 @@
             },
             setTheme(mode, persist = true) {
                 this.themeMode = mode;
+
                 if (persist) {
-                    localStorage.setItem('theme', mode);
+                    if (mode === 'system') {
+                        localStorage.removeItem('theme');
+                    } else {
+                        localStorage.setItem('theme', mode);
+                    }
                 }
 
                 if (mode === 'light') {
@@ -54,6 +64,9 @@
                 }
 
                 document.documentElement.classList.toggle('dark', this.isDark);
+            },
+            toggleTheme() {
+                this.setTheme(this.isDark ? 'light' : 'dark');
             }
         }"
     >
@@ -92,39 +105,48 @@
                         </span>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <div class="relative" @click.away="openTheme = false">
-                            <button @click="openTheme = !openTheme" type="button" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 text-sm text-white dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-                                <span class="mr-2" x-text="themeMode === 'system' ? 'Tema: Sistem' : (themeMode === 'light' ? 'Tema: Terang' : 'Tema: Gelap')"></span>
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75L12 13.5l3.75-3.75" />
-                                </svg>
-                            </button>
-                            <div x-show="openTheme" x-cloak class="absolute right-0 mt-1 w-40 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-20">
-                                <button type="button" @click="setTheme('system'); openTheme = false" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    Mengikuti tema sistem
-                                </button>
-                                <button type="button" @click="setTheme('light'); openTheme = false" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    Terang
-                                </button>
-                                <button type="button" @click="setTheme('dark'); openTheme = false" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    Gelap
-                                </button>
-                            </div>
-                        </div>
+                    @php
+                        $authUser = Auth::user();
+                        $profilePhotoUrl = $authUser?->profile_photo_path
+                            ? asset('storage/' . $authUser->profile_photo_path)
+                            : 'https://ui-avatars.com/api/?name=' . urlencode($authUser?->name ?? 'User') . '&background=E11D48&color=ffffff&size=96';
+                    @endphp
+
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            @click="toggleTheme()"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white shadow-sm transition hover:bg-white/25 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                            :title="isDark ? 'Ubah ke tema terang' : 'Ubah ke tema gelap'"
+                            aria-label="Toggle theme"
+                        >
+                            <svg x-show="!isDark" x-cloak class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zm0 15a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5zm0 4.5a.75.75 0 01.75-.75v-1.5a.75.75 0 00-1.5 0V21a.75.75 0 01.75.75zm9-9a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5A.75.75 0 0021 12zm-15.75 0a.75.75 0 00-.75-.75H3a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75zm12.114 6.364a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm-10.728 0a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm10.728-10.728a.75.75 0 000 1.06.75.75 0 001.06 0l1.06-1.06a.75.75 0 10-1.06-1.06l-1.06 1.06zM6.636 6.636a.75.75 0 10-1.06-1.06L4.515 6.636a.75.75 0 101.06 1.06l1.06-1.06z"/>
+                            </svg>
+                            <svg x-show="isDark" x-cloak class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819 8.25 8.25 0 0010.773 10.773.75.75 0 01.981.98A9.75 9.75 0 118.548 1.556a.75.75 0 01.98.162z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
 
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
-                                <button class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-5 font-medium rounded-md text-white dark:text-gray-200 bg-white/15 dark:bg-gray-800 hover:bg-white/25 dark:hover:bg-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                    <span class="mr-2">{{ Auth::user()->name }}</span>
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <button class="inline-flex h-10 items-center gap-1.5 rounded-lg bg-white/15 px-2.5 text-xs font-medium text-white transition ease-in-out duration-150 hover:bg-white/25 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                                    <img src="{{ $profilePhotoUrl }}" alt="Foto {{ $authUser->name }}" class="h-7 w-7 rounded-full object-cover ring-2 ring-white/20">
+                                    <span class="max-w-[6rem] truncate text-xs font-semibold uppercase tracking-[0.02em]">{{ $authUser->name }}</span>
+                                    <svg class="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
                             </x-slot>
 
                             <x-slot name="content">
-                                <div class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</div>
+                                <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+                                    <img src="{{ $profilePhotoUrl }}" alt="Foto {{ $authUser->name }}" class="h-11 w-11 rounded-full object-cover">
+                                    <div class="min-w-0">
+                                        <div class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $authUser->name }}</div>
+                                        <div class="truncate text-xs text-gray-500 dark:text-gray-400">{{ $authUser->email }}</div>
+                                    </div>
+                                </div>
 
                                 <x-dropdown-link :href="route('profile.edit')">
                                     {{ __('Profile') }}
@@ -215,7 +237,7 @@
                             </svg>
                             <span>Izin</span>
                         </a>
-                        <a href="{{ route('guru.kehadiran') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.kehadiran*') ? 'text-cyan-600 dark:text-cyan-400 border-t-2 border-cyan-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                        <a href="{{ route('guru.kehadiran.periods') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.kehadiran*') ? 'text-cyan-600 dark:text-cyan-400 border-t-2 border-cyan-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
                             <svg class="w-5 h-5 mb-0.5 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>

@@ -12,7 +12,7 @@ class KelolaBeritaController extends Controller
 	{
 		$beritas = Berita::orderByDesc('tanggal_berita')->orderByDesc('created_at')->get();
 
-		return view('admin.kelola_berita', compact('beritas'));
+		return view('admin.berita.kelola_berita', compact('beritas'));
 	}
 
 	public function create()

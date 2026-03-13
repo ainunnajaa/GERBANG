@@ -22,7 +22,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'password',
         ]);
 
@@ -35,11 +35,24 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'login' => $user->email,
             'password' => 'wrong-password',
         ]);
 
         $this->assertGuest();
+    }
+
+    public function test_unverified_users_can_authenticate(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->post('/login', [
+            'login' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_can_logout(): void

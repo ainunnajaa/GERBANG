@@ -6,32 +6,21 @@
 	</x-slot>
 
 	@php
-		$bulanNames = [
-			1 => 'Januari',
-			2 => 'Februari',
-			3 => 'Maret',
-			4 => 'April',
-			5 => 'Mei',
-			6 => 'Juni',
-			7 => 'Juli',
-			8 => 'Agustus',
-			9 => 'September',
-			10 => 'Oktober',
-			11 => 'November',
-			12 => 'Desember',
-		];
-		$monthNumber = is_numeric($month ?? null) ? (int) $month : now()->month;
-		$monthLabel = $bulanNames[$monthNumber] ?? $monthNumber;
+		$monthLabel = data_get($monthOptions, $selectedMonthKey, $month . '-' . $year);
 	@endphp
 
 	<div class="py-1">
 		<div class="px-4 sm:px-6 lg:px-8">
 			<div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100 space-y-4">
+					<div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+						Periode ditampilkan: {{ $selectedPeriod->name }} ({{ $selectedPeriod->start_date->format('d M Y') }} - {{ $selectedPeriod->end_date->format('d M Y') }})
+					</div>
+
 					<div class="flex items-center justify-between">
 						<h3 class="text-lg font-semibold">Rekap Bulanan (Matriks)</h3>
 						<a
-							href="{{ route('guru.kehadiran') }}"
+							href="{{ route('guru.kehadiran', ['period_id' => $selectedPeriod->id, 'month_key' => $selectedMonthKey]) }}"
 							class="inline-flex items-center px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600"
 						>
 							&larr; Kembali ke Riwayat Harian
@@ -39,23 +28,16 @@
 					</div>
 
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						Pilih bulan dan tahun untuk melihat pola kehadiran Anda dalam bentuk matriks.
+						Pilih bulan dalam periode yang dipilih untuk melihat pola kehadiran Anda dalam bentuk matriks.
 					</p>
 
 					<form method="GET" action="{{ route('guru.kehadiran.bulanan') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mt-2">
+						<input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
 						<div>
-							<label class="block text-sm font-medium mb-1">Bulan</label>
-							<select name="bulan" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-								@foreach($bulanNames as $num => $name)
-									<option value="{{ $num }}" @selected($num == $month)>{{ $name }}</option>
-								@endforeach
-							</select>
-						</div>
-						<div>
-							<label class="block text-sm font-medium mb-1">Tahun</label>
-							<select name="tahun" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-								@foreach($years as $y)
-									<option value="{{ $y }}" @selected($y == $year)>{{ $y }}</option>
+							<label class="block text-sm font-medium mb-1">Bulan Periode</label>
+							<select name="month_key" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+								@foreach($monthOptions as $monthKey => $label)
+									<option value="{{ $monthKey }}" @selected($monthKey === $selectedMonthKey)>{{ $label }}</option>
 								@endforeach
 							</select>
 						</div>
@@ -67,14 +49,14 @@
 					</form>
 
 					<div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-						<span>Bulan ditampilkan: <strong>{{ $monthLabel }} {{ $year }}</strong></span>
+						<span>Bulan ditampilkan: <strong>{{ $monthLabel }}</strong></span>
 						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, A = Alpha, - = Belum ada data</span>
 					</div>
 
 					<div class="flex items-center justify-between mt-2 text-xs">
 						<span></span>
 						<a
-							href="{{ route('guru.kehadiran.bulanan.export', ['bulan' => $month, 'tahun' => $year]) }}"
+							href="{{ route('guru.kehadiran.bulanan.export', ['period_id' => $selectedPeriod->id, 'month_key' => $selectedMonthKey]) }}"
 							class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700"
 						>
 							Export Excel Bulan Ini
