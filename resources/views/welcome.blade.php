@@ -191,11 +191,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body id="top" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
-<<<<<<< HEAD
-        @include('tampilan.footer_navbar', ['slotPosition' => 'header'])
-=======
         @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
->>>>>>> main
 
             <main class="flex-1">
                 <div>
@@ -393,11 +389,7 @@
                     </div>
                 @endif
 
-<<<<<<< HEAD
                 @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-=======
-                {{-- @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
->>>>>>> main
                 <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -415,7 +407,7 @@
                             @endif
                         </div>
                     </div>
-                @endif --}}
+                @endif
 
                 @if (!empty($gurus) && $gurus->count())
                     <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
@@ -603,10 +595,12 @@
                                 // Dropdown Profil in navbar
                                 const profilButton = document.getElementById('profil_menu_button');
                                 const profilMenu = document.getElementById('profil_menu');
+                                const profilMenuClose = document.getElementById('profil_menu_close');
                                 if (profilButton && profilMenu) {
                                     let profilOpen = false;
                                     function closeProfilMenu() {
                                         profilMenu.classList.add('hidden');
+                                        document.body.classList.remove('overflow-hidden');
                                         profilOpen = false;
                                     }
                                     profilButton.addEventListener('click', function(e){
@@ -615,17 +609,19 @@
                                             closeProfilMenu();
                                         } else {
                                             profilMenu.classList.remove('hidden');
+                                            document.body.classList.add('overflow-hidden');
                                             profilOpen = true;
                                         }
                                     });
-                                    profilMenu.querySelectorAll('a[href^="#"]').forEach(function(link){
+                                    if (profilMenuClose) {
+                                        profilMenuClose.addEventListener('click', function(){
+                                            closeProfilMenu();
+                                        });
+                                    }
+                                    profilMenu.querySelectorAll('a').forEach(function(link){
                                         link.addEventListener('click', function(){
                                             closeProfilMenu();
                                         });
-                                    });
-                                    document.addEventListener('click', function(){
-                                        if (!profilOpen) return;
-                                        closeProfilMenu();
                                     });
                                 }
                             })();
