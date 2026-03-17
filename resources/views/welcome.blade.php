@@ -3,7 +3,6 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <script>
@@ -11,307 +10,187 @@
                 try {
                     var root = document.documentElement;
                     var saved = localStorage.getItem('theme') || 'system';
-                    var isDark;
-
-                    if (saved === 'light') {
-                        isDark = false;
-                    } else if (saved === 'dark') {
-                        isDark = true;
-                    } else {
-                        isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    }
-
-                    if (isDark) {
-                        root.classList.add('dark');
-                    } else {
-                        root.classList.remove('dark');
-                    }
-                } catch (e) {
-                    // fallback: do nothing
-                }
+                    var isDark = saved === 'dark' || (saved !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    if (isDark) { root.classList.add('dark'); } else { root.classList.remove('dark'); }
+                } catch (e) {}
             })();
         </script>
 
         <style>
+            /* FONT PLAYFUL UNTUK ANAK TK */
+            @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+            
+            body {
+                font-family: 'Nunito', sans-serif;
+                background-color: #FDFCE0; 
+                margin: 0;
+                padding: 0;
+                transition: background-color 0.3s ease;
+            }
+            .font-playful {
+                font-family: 'Fredoka One', 'Comic Sans MS', cursive, sans-serif;
+                letter-spacing: 1px;
+            }
+
             /* CSS UNTUK SAMBUTAN KEPALA SEKOLAH (DIAGONAL) */
             .welcome-section {
-                position: relative;
-                width: 100%;
-                min-height: 500px;
-                background-color: #ffffff;
-                overflow: hidden;
-                display: flex;
-                align-items: center;
-                padding: 60px 20px;
-                border-radius: 0.5rem; /* Tambahan agar melengkung seperti card Tailwind */
+                position: relative; width: 100%; min-height: 400px;
+                background-color: #ffffff; overflow: hidden; display: flex; align-items: center;
+                padding: 60px 20px; border-radius: 1.5rem; 
+                border: 6px solid #1E90FF; box-shadow: 0 10px 0 #104E8B; 
+                transition: all 0.3s ease;
             }
-
             .bg-shape {
-                position: absolute;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                width: 100%;
-                background-color: #0C2C55;
-                z-index: 1;
-                clip-path: polygon(35% 0, 100% 0, 100% 100%, 10% 100%);
+                position: absolute; top: 0; right: 0; bottom: 0; width: 100%;
+                background-color: #1E90FF; z-index: 1;
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 15% 100%);
+                transition: all 0.3s ease;
             }
-
             .content-wrapper {
-                position: relative;
-                z-index: 2;
-                max-width: 1100px;
-                margin: 0 auto;
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 40px;
-                width: 100%;
+                position: relative; z-index: 2; max-width: 1100px; margin: 0 auto;
+                display: flex; flex-wrap: wrap; align-items: center; gap: 40px; width: 100%;
             }
-
-            .image-column {
-                flex: 1 1 350px;
-                display: flex;
-                justify-content: center;
-            }
-
-            .image-box {
-                position: relative;
-                width: 100%;
-                max-width: 350px;
-            }
-
+            .image-column { flex: 1 1 350px; display: flex; justify-content: center; }
+            .image-box { position: relative; width: 100%; max-width: 320px; }
             .image-box img {
-                width: 100%;
-                height: 420px;
-                object-fit: cover;
-                border: 6px solid #F5A623;
-                border-radius: 10px;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-                display: block;
+                width: 100%; height: 380px; object-fit: cover;
+                border: 8px solid #FFD700; border-radius: 20px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); background-color: white;
             }
-
             .name-tag {
-                position: absolute;
-                bottom: -20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: #ffffff;
-                padding: 12px 20px;
-                border-radius: 8px;
-                text-align: center;
-                width: 70%;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+                position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+                background-color: #FF8C00; color: white; padding: 10px 25px;
+                border-radius: 50px; text-align: center; width: 80%;
+                border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             }
+            .name-tag h3 { font-family: 'Fredoka One', cursive; font-size: 18px; margin-bottom: 2px; }
+            .name-tag p { font-size: 13px; font-weight: 700; margin: 0; }
+            .text-column { flex: 1 1 500px; color: #ffffff; }
+            .text-column h2 { font-family: 'Fredoka One', cursive; font-size: 32px; margin-bottom: 8px; text-shadow: 2px 2px 0px rgba(0,0,0,0.2); }
+            .yellow-line { height: 6px; width: 150px; background-color: #FFD700; margin-bottom: 25px; border-radius: 10px;}
+            .text-column .intro-text { font-size: 18px; font-weight: 800; margin-bottom: 15px; line-height: 1.4; color: #FFF; }
+            .text-column .main-text { font-size: 15px; line-height: 1.8; color: #E6F2FF; font-weight: 600; }
 
-            .name-tag h3 {
-                color: #111;
-                font-size: 16px;
-                margin-bottom: 4px;
-                font-weight: bold;
-            }
-
-            .name-tag p {
-                color: #555;
-                font-size: 13px;
-                font-weight: 500;
-                margin: 0;
-            }
-
-            .text-column {
-                flex: 1 1 500px;
-                color: #ffffff;
-            }
-
-            .text-column h2 {
-                font-size: 32px;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 8px;
-            }
-
-            .yellow-line {
-                height: 4px;
-                width: 250px;
-                background-color: #FFD600;
-                margin-bottom: 25px;
-            }
-
-            .text-column .intro-text {
-                font-size: 18px;
-                font-weight: 600;
-                margin-bottom: 15px;
-                line-height: 1.5;
-            }
-
-            .text-column .main-text {
-                font-size: 15px;
-                line-height: 1.8;
-                text-align: justify;
-                color: #e0e4ff;
-                white-space: pre-line;
-            }
-
-            /* Responsif untuk HP dan Tablet Kecil */
             @media screen and (max-width: 900px) {
-                .bg-shape {
-                    clip-path: none;
-                }
-                .content-wrapper {
-                    flex-direction: column;
-                    text-align: center;
-                }
-                .image-column {
-                    margin-bottom: 40px;
-                }
-                .yellow-line {
-                    margin: 0 auto 25px auto;
-                }
-                .text-column .main-text {
-                    text-align: center;
-                }
+                .bg-shape { clip-path: none; }
+                .content-wrapper { flex-direction: column; text-align: center; }
+                .image-column { margin-bottom: 40px; }
+                .yellow-line { margin: 0 auto 25px auto; }
             }
 
-            /* Tambahan: Dukungan Dark Mode agar serasi dengan website Anda */
-            html.dark .welcome-section {
-                background-color: #1f2937; /* Tailwind gray-800 */
+            /* =============================================== */
+            /* PENGATURAN WARNA KHUSUS DARK MODE (TEMA GELAP)  */
+            /* =============================================== */
+            html.dark body { background-color: #111827; }
+            
+            html.dark .welcome-section { background-color: #1f2937; border-color: #3b82f6; box-shadow: 0 10px 0 #1e3a8a; }
+            html.dark .bg-shape { background-color: #2563eb; }
+            html.dark .name-tag { background-color: #ea580c; border-color: #1f2937; }
+            html.dark .text-column { color: #f3f4f6; }
+            html.dark .image-box img { border-color: #ca8a04; }
+
+            /* CSS Untuk Tombol Slider Main (Hero) */
+            .slider-btn {
+                position: absolute; top: 50%; transform: translateY(-50%);
+                background: rgba(255, 255, 255, 0.4); color: white;
+                border: 3px solid white; border-radius: 50%;
+                width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
+                cursor: pointer; z-index: 10; transition: all 0.3s; backdrop-filter: blur(4px);
             }
-            html.dark .name-tag {
-                background-color: #111827; /* Tailwind gray-900 */
-            }
-            html.dark .name-tag h3 {
-                color: #f3f4f6;
-            }
-            html.dark .name-tag p {
-                color: #9ca3af;
+            .slider-btn:hover { background: rgba(255, 255, 255, 0.9); color: #1E90FF; transform: translateY(-50%) scale(1.15); }
+            html.dark .slider-btn { background: rgba(17, 24, 39, 0.6); border-color: #374151; color: #f3f4f6; }
+            html.dark .slider-btn:hover { background: rgba(31, 41, 55, 0.9); color: #60a5fa; }
+            
+            #prevSlide { left: 15px; } #nextSlide { right: 15px; }
+            @media (min-width: 768px) {
+                .slider-btn { width: 55px; height: 55px; }
+                #prevSlide { left: -25px; } #nextSlide { right: -25px; }
             }
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body id="top" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
+    <body id="top" class="text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
         @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
             <main class="flex-1">
-                <div>
-                        @if (!empty($backgrounds) && $backgrounds->count())
-                            {{-- HERO SECTION: Background + Logo + Text Overlay --}}
-                            <div class="relative w-full aspect-[21/7.5] mb-6 rounded-lg overflow-hidden">
-                                {{-- Background Image --}}
-                                @foreach ($backgrounds as $idx => $bg)
-                                    <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style="background-image: url('{{ asset('storage/' . $bg->path) }}'); opacity: {{ $loop->first ? '1' : '0' }};" data-slide-index="{{ $idx }}"></div>
-                                @endforeach
+                
+                {{-- AREA BIRU LANGIT UNTUK TV WALL SLIDER --}}
+                <div class="w-full bg-[#87CEEB] dark:bg-[#0f172a] pt-8 pb-16 md:pb-24 relative px-4 transition-colors duration-300">
+                    <div class="max-w-6xl mx-auto relative z-10">
+                        
+                        {{-- NAMA SEKOLAH (Di atas Slider) --}}
+                        @if (!empty($schoolProfile?->school_name))
+                            <div class="mb-4 md:mb-6 pl-2 md:pl-6 text-center md:text-left">
+                                <h1 class="font-playful text-4xl md:text-5xl lg:text-6xl text-[#FFD700] dark:text-yellow-400 drop-shadow-md" style="-webkit-text-stroke: 2px #0C2C55;">
+                                    {{ $schoolProfile->school_name }}
+                                </h1>
+                            </div>
+                        @endif
 
-                                @if ($backgrounds->count() > 1)
-                                    <button type="button" id="slide_prev" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 text-white hover:bg-black/50 transition" aria-label="Slide sebelumnya">
-                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                        </svg>
+                        @if (!empty($backgrounds) && $backgrounds->count())
+                            {{-- HERO SECTION (BENTUK CARD / TV WALL) --}}
+                            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] border-[10px] md:border-[16px] border-white dark:border-gray-800 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-visible group bg-gray-200 dark:bg-gray-900 transition-colors duration-300">
+                                
+                                {{-- Area Gambar Slider --}}
+                                <div class="w-full h-full relative overflow-hidden rounded-xl">
+                                    @foreach ($backgrounds as $idx => $bg)
+                                        <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style="background-image: url('{{ asset('storage/' . $bg->path) }}'); opacity: {{ $loop->first ? '1' : '0' }};" data-slide-index="{{ $idx }}"></div>
+                                    @endforeach
+                                    
+                                    {{-- PITA VISI SEKOLAH (Pojok Kiri Bawah) --}}
+                                    @if (!empty($schoolProfile?->vision))
+                                        <div class="absolute bottom-4 md:bottom-8 left-0 z-10 w-[95%] md:w-[85%] lg:w-[70%] pointer-events-none">
+                                            <div class="flex flex-col items-start">
+                                                {{-- Pita Biru (Judul) --}}
+                                                <div class="bg-[#1E90FF] dark:bg-blue-600 px-4 md:px-6 py-1 md:py-2 rounded-r-xl shadow-[4px_4px_10px_rgba(0,0,0,0.2)] border-y-[3px] border-r-[3px] border-white dark:border-gray-800 border-l-0 mb-[-3px] relative z-20 transition-colors duration-300">
+                                                    <h2 class="font-playful text-lg md:text-2xl text-white drop-shadow-md">Visi Sekolah</h2>
+                                                </div>
+                                                {{-- Pita Oranye (Isi Visi memanjang) --}}
+                                                <div class="bg-[#FF6347] dark:bg-orange-600 px-4 md:px-6 py-2 md:py-3 rounded-r-xl shadow-[4px_4px_10px_rgba(0,0,0,0.2)] border-y-[3px] border-r-[3px] border-white dark:border-gray-800 border-l-0 w-full relative z-10 transition-colors duration-300">
+                                                    <p class="text-xs md:text-sm lg:text-base font-bold text-white drop-shadow-sm leading-snug">{{ $schoolProfile->vision }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Tombol Slider Kiri & Kanan --}}
+                                @if($backgrounds->count() > 1)
+                                    <button id="prevSlide" class="slider-btn shadow-lg" aria-label="Previous image">
+                                        <svg class="w-6 h-6 md:w-8 md:h-8 ml-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 19l-7-7 7-7"></path></svg>
                                     </button>
-                                    <button type="button" id="slide_next" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 text-white hover:bg-black/50 transition" aria-label="Slide berikutnya">
-                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                        </svg>
+                                    <button id="nextSlide" class="slider-btn shadow-lg" aria-label="Next image">
+                                        <svg class="w-6 h-6 md:w-8 md:h-8 mr-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 5l7 7-7 7"></path></svg>
                                     </button>
                                 @endif
-                                
-                                {{-- Dark Overlay --}}
-                                <div class="absolute inset-0 bg-black/40 rounded-lg"></div>
-                                
-                                {{-- Content Overlay: Logo + Text (Centered, Side by Side) --}}
-                                <div class="absolute inset-0 flex items-center justify-center rounded-lg">
-                                    <div class="flex flex-row items-center gap-6 md:gap-8 text-center text-white max-w-3xl px-4">
-                                        {{-- Logo with White Frame --}}
-                                        @if (!empty($schoolProfile?->school_logo_path))
-                                            <div class="flex-shrink-0 bg-white rounded-full overflow-hidden p-3 md:p-4 shadow-lg">
-                                                <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-20 h-20 md:w-28 md:h-28 object-cover">
-                                            </div>
-                                        @endif
-                                        
-                                        {{-- School Name + Tagline (Text Column) --}}
-                                        <div class="flex flex-col items-start text-left flex-1">
-                                            {{-- School Name --}}
-                                            @if (!empty($schoolProfile?->school_name))
-                                                <h1 class="text-3xl md:text-4xl font-black drop-shadow-lg leading-tight">{{ $schoolProfile->school_name }}</h1>
-                                            @endif
-                                            
-                                            {{-- Tagline/Vision --}}
-                                            @if (!empty($schoolProfile?->vision))
-                                                <p class="text-sm md:text-base drop-shadow-lg italic font-semibold mt-2">{{ $schoolProfile->vision }}</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
-                            <script>
-                                (function(){
-                                    const slides = document.querySelectorAll('[data-slide-index]');
-                                    let current = 0;
-
-                                    if (slides.length <= 1) {
-                                        return;
-                                    }
-
-                                    const prevButton = document.getElementById('slide_prev');
-                                    const nextButton = document.getElementById('slide_next');
-                                    let autoSlideTimer = null;
-
-                                    function showSlide(nextIndex) {
-                                        slides[current].style.opacity = '0';
-                                        current = (nextIndex + slides.length) % slides.length;
-                                        slides[current].style.opacity = '1';
-                                    }
-
-                                    function restartAutoSlide() {
-                                        if (autoSlideTimer) {
-                                            clearInterval(autoSlideTimer);
-                                        }
-                                        autoSlideTimer = setInterval(function(){
-                                            showSlide(current + 1);
-                                        }, 4000);
-                                    }
-
-                                    if (prevButton) {
-                                        prevButton.addEventListener('click', function(){
-                                            showSlide(current - 1);
-                                            restartAutoSlide();
-                                        });
-                                    }
-
-                                    if (nextButton) {
-                                        nextButton.addEventListener('click', function(){
-                                            showSlide(current + 1);
-                                            restartAutoSlide();
-                                        });
-                                    }
-
-                                    restartAutoSlide();
-                                })();
-                            </script>
                         @endif
                         
-                        <div class="px-4 md:px-8 lg:px-16">
+                    </div>
+                </div>
+                
+                {{-- AREA BAWAH UNTUK KONTEN --}}
+                <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12">
                 
                 @if (!empty($schoolProfile?->welcome_message))
-                
-                    {{-- CARD 1: SELAMAT DATANG --}}
-                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
-                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">{{ $schoolProfile->welcome_message }}</p>
+                    {{-- CARD 1: SELAMAT DATANG (PLAYFUL) --}}
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300">
+                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm">Halo! 👋</div>
+                        <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang di Dunia Ceria!</h2>
+                        <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
                     </div>
 
-                    {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (GAYA DIAGONAL) --}}
+                    {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (DIAGONAL) --}}
                     @php
                         $principalName = $schoolProfile->principal_name ?? 'Kepala Sekolah';
-                        $welcomeIntro = 'Selamat Datang Kami ucapkan terimakasih telah mengakses laman ini'; // Atau ambil dari DB jika ada
+                        $welcomeIntro = 'Selamat Datang Kami ucapkan terimakasih telah mengakses laman ini';
                         $welcomeBody = $schoolProfile->principal_greeting ?? 'Terima kasih telah mengunjungi laman resmi sekolah kami.';
                     @endphp
-                    <div class="rounded-lg shadow-md mb-8">
+                    <div class="mb-14">
                         <section class="welcome-section">
                             <div class="bg-shape"></div>
                             <div class="content-wrapper">
-                                
                                 <div class="image-column">
                                     <div class="image-box">
                                         @if (!empty($schoolProfile->principal_photo_path))
@@ -319,312 +198,303 @@
                                         @else
                                             <img src="https://via.placeholder.com/400x450" alt="Foto Kepala Sekolah">
                                         @endif
-                                        
                                         <div class="name-tag">
                                             <h3>{{ $principalName }}</h3>
                                             <p>Kepala Sekolah</p>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="text-column">
                                     <h2>Sambutan Kepala Sekolah</h2>
                                     <div class="yellow-line"></div>
-                                    
-                                    <p class="intro-text">
-                                        {{ $welcomeIntro }}
-                                    </p>
-                                    
-                                    <p class="main-text">
-                                        {{ $welcomeBody }}
-                                    </p>
+                                    <p class="intro-text">{{ $welcomeIntro }}</p>
+                                    <p class="main-text">{{ $welcomeBody }}</p>
                                 </div>
-
                             </div>
                         </section>
                     </div>
-
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Selamat Datang</h2>
-                        <p class="text-gray-700 dark:text-gray-300 mt-4">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
-                        @isset($guruCount)
-                            <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                <span class="font-medium">Jumlah Guru:</span> {{ $guruCount }}
-                            </div>
-                        @endisset
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300">
+                        <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang!</h2>
+                        <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
                     </div>
                 @endif
 
+                {{-- PROGRAM UNGGULAN COLORFUL --}}
                 @if (!empty($programs) && $programs->count())
-                <div id="program-unggulan" class="mb-8 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Program Unggulan</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                            @foreach ($programs as $program)
-                            @php
-                                // White background with colored lis atas (border-l)
-                                // Odd cards (1st, 3rd, 5th...): blue lis, dark text
-                                // Even cards (2nd, 4th, 6th...): yellow lis, dark text
-                                if ($loop->odd) {
-                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-blue-400', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'];
-                                } else {
-                                    $colors = ['bg' => 'bg-white dark:bg-gray-800', 'border' => 'border-l-yellow-500', 'text' => 'text-[#0C2C55] dark:text-gray-100', 'desc' => 'text-gray-700 dark:text-gray-300', 'icon' => 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200'];
-                                }
-                                $color = $colors;
-                            @endphp
-                            <div class="{{ $color['bg'] }} rounded-md border-l-4 {{ $color['border'] }} border border-gray-300 dark:border-gray-600 p-4 flex flex-col shadow-md">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="font-medium {{ $color['text'] }}">{{ $program->title }}</div>
-                                        @if (!empty($program->icon))
-                                            <span class="inline-block text-xs px-2 py-1 rounded {{ $color['icon'] }}">{{ $program->icon }}</span>
-                                        @endif
-                                    </div>
-                                    @if (!empty($program->description))
-                                        <p class="text-sm {{ $color['desc'] }}">{{ $program->description }}</p>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                <div id="program-unggulan" class="mb-14 pt-4">
+                    <div class="text-center mb-10">
+                        <h2 class="font-playful text-3xl md:text-4xl text-[#8A2BE2] dark:text-purple-400 drop-shadow-sm inline-block bg-white dark:bg-gray-800 px-8 py-3 rounded-full border-4 border-[#8A2BE2] dark:border-purple-600 shadow-[0_6px_0_#4B0082] dark:shadow-[0_6px_0_#4c1d95] transition-colors duration-300">🌟 Program Unggulan 🌟</h2>
                     </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                        @php
+                            $themeColors = [
+                                ['bg' => 'bg-[#FFF0F5] dark:bg-slate-800', 'border' => 'border-[#DC143C] dark:border-red-500', 'text' => 'text-[#DC143C] dark:text-red-400', 'shadow' => 'shadow-[0_6px_0_#DC143C] dark:shadow-[0_6px_0_#991b1b]'], 
+                                ['bg' => 'bg-[#F0FFF0] dark:bg-slate-800', 'border' => 'border-[#32CD32] dark:border-green-500', 'text' => 'text-[#228B22] dark:text-green-400', 'shadow' => 'shadow-[0_6px_0_#32CD32] dark:shadow-[0_6px_0_#166534]'], 
+                                ['bg' => 'bg-[#FFFFE0] dark:bg-slate-800', 'border' => 'border-[#FFD700] dark:border-yellow-500', 'text' => 'text-[#B8860B] dark:text-yellow-400', 'shadow' => 'shadow-[0_6px_0_#FFD700] dark:shadow-[0_6px_0_#854d0e]'], 
+                                ['bg' => 'bg-[#F0F8FF] dark:bg-slate-800', 'border' => 'border-[#1E90FF] dark:border-blue-500', 'text' => 'text-[#0000CD] dark:text-blue-400', 'shadow' => 'shadow-[0_6px_0_#1E90FF] dark:shadow-[0_6px_0_#1e3a8a]'], 
+                                ['bg' => 'bg-[#F5FFFA] dark:bg-slate-800', 'border' => 'border-[#FF8C00] dark:border-orange-500', 'text' => 'text-[#D2691E] dark:text-orange-400', 'shadow' => 'shadow-[0_6px_0_#FF8C00] dark:shadow-[0_6px_0_#9a3412]'], 
+                                ['bg' => 'bg-[#F8F8FF] dark:bg-slate-800', 'border' => 'border-[#8A2BE2] dark:border-purple-500', 'text' => 'text-[#4B0082] dark:text-purple-400', 'shadow' => 'shadow-[0_6px_0_#8A2BE2] dark:shadow-[0_6px_0_#581c87]'], 
+                            ];
+                        @endphp
+                        @foreach ($programs as $index => $program)
+                            @php $color = $themeColors[$index % count($themeColors)]; @endphp
+                            <div class="{{ $color['bg'] }} rounded-3xl border-4 {{ $color['border'] }} p-6 flex flex-col {{ $color['shadow'] }} hover:-translate-y-2 transition-all duration-300 text-center">
+                                <div class="mx-auto w-20 h-20 rounded-full bg-white dark:bg-gray-900 border-4 {{ $color['border'] }} flex items-center justify-center mb-4 text-3xl shadow-sm">
+                                    {{ !empty($program->icon) ? $program->icon : '✨' }}
+                                </div>
+                                <h3 class="font-playful text-xl mb-2 {{ $color['text'] }}">{{ $program->title }}</h3>
+                                @if (!empty($program->description))
+                                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $program->description }}</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
                 @endif
 
-                @if (!empty($schoolProfile?->vision) || !empty($schoolProfile?->mission))
-                <div id="visi-misi" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                            @if (!empty($schoolProfile->vision))
-                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-yellow-500 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
-                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Visi</h3>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $schoolProfile->vision }}</p>
-                                </div>
-                            @endif
-                            @if (!empty($schoolProfile->mission))
-                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-blue-400 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
-                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Misi</h3>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
+                {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & KELAS --}}
                 @if (!empty($gurus) && $gurus->count())
-                    <div id="guru" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Guru</h2>
-<div class="flex items-center justify-between">
-                        <p class="text-gray-600 dark:text-gray-400">Tenaga Pengajar Profesional</p>
-                        <button class="bg-[#0C2C55] text-white px-5 py-2 rounded shadow-md hover:shadow-lg hover:bg-[#0A1F3C] font-medium text-sm md:text-base transition">Selengkapnya</button>
+                    <div id="guru" class="mb-14 pt-4">
+                        <div class="flex flex-col md:flex-row items-center justify-between bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300 mb-8">
+                            <div class="text-center md:text-left mb-6 md:mb-0">
+                                <h2 class="font-playful text-3xl md:text-4xl text-white drop-shadow-md">👨‍🏫 Guru Super 👩‍🏫</h2>
+                                <p class="text-white font-bold text-lg">Pahlawan Pembimbing Kami!</p>
+                            </div>
+                            {{-- Jika Anda punya route halaman khusus guru, tambahkan di href ini --}}
+                         <a href="{{ route('publik.guru.index') }}" class="bg-[#FFD700] dark:bg-yellow-500 text-gray-900 border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_4px_0_#CDAD00] dark:shadow-[0_4px_0_#854d0e] hover:translate-y-[2px] hover:shadow-[0_2px_0_#CDAD00] font-playful text-xl transition-all">Lihat Semua</a>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-6">
-                            @foreach ($gurus as $guru)
-                                <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-6 text-center hover:shadow-xl transition">
-                                <div class="w-24 h-24 mx-auto bg-gray-300 dark:bg-gray-700 rounded-full mb-4 overflow-hidden flex items-center justify-center">
-                                        @if ($guru->profile_photo_path)
-                                            <img src="{{ asset('storage/' . $guru->profile_photo_path) }}" alt="Foto {{ $guru->name }}" class="w-full h-full object-cover">
-                                        @else
-                                            <span class="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                                                {{ strtoupper(substr($guru->name, 0, 1)) }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <h4 class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ $guru->name }}</h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Guru</p>
-                                    <div class="mt-3 w-8 h-1 bg-[#0C2C55] mx-auto"></div>
+                        {{-- Wrapper Carousel --}}
+                        <div class="relative px-2 md:px-4" id="guru-carousel-container" @mouseenter="pauseCarousel()" @mouseleave="startCarousel()">
+                            
+                            {{-- Tombol Kiri --}}
+                            <button id="prevGuru" class="absolute left-[-5px] md:left-[-15px] top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
+                                <svg class="w-6 h-6 ml-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+
+                            {{-- Area Track Slide --}}
+                            <div class="overflow-hidden w-full py-4"> 
+                                <div id="guru-track" class="flex transition-transform duration-500 ease-out gap-6" style="transform: translateX(0px);">
+                                    @foreach ($gurus as $index => $guru)
+                                        @php
+                                            $ringColors = ['ring-[#DC143C]', 'ring-[#1E90FF]', 'ring-[#FFD700]', 'ring-[#8A2BE2]'];
+                                            $ring = $ringColors[$index % count($ringColors)];
+                                            
+                                            // Badge Warna untuk Kelas
+                                            $classBadges = [
+                                                'bg-pink-100 text-pink-700 border-pink-300 dark:bg-pink-900 dark:text-pink-300 dark:border-pink-700',
+                                                'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700',
+                                                'bg-green-100 text-green-700 border-green-300 dark:bg-green-900 dark:text-green-300 dark:border-green-700',
+                                                'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-700'
+                                            ];
+                                            $classBadge = $classBadges[$index % count($classBadges)];
+                                        @endphp
+                                        
+                                        {{-- 2 Kartu di HP, 4 Kartu di Laptop --}}
+                                        <div class="flex-none w-[calc((100%-24px)/2)] md:w-[calc((100%-72px)/4)]">
+                                            <div class="bg-white dark:bg-gray-800 rounded-3xl border-4 border-gray-200 dark:border-gray-700 shadow-md p-6 text-center hover:scale-105 transition-all duration-300 h-full flex flex-col justify-between">
+                                                <div>
+                                                    <div class="w-24 h-24 mx-auto bg-gray-100 dark:bg-gray-900 rounded-full mb-4 overflow-hidden flex items-center justify-center ring-4 {{ $ring }} ring-offset-4 dark:ring-offset-gray-800">
+                                                        @if ($guru->profile_photo_path)
+                                                            <img src="{{ asset('storage/' . $guru->profile_photo_path) }}" alt="Foto {{ $guru->name }}" class="w-full h-full object-cover">
+                                                        @else
+                                                            <span class="text-2xl font-bold text-gray-500 dark:text-gray-400">{{ strtoupper(substr($guru->name, 0, 1)) }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <h4 class="font-bold text-gray-800 dark:text-gray-100 text-base leading-tight">{{ $guru->name }}</h4>
+                                                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p>
+                                                </div>
+                                                
+                                                {{-- Info Kelas yang diajar --}}
+                                                <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+                                                    @if (!empty($guru->kelas))
+                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">Kelas {{ $guru->kelas }}</span>
+                                                    @else
+                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">Umum</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                            </div>
+
+                            {{-- Tombol Kanan --}}
+                            <button id="nextGuru" class="absolute right-[-5px] md:right-[-15px] top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
+                                <svg class="w-6 h-6 mr-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+
                         </div>
                     </div>
                 @endif
 
+                {{-- KONTEN / SOSMED --}}
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mt-10 bg-gradient-to-r from-purple-500/10 via-blue-400/10 to-purple-500/10 rounded-lg p-6 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block mb-6">Konten</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mt-6">
+                    <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300">
+                        <div class="text-center mb-8">
+                            <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Galeri Keseruan 🎨</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                             @foreach ($contents as $index => $content)
-                                <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-md p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif">
+                                <div class="bg-[#F0F8FF] dark:bg-slate-700 rounded-2xl border-4 border-blue-200 dark:border-blue-900 p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif transition-colors">
                                     @if ($content->platform === 'instagram')
-                                        <div class="rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900">
-                                            <blockquote class="instagram-media w-full" data-instgrm-permalink="{{ $content->url }}" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px rgba(0,0,0,0.15); margin: 0; max-width:none; padding:0; width:100%; "></blockquote>
+                                        <div class="rounded-xl overflow-hidden bg-white">
+                                            <blockquote class="instagram-media w-full" data-instgrm-permalink="{{ $content->url }}" data-instgrm-version="14" style="background:#FFF; border:0; margin: 0; max-width:none; padding:0; width:100%;"></blockquote>
                                         </div>
                                     @endif
-                                    <div class="mt-3 flex-1 flex flex-col">
-                                        <div class="font-medium text-gray-800 dark:text-gray-100 mb-1">{{ $content->title ?? 'Instagram Post' }}</div>
+                                    <div class="mt-4 flex-1 flex flex-col">
+                                        <div class="font-bold text-lg text-[#0C2C55] dark:text-white mb-2">{{ $content->title ?? 'Postingan Spesial' }}</div>
                                         @if (!empty($content->description))
-                                            <p class="text-sm text-gray-600 dark:text-gray-300">{{ $content->description }}</p>
+                                            <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $content->description }}</p>
                                         @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                         @if ($contents->count() > 3)
-                            <div class="mt-4 text-center">
-                                <button id="toggle_contents" type="button" class="inline-flex items-center px-4 py-2 rounded-full bg-[#0C2C55] text-white text-sm font-semibold hover:shadow-lg hover:bg-[#0A1F3C] shadow-md transition">
-                                    Selengkapnya
+                            <div class="mt-8 text-center">
+                                <button id="toggle_contents" type="button" class="bg-[#FF8C00] dark:bg-orange-600 text-white border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_6px_0_#CD6600] dark:shadow-[0_6px_0_#9a3412] hover:translate-y-[2px] hover:shadow-[0_4px_0_#CD6600] font-playful text-xl transition-all">
+                                    Lihat Lebih Banyak!
                                 </button>
                             </div>
-                            <script>
-                                (function(){
-                                    const btn = document.getElementById('toggle_contents');
-                                    if (!btn) return;
-                                    let expanded = false;
-                                    btn.addEventListener('click', function(){
-                                        const extras = document.querySelectorAll('.js-extra-content');
-                                        if (!expanded) {
-                                            extras.forEach(function(el){
-                                                el.classList.remove('hidden');
-                                            });
-                                            btn.textContent = 'Tutup';
-                                        } else {
-                                            extras.forEach(function(el){
-                                                el.classList.add('hidden');
-                                            });
-                                            btn.textContent = 'Selengkapnya';
-                                        }
-                                        expanded = !expanded;
-                                    });
-                                })();
-                            </script>
                         @endif
                         <script async src="https://www.instagram.com/embed.js"></script>
                     </div>
                 @endif
-
-                    </div>
                 </div>
             </main>
 
             @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
-                        <script>
-                            (function(){
-                                const header = document.querySelector('header');
-                                if (!header) return;
-                                const links = header.querySelectorAll('a[href^="#"]');
-                                links.forEach(function(link){
-                                    link.addEventListener('click', function(e){
-                                        const href = this.getAttribute('href');
-                                        if (!href) return;
-                                        if (href === '#' || href === '#top') {
-                                            e.preventDefault();
-                                            const topEl = document.getElementById('top');
-                                            if (topEl) {
-                                                topEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                            } else {
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }
-                                            return;
-                                        }
-                                        const target = document.querySelector(href);
-                                        if (target) {
-                                            e.preventDefault();
-                                            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                    });
-                                });
-                                let lastY = window.scrollY || window.pageYOffset;
-                                window.addEventListener('scroll', function(){
-                                    const currentY = window.scrollY || window.pageYOffset;
-                                    const delta = currentY - lastY;
-                                    if (currentY <= 0) {
-                                        header.classList.remove('-translate-y-full');
-                                        lastY = currentY;
-                                        return;
-                                    }
-                                    if (Math.abs(delta) > 5) {
-                                        if (delta > 0) {
-                                            // scroll down: hide header
-                                            header.classList.add('-translate-y-full');
-                                        } else {
-                                            // scroll up: show header
-                                            header.classList.remove('-translate-y-full');
-                                        }
-                                        lastY = currentY;
-                                    }
-                                });
-                                // Theme toggle for welcome navbar
-                                const themeButton = document.getElementById('welcome_theme_button');
-                                const sunIcon = document.getElementById('welcome_theme_icon_sun');
-                                const moonIcon = document.getElementById('welcome_theme_icon_moon');
-                                function getInitialTheme() {
-                                    return localStorage.getItem('theme') || 'system';
-                                }
-                                function isDarkFromMode(mode) {
-                                    if (mode === 'light') return false;
-                                    if (mode === 'dark') return true;
-                                    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                                }
-                                function updateThemeIcons(isDark) {
-                                    if (sunIcon) {
-                                        sunIcon.classList.toggle('hidden', isDark);
-                                    }
-                                    if (moonIcon) {
-                                        moonIcon.classList.toggle('hidden', !isDark);
-                                    }
-                                }
-                                function applyTheme(mode, persist = true) {
-                                    if (persist) {
-                                        if (mode === 'system') {
-                                            localStorage.removeItem('theme');
-                                        } else {
-                                            localStorage.setItem('theme', mode);
-                                        }
-                                    }
-                                    const dark = isDarkFromMode(mode);
-                                    document.documentElement.classList.toggle('dark', dark);
-                                    updateThemeIcons(dark);
-                                }
-                                if (themeButton) {
-                                    applyTheme(getInitialTheme(), false);
-                                    themeButton.addEventListener('click', function(){
-                                        const currentlyDark = document.documentElement.classList.contains('dark');
-                                        applyTheme(currentlyDark ? 'light' : 'dark', true);
-                                    });
 
-                                    const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                                    if (media && media.addEventListener) {
-                                        media.addEventListener('change', function(){
-                                            const saved = getInitialTheme();
-                                            if (saved === 'system') {
-                                                applyTheme('system', false);
-                                            }
-                                        });
-                                    }
-                                }
+            <script>
+                // SCRIPT UNTUK TOMBOL THEME (LIGHT / DARK MODE)
+                (function(){
+                    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+                    if (themeToggleBtn) {
+                        themeToggleBtn.addEventListener('click', function() {
+                            const isDark = document.documentElement.classList.contains('dark');
+                            if (isDark) {
+                                document.documentElement.classList.remove('dark');
+                                localStorage.setItem('theme', 'light');
+                            } else {
+                                document.documentElement.classList.add('dark');
+                                localStorage.setItem('theme', 'dark');
+                            }
+                        });
+                    }
+                })();
 
-                                // Dropdown Profil in navbar
-                                const profilButton = document.getElementById('profil_menu_button');
-                                const profilMenu = document.getElementById('profil_menu');
-                                const profilMenuClose = document.getElementById('profil_menu_close');
-                                if (profilButton && profilMenu) {
-                                    let profilOpen = false;
-                                    function closeProfilMenu() {
-                                        profilMenu.classList.add('hidden');
-                                        document.body.classList.remove('overflow-hidden');
-                                        profilOpen = false;
-                                    }
-                                    profilButton.addEventListener('click', function(e){
-                                        e.stopPropagation();
-                                        if (profilOpen) {
-                                            closeProfilMenu();
-                                        } else {
-                                            profilMenu.classList.remove('hidden');
-                                            document.body.classList.add('overflow-hidden');
-                                            profilOpen = true;
-                                        }
-                                    });
-                                    if (profilMenuClose) {
-                                        profilMenuClose.addEventListener('click', function(){
-                                            closeProfilMenu();
-                                        });
-                                    }
-                                    profilMenu.querySelectorAll('a').forEach(function(link){
-                                        link.addEventListener('click', function(){
-                                            closeProfilMenu();
-                                        });
-                                    });
-                                }
-                            })();
-                        </script>
+                // SCRIPT UNTUK SLIDER GAMBAR HERO
+                (function(){
+                    const slides = document.querySelectorAll('[data-slide-index]');
+                    if (slides.length > 1) {
+                        let current = 0;
+                        let slideInterval;
+
+                        function showSlide(index) {
+                            slides.forEach(s => s.style.opacity = '0');
+                            slides[index].style.opacity = '1';
+                        }
+                        function nextSlide() { current = (current + 1) % slides.length; showSlide(current); }
+                        function prevSlide() { current = (current - 1 + slides.length) % slides.length; showSlide(current); }
+                        function startSlide() { slideInterval = setInterval(nextSlide, 4000); }
+                        function resetSlide() { clearInterval(slideInterval); startSlide(); }
+
+                        const nextBtn = document.getElementById('nextSlide');
+                        const prevBtn = document.getElementById('prevSlide');
+
+                        if(nextBtn) { nextBtn.addEventListener('click', function() { nextSlide(); resetSlide(); }); }
+                        if(prevBtn) { prevBtn.addEventListener('click', function() { prevSlide(); resetSlide(); }); }
+                        startSlide();
+                    }
+                })();
+
+                // SCRIPT UNTUK SLIDER DAFTAR GURU (DENGAN AUTO-LOOP)
+                (function(){
+                    const track = document.getElementById('guru-track');
+                    const prevBtn = document.getElementById('prevGuru');
+                    const nextBtn = document.getElementById('nextGuru');
+                    const container = document.getElementById('guru-carousel-container');
+                    
+                    if (track && prevBtn && nextBtn) {
+                        let currentIndex = 0;
+                        const cards = track.children;
+                        const totalCards = cards.length;
+                        let autoSlideInterval;
+                        
+                        function updateCarousel() {
+                            const isMobile = window.innerWidth < 768;
+                            const visibleCards = isMobile ? 2 : 4; 
+                            const maxIndex = Math.max(0, totalCards - visibleCards);
+                            
+                            // Logika Looping: Jika mentok kanan, balik ke kiri. Jika mentok kiri, pergi ke kanan.
+                            if (currentIndex > maxIndex) currentIndex = 0; 
+                            if (currentIndex < 0) currentIndex = maxIndex;
+                            
+                            if(cards.length > 0) {
+                                const cardWidth = cards[0].getBoundingClientRect().width;
+                                const gap = 24; // 24px = gap-6 Tailwind
+                                const moveAmount = (cardWidth + gap) * currentIndex;
+                                track.style.transform = `translateX(-${moveAmount}px)`;
+                            }
+                        }
+
+                        function nextGuruSlide() {
+                            currentIndex++;
+                            updateCarousel();
+                        }
+
+                        function startAutoSlide() {
+                            // Geser otomatis setiap 3 detik (3000ms)
+                            autoSlideInterval = setInterval(nextGuruSlide, 3000);
+                        }
+
+                        function stopAutoSlide() {
+                            clearInterval(autoSlideInterval);
+                        }
+
+                        nextBtn.addEventListener('click', () => { 
+                            currentIndex++; 
+                            updateCarousel(); 
+                            stopAutoSlide(); 
+                            startAutoSlide(); // Reset timer saat diklik manual
+                        });
+                        
+                        prevBtn.addEventListener('click', () => { 
+                            currentIndex--; 
+                            updateCarousel(); 
+                            stopAutoSlide(); 
+                            startAutoSlide(); 
+                        });
+
+                        // Hentikan auto-slide saat mouse berada di area carousel agar nyaman dibaca
+                        if(container){
+                            container.addEventListener('mouseenter', stopAutoSlide);
+                            container.addEventListener('mouseleave', startAutoSlide);
+                        }
+
+                        window.addEventListener('resize', updateCarousel);
+                        
+                        setTimeout(updateCarousel, 100);
+                        startAutoSlide(); // Mulai jalankan otomatis saat web dimuat
+                    }
+                })();
+
+                // SCRIPT KONTEN LIHAT LEBIH BANYAK
+                (function(){
+                    const btn = document.getElementById('toggle_contents');
+                    if (btn) {
+                        let expanded = false;
+                        btn.addEventListener('click', function(){
+                            const extras = document.querySelectorAll('.js-extra-content');
+                            if (!expanded) { extras.forEach(el => el.classList.remove('hidden')); btn.textContent = 'Tutup'; } 
+                            else { extras.forEach(el => el.classList.add('hidden')); btn.textContent = 'Lihat Lebih Banyak!'; }
+                            expanded = !expanded;
+                        });
+                    }
+                })();
+            </script>
     </body>
 </html>
