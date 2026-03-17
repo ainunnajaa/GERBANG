@@ -19,7 +19,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
-                    <div id="profil_menu" class="fixed inset-0 z-40 hidden bg-white">
+                    <div id="profil_menu" class="fixed inset-0 z-40 hidden bg-white dark:bg-white opacity-100" style="background-color: #ffffff !important; opacity: 1 !important;">
                         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
                             <div class="text-lg font-semibold text-gray-800 dark:text-gray-100">Menu</div>
                             <button id="profil_menu_close" type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" aria-label="Tutup menu">
@@ -29,7 +29,7 @@
                             </button>
                         </div>
 
-                        <div class="overflow-y-auto h-[calc(100vh-74px)]">
+                        <div class="overflow-y-auto h-[calc(100vh-74px)] bg-white" style="background-color: #ffffff !important;">
                             <details class="group border-b border-gray-200 dark:border-gray-700" open>
                                 <summary class="list-none flex items-center justify-between px-6 py-6 text-4 font-semibold text-gray-800 dark:text-gray-100 cursor-pointer select-none">
                                     <span class="text-4 font-semibold">Profile</span>
@@ -43,7 +43,6 @@
                                     <a href="{{ url('/#konten-sosmed') }}" class="block px-10 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
                                 </div>
                             </details>
-
                             <a href="{{ route('publik.visi_misi') }}" class="block px-6 py-6 text-base font-semibold text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
                             <a href="{{ route('publik.berita.index') }}" class="block px-6 py-6 text-base font-semibold text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
                             <a href="{{ route('publik.kontak') }}" class="block px-6 py-6 text-base font-semibold text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
@@ -53,22 +52,14 @@
 
                 {{-- Desktop: full menu --}}
                 <div class="hidden md:flex flex-wrap items-center gap-2">
-                    <div class="relative group">
-                        <button type="button" class="inline-flex items-center px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-                            Profile
-                            <svg class="ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div class="absolute left-0 mt-1 w-52 rounded-md shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 z-20 hidden group-hover:block group-focus-within:block">
-                            <a href="{{ url('/#program-unggulan') }}" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
-                            <a href="{{ url('/#guru') }}" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
-                            <a href="{{ url('/#konten-sosmed') }}" class="block px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
-                        </div>
-                    </div>
+                    <a href="{{ url('/#welcome') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
+                    <a href="{{ url('/#program-unggulan') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Program Unggulan</a>
+                    <a href="{{ url('/#guru') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Guru</a>
+                    <a href="{{ url('/#konten-sosmed') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Konten Sosial Media</a>
                     <a href="{{ route('publik.visi_misi') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Visi dan Misi</a>
                     <a href="{{ route('publik.berita.index') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Berita</a>
                     <a href="{{ route('publik.kontak') }}" class="px-3 py-0.5 rounded-full text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Kontak</a>
+                    
                 </div>
             </nav>
         </div>
