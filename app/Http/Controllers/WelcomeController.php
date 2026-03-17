@@ -79,5 +79,18 @@ class WelcomeController extends Controller
 
 		return back()->with('success', 'Terima kasih, pesan Anda telah dikirim.');
 	}
+	public function guru()
+    {
+        // Ambil data user yang memiliki role 'guru'
+        $gurus = \App\Models\User::where('role', 'guru')
+                    ->orderBy('name', 'asc')
+                    ->paginate(12); // Menampilkan 12 guru per halaman (Pagination)
+
+        // Ambil data profil sekolah untuk memunculkan logo/navbar/footer
+        $schoolProfile = \App\Models\SchoolProfile::first();
+
+        // Lempar datanya ke view daftar_guru_publik yang kita buat tadi
+        return view('publik.daftar_guru.daftar_guru_publik', compact('gurus', 'schoolProfile'));
+    }
 }
 

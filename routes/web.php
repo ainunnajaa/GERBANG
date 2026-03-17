@@ -18,6 +18,9 @@ Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.v
 Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
 Route::post('/contact', [WelcomeController::class, 'contact'])->name('contact.send');
 
+// Route untuk Halaman Daftar Guru (BARU DITAMBAHKAN)
+Route::get('/guru', [WelcomeController::class, 'guru'])->name('publik.guru.index');
+
 // Public berita
 Route::get('/berita', [BeritaPublikController::class, 'index'])->name('publik.berita.index');
 Route::get('/berita/{berita}', [BeritaPublikController::class, 'show'])->name('publik.berita.show');
