@@ -89,6 +89,14 @@
                     class="fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-[3.570rem] px-4 sm:px-6 lg:px-8 bg-[#0000F4] dark:bg-[#0000F4] transform translate-y-0 transition-all duration-300 ease-in-out"
                     x-bind:style="(windowWidth >= 768) ? (sidebarCollapsed ? 'padding-left: 5.5rem;' : 'padding-left: 17rem;') : 'padding-left: 0;'"
                 >
+                    @php
+                        $authUser = Auth::user();
+                        $schoolProfile = \App\Models\SchoolProfile::first();
+                        $profilePhotoUrl = $authUser?->profile_photo_path
+                            ? asset('storage/' . $authUser->profile_photo_path)
+                            : 'https://ui-avatars.com/api/?name=' . urlencode($authUser?->name ?? 'User') . '&background=E11D48&color=ffffff&size=96';
+                    @endphp
+
                     <div class="flex items-center gap-2">
                         <!-- Hamburger (desktop only) -->
                         <button
@@ -101,17 +109,18 @@
                             </svg>
                         </button>
 
-                        <span class="text-sm font-semibold text-white dark:text-gray-100 truncate md:ml-0 ml-8">
+                        <a href="{{ url('/') }}" class="ml-4 md:ml-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white border-4 border-[#FFD700] overflow-hidden shadow-sm hover:scale-105 transition-transform" aria-label="Kembali ke halaman utama">
+                            @if (!empty($schoolProfile?->school_logo_path))
+                                <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="h-full w-full object-contain">
+                            @else
+                                <span class="text-lg leading-none" aria-hidden="true">🏫</span>
+                            @endif
+                        </a>
+
+                        <span class="text-sm font-semibold text-white dark:text-gray-100 truncate ml-1">
                             GERBANG
                         </span>
                     </div>
-
-                    @php
-                        $authUser = Auth::user();
-                        $profilePhotoUrl = $authUser?->profile_photo_path
-                            ? asset('storage/' . $authUser->profile_photo_path)
-                            : 'https://ui-avatars.com/api/?name=' . urlencode($authUser?->name ?? 'User') . '&background=E11D48&color=ffffff&size=96';
-                    @endphp
 
                     <div class="flex items-center gap-2">
                         <button

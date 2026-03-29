@@ -118,12 +118,33 @@
             .instagram-embed-wrap .instagram-media { min-width: 100% !important; max-width: 100% !important; margin: 0 !important; }
 
             .nav-pressing { transform: translateY(4px) !important; }
+
+            .scroll-reveal {
+                opacity: 0;
+                transform: translateY(28px) scale(0.98);
+                transition: opacity 700ms ease, transform 700ms ease;
+                will-change: opacity, transform;
+            }
+
+            .scroll-reveal.is-visible {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .scroll-reveal,
+                .scroll-reveal.is-visible {
+                    opacity: 1;
+                    transform: none;
+                    transition: none;
+                }
+            }
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body id="top" class="text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
-        @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
+        @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header', 'compactUi' => true])
 
             <main class="flex-1">
                 
@@ -224,7 +245,7 @@
                 
                 @if (!empty($schoolProfile?->welcome_message))
                     {{-- CARD 1: SELAMAT DATANG (PLAYFUL) --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300">
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300 scroll-reveal" data-reveal>
                         <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang di Dunia Ceria!</h2>
                         <div class="rtf-content text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed prose dark:prose-invert max-w-none">{!! $schoolProfile->welcome_message !!}</div>
                     </div>
@@ -235,7 +256,7 @@
                         $welcomeIntro = 'Selamat Datang Kami ucapkan terimakasih telah mengakses laman ini';
                         $welcomeBody = $schoolProfile->principal_greeting ?? 'Terima kasih telah mengunjungi laman resmi sekolah kami.';
                     @endphp
-                    <div class="mb-14">
+                    <div class="mb-14 scroll-reveal" data-reveal>
                         <section class="welcome-section">
                             <div class="bg-shape"></div>
                             <div class="content-wrapper">
@@ -263,7 +284,7 @@
                     </div>
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300">
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300 scroll-reveal" data-reveal>
                         <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang!</h2>
                         <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
                     </div>
@@ -271,7 +292,7 @@
 
                 {{-- PROGRAM UNGGULAN COLORFUL --}}
                 @if (!empty($programs) && $programs->count())
-                <div id="program-unggulan" class="mb-14 pt-4">
+                <div id="program-unggulan" class="mb-14 pt-4 scroll-reveal" data-reveal>
                     <div class="text-center mb-10">
                         <h2 class="font-playful text-3xl md:text-4xl text-[#8A2BE2] dark:text-purple-400 drop-shadow-sm inline-block bg-white dark:bg-gray-800 px-8 py-3 rounded-full border-4 border-[#8A2BE2] dark:border-purple-600 shadow-[0_6px_0_#4B0082] dark:shadow-[0_6px_0_#4c1d95] transition-colors duration-300">🌟 Program Unggulan 🌟</h2>
                     </div>
@@ -311,7 +332,7 @@
 
                 {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & KELAS --}}
                 @if (!empty($gurus) && $gurus->count())
-                    <div id="guru" class="mb-14 pt-4">
+                    <div id="guru" class="mb-14 pt-4 scroll-reveal" data-reveal>
                         <div class="flex flex-col md:flex-row items-center justify-between bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300 mb-8">
                             <div class="text-center md:text-left mb-6 md:mb-0">
                                 <h2 class="font-playful text-3xl md:text-4xl text-white drop-shadow-md">👨‍🏫 Guru Super 👩‍🏫</h2>
@@ -383,7 +404,7 @@
 
                 {{-- KONTEN / SOSMED --}}
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300 mb-8 relative z-10">
+                    <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300 mb-8 relative z-10 scroll-reveal" data-reveal>
                         <div class="text-center mb-8">
                             <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Galeri Keseruan 🎨</h2>
                         </div>
@@ -417,7 +438,7 @@
                 </div>
             </main>
 
-            @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
+            @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer', 'compactUi' => true])
 
             <script>
                 // SCRIPT UNTUK TOMBOL THEME (LIGHT / DARK MODE)
@@ -598,6 +619,35 @@
                                 window.location.href = href;
                             }, 140);
                         });
+                    });
+                })();
+
+                // Animasi reveal saat section masuk viewport ketika scroll.
+                (function () {
+                    const targets = document.querySelectorAll('[data-reveal]');
+                    if (!targets.length) return;
+
+                    if (!('IntersectionObserver' in window)) {
+                        targets.forEach(function (el) {
+                            el.classList.add('is-visible');
+                        });
+                        return;
+                    }
+
+                    const observer = new IntersectionObserver(function (entries, obs) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('is-visible');
+                                obs.unobserve(entry.target);
+                            }
+                        });
+                    }, {
+                        threshold: 0.12,
+                        rootMargin: '0px 0px -8% 0px'
+                    });
+
+                    targets.forEach(function (el) {
+                        observer.observe(el);
                     });
                 })();
             </script>
