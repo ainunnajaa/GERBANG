@@ -303,7 +303,7 @@
                 @if (!empty($programs) && $programs->count())
                 <div id="program-unggulan" class="mb-14 pt-4 scroll-reveal" data-reveal>
                     <div class="text-center mb-10">
-                        <h2 class="font-playful text-3xl md:text-4xl text-[#8A2BE2] dark:text-purple-400 drop-shadow-sm inline-block bg-white dark:bg-gray-800 px-8 py-3 rounded-full border-4 border-[#8A2BE2] dark:border-purple-600 shadow-[0_6px_0_#4B0082] dark:shadow-[0_6px_0_#4c1d95] transition-colors duration-300">🌟 Program Unggulan 🌟</h2>
+                        <h2 class="font-playful text-3xl md:text-4xl text-[#8A2BE2] dark:text-purple-400 drop-shadow-sm inline-block bg-white dark:bg-gray-800 px-8 py-3 rounded-full border-4 border-[#8A2BE2] dark:border-purple-600 shadow-[0_6px_0_#4B0082] dark:shadow-[0_6px_0_#4c1d95] transition-colors duration-300">Program Unggulan</h2>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         @php
@@ -344,7 +344,7 @@
                     <div id="guru" class="mb-14 pt-4 scroll-reveal" data-reveal>
                         <div class="flex flex-col md:flex-row items-center justify-between bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300 mb-8">
                             <div class="text-center md:text-left mb-6 md:mb-0">
-                                <h2 class="font-playful text-3xl md:text-4xl text-white drop-shadow-md">👨‍🏫 Guru Super 👩‍🏫</h2>
+                                <h2 class="font-playful text-3xl md:text-4xl text-white drop-shadow-md">Daftar Guru</h2>
                                 <p class="text-white font-bold text-lg">Pahlawan Pembimbing Kami!</p>
                             </div>
                          <a href="{{ route('publik.guru.index') }}" class="bg-[#FFD700] dark:bg-yellow-500 text-gray-900 border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_4px_0_#CDAD00] dark:shadow-[0_4px_0_#854d0e] hover:translate-y-[2px] hover:shadow-[0_2px_0_#CDAD00] font-playful text-xl transition-all">Lihat Semua</a>
@@ -412,7 +412,7 @@
                 @if (!empty($contents) && $contents->count())
                     <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300 mb-8 relative z-10 scroll-reveal" data-reveal>
                         <div class="text-center mb-8">
-                            <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Konten 🎨</h2>
+                            <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">Konten</h2>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                             @foreach ($contents as $index => $content)
