@@ -21,7 +21,12 @@ class WelcomeController extends Controller
 			? SchoolProgram::where('school_profile_id', $profile->id)->orderBy('order')->get()
 			: collect();
 		$contents = $profile
-			? SchoolContent::where('school_profile_id', $profile->id)->orderBy('order')->get()
+			? SchoolContent::where('school_profile_id', $profile->id)
+				->where(function ($query) {
+					$query->whereNull('platform')->orWhere('platform', '!=', 'youtube');
+				})
+				->orderBy('order')
+				->get()
 			: collect();
 		$backgrounds = $profile
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderBy('order')->get()
