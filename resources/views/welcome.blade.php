@@ -253,7 +253,7 @@
                     {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (DIAGONAL) --}}
                     @php
                         $principalName = $schoolProfile->principal_name ?? 'Kepala Sekolah';
-                        $welcomeIntro = 'Selamat Datang Kami ucapkan terimakasih telah mengakses laman ini';
+                        $welcomeIntro = 'Selamat Datang di Website Sekolah Kami';
                         $welcomeBody = $schoolProfile->principal_greeting ?? 'Terima kasih telah mengunjungi laman resmi sekolah kami.';
                     @endphp
                     <div class="mb-14 scroll-reveal" data-reveal>
@@ -406,7 +406,7 @@
                 @if (!empty($contents) && $contents->count())
                     <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300 mb-8 relative z-10 scroll-reveal" data-reveal>
                         <div class="text-center mb-8">
-                            <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Galeri Keseruan 🎨</h2>
+                            <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Konten 🎨</h2>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                             @foreach ($contents as $index => $content)
