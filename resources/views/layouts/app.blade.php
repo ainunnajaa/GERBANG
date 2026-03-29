@@ -113,7 +113,7 @@
                             @if (!empty($schoolProfile?->school_logo_path))
                                 <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="h-full w-full object-contain">
                             @else
-                                <span class="text-lg leading-none" aria-hidden="true">🏫</span>
+                                <span class="sr-only">Logo sekolah belum tersedia</span>
                             @endif
                         </a>
 

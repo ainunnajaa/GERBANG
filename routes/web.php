@@ -11,9 +11,15 @@ use App\Http\Controllers\PresensiPeriodController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\RiwayatPresensiController;
+use App\Http\Controllers\PwaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+Route::get('/pwa/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/pwa/icon/{size}.png', [PwaController::class, 'icon'])
+    ->whereNumber('size')
+    ->name('pwa.icon');
+Route::get('/apple-touch-icon.png', [PwaController::class, 'appleTouchIcon'])->name('pwa.apple-touch-icon');
 Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.visi_misi');
 Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
 Route::get('/video', [WelcomeController::class, 'video'])->name('publik.video');

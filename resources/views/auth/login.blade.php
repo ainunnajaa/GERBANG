@@ -77,9 +77,7 @@
                                 <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="w-full h-full object-contain">
                             </div>
                         @else
-                            <div class="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-full bg-[#FFF8DC] border-4 border-[#FFD700] shadow-sm">
-                                <span class="text-xl md:text-2xl">🏫</span>
-                            </div>
+                                <div class="w-16 h-16 rounded-full bg-white shadow-md border-4 border-[#FFD700]" aria-label="Logo sekolah belum tersedia"></div>
                         @endif
                         
                         <h2 class="text-lg md:text-xl font-extrabold text-[#0C2C55] dark:text-white tracking-tight font-playful text-left leading-tight transition-colors duration-300">
