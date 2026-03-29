@@ -3,6 +3,9 @@
         $initialLatitude = old('latitude', $settings->latitude);
         $initialLongitude = old('longitude', $settings->longitude);
         $initialRadius = old('radius_meter', $settings->radius_meter);
+        $activeDays = $activePeriod->active_days ?? [];
+        $hasFriday = in_array('friday', $activeDays, true);
+        $hasSaturday = in_array('saturday', $activeDays, true);
     @endphp
 
     <x-slot name="header">
@@ -112,6 +115,40 @@
                             @enderror
                         </div>
 
+                        @if($hasFriday)
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Jam Pulang Mulai (Khusus Jumat)</label>
+                                <input type="time" name="jam_pulang_start_jumat" value="{{ old('jam_pulang_start_jumat', optional($settings->jam_pulang_start_jumat ? \Carbon\Carbon::parse($settings->jam_pulang_start_jumat) : null)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                @error('jam_pulang_start_jumat')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Jam Pulang Selesai (Khusus Jumat)</label>
+                                <input type="time" name="jam_pulang_end_jumat" value="{{ old('jam_pulang_end_jumat', optional($settings->jam_pulang_end_jumat ? \Carbon\Carbon::parse($settings->jam_pulang_end_jumat) : null)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                @error('jam_pulang_end_jumat')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
+
+                        @if($hasSaturday)
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Jam Pulang Mulai (Khusus Sabtu)</label>
+                                <input type="time" name="jam_pulang_start_sabtu" value="{{ old('jam_pulang_start_sabtu', optional($settings->jam_pulang_start_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu) : null)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                @error('jam_pulang_start_sabtu')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Jam Pulang Selesai (Khusus Sabtu)</label>
+                                <input type="time" name="jam_pulang_end_sabtu" value="{{ old('jam_pulang_end_sabtu', optional($settings->jam_pulang_end_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu) : null)->format('H:i')) }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                @error('jam_pulang_end_sabtu')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
+
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1">Teks / URL QR Presensi</label>
                             <input
@@ -214,6 +251,12 @@
                                 @endif
                             </li>
                             <li>Pulang: {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</li>
+                            @if($hasFriday && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat)
+                                <li>Pulang Jumat: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_jumat)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_jumat)->format('H:i') }}</li>
+                            @endif
+                            @if($hasSaturday && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu)
+                                <li>Pulang Sabtu: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu)->format('H:i') }}</li>
+                            @endif
                         </ul>
                     </div>
                 </div>

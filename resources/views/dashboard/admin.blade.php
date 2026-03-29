@@ -1,4 +1,13 @@
 <x-app-layout>
+    @php
+        $attendance = $todayAttendanceSummary ?? ['H' => 0, 'T' => 0, 'I' => 0, 'A' => 0, 'total' => 0, 'isOperationalDay' => false];
+        $totalAttendance = max((int) ($attendance['total'] ?? 0), 1);
+        $hadirPct = round((($attendance['H'] ?? 0) / $totalAttendance) * 100, 2);
+        $terlambatPct = round((($attendance['T'] ?? 0) / $totalAttendance) * 100, 2);
+        $izinPct = round((($attendance['I'] ?? 0) / $totalAttendance) * 100, 2);
+        $alphaPct = max(0, 100 - ($hadirPct + $terlambatPct + $izinPct));
+    @endphp
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard Admin') }}
@@ -70,6 +79,57 @@
                         Belum ada periode presensi yang sedang aktif.
                     </div>
                 @endif
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Status Hari Ini (Guru)</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            @if(!empty($attendance['isOperationalDay']))
+                                Ringkasan kehadiran guru hari ini.
+                            @else
+                                Hari ini bukan hari operasional presensi aktif atau belum ada periode aktif.
+                            @endif
+                        </p>
+                    </div>
+                    <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        Total Guru: {{ $attendance['total'] ?? 0 }}
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] gap-6 items-center">
+                    <div class="mx-auto">
+                        <div class="relative h-56 w-56 rounded-full"
+                            style="background: conic-gradient(#16a34a 0% {{ $hadirPct }}%, #f59e0b {{ $hadirPct }}% {{ $hadirPct + $terlambatPct }}%, #3b82f6 {{ $hadirPct + $terlambatPct }}% {{ $hadirPct + $terlambatPct + $izinPct }}%, #ef4444 {{ $hadirPct + $terlambatPct + $izinPct }}% 100%);">
+                            <div class="absolute inset-6 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-center border border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Status Guru</p>
+                                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $attendance['total'] ?? 0 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="rounded-lg border border-green-200 dark:border-green-900/60 bg-green-50 dark:bg-green-900/20 p-4">
+                            <p class="text-sm font-semibold text-green-700 dark:text-green-300">Hadir</p>
+                            <p class="text-2xl font-bold text-green-800 dark:text-green-200">{{ $attendance['H'] ?? 0 }}</p>
+                        </div>
+                        <div class="rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-900/20 p-4">
+                            <p class="text-sm font-semibold text-amber-700 dark:text-amber-300">Terlambat</p>
+                            <p class="text-2xl font-bold text-amber-800 dark:text-amber-200">{{ $attendance['T'] ?? 0 }}</p>
+                        </div>
+                        <div class="rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-900/20 p-4">
+                            <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">Izin</p>
+                            <p class="text-2xl font-bold text-blue-800 dark:text-blue-200">{{ $attendance['I'] ?? 0 }}</p>
+                        </div>
+                        <div class="rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-900/20 p-4">
+                            <p class="text-sm font-semibold text-red-700 dark:text-red-300">Tidak Hadir</p>
+                            <p class="text-2xl font-bold text-red-800 dark:text-red-200">{{ $attendance['A'] ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

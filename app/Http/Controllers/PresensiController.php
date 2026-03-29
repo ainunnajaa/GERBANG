@@ -145,6 +145,10 @@ class PresensiController extends Controller
 			'jam_masuk_toleransi' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_start' => ['required', 'date_format:H:i'],
 			'jam_pulang_end' => ['required', 'date_format:H:i'],
+			'jam_pulang_start_jumat' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_end_jumat' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_start_sabtu' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_end_sabtu' => ['nullable', 'date_format:H:i'],
 			'qr_text' => ['nullable', 'string', 'max:255'],
 			'latitude' => ['nullable', 'numeric', 'between:-90,90'],
 			'longitude' => ['nullable', 'numeric', 'between:-180,180'],
@@ -159,6 +163,10 @@ class PresensiController extends Controller
 			: null;
 		$settings->jam_pulang_start = $data['jam_pulang_start'] . ':00';
 		$settings->jam_pulang_end = $data['jam_pulang_end'] . ':00';
+		$settings->jam_pulang_start_jumat = !empty($data['jam_pulang_start_jumat']) ? $data['jam_pulang_start_jumat'] . ':00' : null;
+		$settings->jam_pulang_end_jumat = !empty($data['jam_pulang_end_jumat']) ? $data['jam_pulang_end_jumat'] . ':00' : null;
+		$settings->jam_pulang_start_sabtu = !empty($data['jam_pulang_start_sabtu']) ? $data['jam_pulang_start_sabtu'] . ':00' : null;
+		$settings->jam_pulang_end_sabtu = !empty($data['jam_pulang_end_sabtu']) ? $data['jam_pulang_end_sabtu'] . ':00' : null;
 		$settings->qr_text = $data['qr_text'] ?? env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
 		$settings->latitude = $data['latitude'] ?? null;
 		$settings->longitude = $data['longitude'] ?? null;
@@ -218,8 +226,20 @@ class PresensiController extends Controller
 
 		$masukStart = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_start, 0, 5));
 		$masukEnd = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_end, 0, 5));
-		$pulangStart = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_start, 0, 5));
-		$pulangEnd = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_end, 0, 5));
+		$pulangStartRaw = $settings->jam_pulang_start;
+		$pulangEndRaw = $settings->jam_pulang_end;
+		$dayKey = strtolower($now->englishDayOfWeek);
+		if ($dayKey === 'friday' && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat) {
+			$pulangStartRaw = $settings->jam_pulang_start_jumat;
+			$pulangEndRaw = $settings->jam_pulang_end_jumat;
+		}
+		if ($dayKey === 'saturday' && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu) {
+			$pulangStartRaw = $settings->jam_pulang_start_sabtu;
+			$pulangEndRaw = $settings->jam_pulang_end_sabtu;
+		}
+
+		$pulangStart = Carbon::createFromFormat('H:i', substr($pulangStartRaw, 0, 5));
+		$pulangEnd = Carbon::createFromFormat('H:i', substr($pulangEndRaw, 0, 5));
 
 		$current = Carbon::createFromFormat('H:i', $currentTime);
 
@@ -324,6 +344,10 @@ class PresensiController extends Controller
 			'jam_masuk_end' => '08:00:00',
 			'jam_pulang_start' => '13:00:00',
 			'jam_pulang_end' => '14:30:00',
+			'jam_pulang_start_jumat' => null,
+			'jam_pulang_end_jumat' => null,
+			'jam_pulang_start_sabtu' => null,
+			'jam_pulang_end_sabtu' => null,
 			'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
 			'latitude' => null,
 			'longitude' => null,

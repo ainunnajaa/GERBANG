@@ -2,8 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{{ config('app.name', 'Laravel') }}</title>
+        @include('partials.favicon')
 
         <script>
             (function() {
@@ -106,6 +107,17 @@
                 .slider-btn { width: 55px; height: 55px; }
                 #prevSlide { left: -25px; } #nextSlide { right: -25px; }
             }
+
+            /* Pastikan konten RTF (ol/ul) tetap tampil rapi di publik */
+            .rtf-content :where(ol) { list-style: decimal !important; margin-left: 1.25rem !important; padding-left: 1rem !important; }
+            .rtf-content :where(ul) { list-style: disc !important; margin-left: 1.25rem !important; padding-left: 1rem !important; }
+            .rtf-content :where(li) { margin: 0.2rem 0 !important; }
+
+            /* Biar embed Instagram tidak kepotong */
+            .instagram-embed-wrap { overflow: visible; }
+            .instagram-embed-wrap .instagram-media { min-width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+
+            .nav-pressing { transform: translateY(4px) !important; }
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -115,13 +127,50 @@
 
             <main class="flex-1">
                 
-                {{-- AREA BIRU LANGIT UNTUK TV WALL SLIDER --}}
-                <div class="w-full bg-[#87CEEB] dark:bg-[#0f172a] pt-8 pb-16 md:pb-24 relative px-4 transition-colors duration-300">
+                {{-- AREA BIRU LANGIT DENGAN DEKORASI AWAN & BALON --}}
+                <div class="w-full bg-[#87CEEB] dark:bg-[#0f172a] pt-8 pb-16 md:pb-28 relative px-4 transition-colors duration-300 overflow-hidden">
+                    
+                    {{-- DEKORASI AWAN (SVG) DI LATAR BELAKANG --}}
+                    <div class="pointer-events-none absolute inset-0 z-0 opacity-70 dark:opacity-20">
+                        <svg class="absolute top-6 left-[5%] md:left-[10%] w-24 md:w-36 h-auto text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 19c2.481 0 4.5-2.019 4.5-4.5S19.981 10 17.5 10c-.17 0-.335.023-.496.058C16.486 7.155 13.987 5 11 5 7.686 5 5 7.686 5 11c0 .178.016.353.037.525C2.695 11.905 1 13.784 1 16c0 2.761 2.239 5 5 5h11.5z"/></svg>
+                        
+                        <svg class="absolute top-10 right-[5%] md:right-[15%] w-32 md:w-48 h-auto text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 19c2.481 0 4.5-2.019 4.5-4.5S19.981 10 17.5 10c-.17 0-.335.023-.496.058C16.486 7.155 13.987 5 11 5 7.686 5 5 7.686 5 11c0 .178.016.353.037.525C2.695 11.905 1 13.784 1 16c0 2.761 2.239 5 5 5h11.5z"/></svg>
+                        
+                        <svg class="absolute bottom-16 left-[8%] md:left-[18%] w-20 md:w-32 h-auto text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 19c2.481 0 4.5-2.019 4.5-4.5S19.981 10 17.5 10c-.17 0-.335.023-.496.058C16.486 7.155 13.987 5 11 5 7.686 5 5 7.686 5 11c0 .178.016.353.037.525C2.695 11.905 1 13.784 1 16c0 2.761 2.239 5 5 5h11.5z"/></svg>
+                        
+                        <svg class="absolute bottom-8 right-[10%] md:right-[25%] w-28 md:w-40 h-auto text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 19c2.481 0 4.5-2.019 4.5-4.5S19.981 10 17.5 10c-.17 0-.335.023-.496.058C16.486 7.155 13.987 5 11 5 7.686 5 5 7.686 5 11c0 .178.016.353.037.525C2.695 11.905 1 13.784 1 16c0 2.761 2.239 5 5 5h11.5z"/></svg>
+                    </div>
+
+                    {{-- KOTAK KONTEN UTAMA --}}
                     <div class="max-w-6xl mx-auto relative z-10">
                         
+                        {{-- DEKORASI BALON UDARA PLAYFUL (Lebih keluar ke sisi luar) --}}
+                        <div class="pointer-events-none absolute inset-0 z-0 overflow-visible">
+                            
+                            {{-- Balon Udara Kiri (Makin ke kiri) --}}
+                            <div class="absolute -left-20 lg:-left-36 top-[40%] w-28 md:w-36 h-auto rotate-[-12deg] hidden md:block opacity-95 drop-shadow-xl transition-all duration-300 z-0">
+                                <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                                    <defs><linearGradient id="balonG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#FF6347;stop-opacity:1" /><stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" /></linearGradient></defs>
+                                    <ellipse cx="50" cy="50" rx="45" ry="50" fill="url(#balonG)" stroke="#FFFFFF" stroke-width="4"/>
+                                    <path d="M50,100 L35,120 M50,100 L65,120 M35,120 L65,120 L65,130 L35,130 Z" fill="#FF8C00" stroke="#FFFFFF" stroke-width="3"/>
+                                    <circle cx="50" cy="50" r="15" fill="#FFFFFF" opacity="0.4"/>
+                                </svg>
+                            </div>
+
+                            {{-- Balon Udara Kanan Atas (Makin ke kanan) --}}
+                            <div class="absolute -right-16 lg:-right-32 top-[10%] w-32 md:w-40 h-auto rotate-[15deg] hidden md:block opacity-95 drop-shadow-xl transition-all duration-300 z-0">
+                                <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="50" cy="55" rx="48" ry="55" fill="#1E90FF" stroke="#FFFFFF" stroke-width="4"/>
+                                    <ellipse cx="50" cy="55" rx="20" ry="55" fill="#32CD32" stroke="#FFFFFF" stroke-width="3"/>
+                                    <path d="M50,110 L40,130 M50,110 L60,130 M40,130 L60,130 L60,140 L40,140 Z" fill="#DC143C" stroke="#FFFFFF" stroke-width="3"/>
+                                </svg>
+                            </div>
+
+                        </div>
+
                         {{-- NAMA SEKOLAH (Di atas Slider) --}}
                         @if (!empty($schoolProfile?->school_name))
-                            <div class="mb-4 md:mb-6 pl-2 md:pl-6 text-center md:text-left">
+                            <div class="mb-4 md:mb-6 pl-2 md:pl-6 text-center md:text-left relative z-20">
                                 <h1 class="font-playful text-4xl md:text-5xl lg:text-6xl text-[#FFD700] dark:text-yellow-400 drop-shadow-md" style="-webkit-text-stroke: 2px #0C2C55;">
                                     {{ $schoolProfile->school_name }}
                                 </h1>
@@ -130,7 +179,7 @@
 
                         @if (!empty($backgrounds) && $backgrounds->count())
                             {{-- HERO SECTION (BENTUK CARD / TV WALL) --}}
-                            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] border-[10px] md:border-[16px] border-white dark:border-gray-800 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-visible group bg-gray-200 dark:bg-gray-900 transition-colors duration-300">
+                            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] border-[10px] md:border-[16px] border-white dark:border-gray-800 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-visible group bg-gray-200 dark:bg-gray-900 transition-colors duration-300 relative z-10">
                                 
                                 {{-- Area Gambar Slider --}}
                                 <div class="w-full h-full relative overflow-hidden rounded-xl">
@@ -148,7 +197,7 @@
                                                 </div>
                                                 {{-- Pita Oranye (Isi Visi memanjang) --}}
                                                 <div class="bg-[#FF6347] dark:bg-orange-600 px-4 md:px-6 py-2 md:py-3 rounded-r-xl shadow-[4px_4px_10px_rgba(0,0,0,0.2)] border-y-[3px] border-r-[3px] border-white dark:border-gray-800 border-l-0 w-full relative z-10 transition-colors duration-300">
-                                                    <p class="text-xs md:text-sm lg:text-base font-bold text-white drop-shadow-sm leading-snug">{{ $schoolProfile->vision }}</p>
+                                                    <div class="rtf-content text-xs md:text-sm lg:text-base font-bold text-white drop-shadow-sm leading-snug prose prose-sm prose-invert max-w-none">{!! $schoolProfile->vision !!}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -171,14 +220,13 @@
                 </div>
                 
                 {{-- AREA BAWAH UNTUK KONTEN --}}
-                <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12">
+                <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12 relative z-20 bg-[#FDFCE0] dark:bg-gray-900 transition-colors duration-300 rounded-t-[3rem] mt-[-30px]">
                 
                 @if (!empty($schoolProfile?->welcome_message))
                     {{-- CARD 1: SELAMAT DATANG (PLAYFUL) --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300">
-                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm">Halo! 👋</div>
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300">
                         <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang di Dunia Ceria!</h2>
-                        <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">{{ $schoolProfile->welcome_message }}</p>
+                        <div class="rtf-content text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed prose dark:prose-invert max-w-none">{!! $schoolProfile->welcome_message !!}</div>
                     </div>
 
                     {{-- CARD 2: SAMBUTAN KEPALA SEKOLAH (DIAGONAL) --}}
@@ -208,7 +256,7 @@
                                     <h2>Sambutan Kepala Sekolah</h2>
                                     <div class="yellow-line"></div>
                                     <p class="intro-text">{{ $welcomeIntro }}</p>
-                                    <p class="main-text">{{ $welcomeBody }}</p>
+                                    <div class="rtf-content main-text">{!! $welcomeBody !!}</div>
                                 </div>
                             </div>
                         </section>
@@ -227,7 +275,7 @@
                     <div class="text-center mb-10">
                         <h2 class="font-playful text-3xl md:text-4xl text-[#8A2BE2] dark:text-purple-400 drop-shadow-sm inline-block bg-white dark:bg-gray-800 px-8 py-3 rounded-full border-4 border-[#8A2BE2] dark:border-purple-600 shadow-[0_6px_0_#4B0082] dark:shadow-[0_6px_0_#4c1d95] transition-colors duration-300">🌟 Program Unggulan 🌟</h2>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         @php
                             $themeColors = [
                                 ['bg' => 'bg-[#FFF0F5] dark:bg-slate-800', 'border' => 'border-[#DC143C] dark:border-red-500', 'text' => 'text-[#DC143C] dark:text-red-400', 'shadow' => 'shadow-[0_6px_0_#DC143C] dark:shadow-[0_6px_0_#991b1b]'], 
@@ -240,7 +288,7 @@
                         @endphp
                         @foreach ($programs as $index => $program)
                             @php $color = $themeColors[$index % count($themeColors)]; @endphp
-                            <div class="{{ $color['bg'] }} rounded-3xl border-4 {{ $color['border'] }} p-6 flex flex-col {{ $color['shadow'] }} hover:-translate-y-2 transition-all duration-300 text-center">
+                            <div class="{{ $color['bg'] }} rounded-3xl border-4 {{ $color['border'] }} p-6 flex flex-col {{ $color['shadow'] }} hover:-translate-y-2 transition-all duration-300 text-center @if($index >= 4) hidden js-extra-program @endif">
                                 <div class="mx-auto w-20 h-20 rounded-full bg-white dark:bg-gray-900 border-4 {{ $color['border'] }} flex items-center justify-center mb-4 text-3xl shadow-sm">
                                     {{ !empty($program->icon) ? $program->icon : '✨' }}
                                 </div>
@@ -251,6 +299,13 @@
                             </div>
                         @endforeach
                     </div>
+                    @if ($programs->count() > 4)
+                        <div class="mt-8 text-center">
+                            <button id="toggle_programs" type="button" class="bg-[#1E90FF] dark:bg-blue-600 text-white border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_6px_0_#104E8B] dark:shadow-[0_6px_0_#1e3a8a] hover:translate-y-[2px] hover:shadow-[0_4px_0_#104E8B] font-playful text-xl transition-all">
+                                Lihat Selengkapnya
+                            </button>
+                        </div>
+                    @endif
                 </div>
                 @endif
 
@@ -262,27 +317,25 @@
                                 <h2 class="font-playful text-3xl md:text-4xl text-white drop-shadow-md">👨‍🏫 Guru Super 👩‍🏫</h2>
                                 <p class="text-white font-bold text-lg">Pahlawan Pembimbing Kami!</p>
                             </div>
-                            {{-- Jika Anda punya route halaman khusus guru, tambahkan di href ini --}}
                          <a href="{{ route('publik.guru.index') }}" class="bg-[#FFD700] dark:bg-yellow-500 text-gray-900 border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_4px_0_#CDAD00] dark:shadow-[0_4px_0_#854d0e] hover:translate-y-[2px] hover:shadow-[0_2px_0_#CDAD00] font-playful text-xl transition-all">Lihat Semua</a>
                         </div>
 
                         {{-- Wrapper Carousel --}}
                         <div class="relative px-2 md:px-4" id="guru-carousel-container" @mouseenter="pauseCarousel()" @mouseleave="startCarousel()">
                             
-                            {{-- Tombol Kiri --}}
-                            <button id="prevGuru" class="absolute left-[-5px] md:left-[-15px] top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
+                            {{-- PERBAIKAN: Menambahkan z-30 pada Tombol Kiri --}}
+                            <button id="prevGuru" class="absolute left-[-5px] md:left-[-15px] top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
                                 <svg class="w-6 h-6 ml-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
 
                             {{-- Area Track Slide --}}
-                            <div class="overflow-hidden w-full py-4"> 
+                            <div class="overflow-hidden w-full py-4 relative z-10"> 
                                 <div id="guru-track" class="flex transition-transform duration-500 ease-out gap-6" style="transform: translateX(0px);">
                                     @foreach ($gurus as $index => $guru)
                                         @php
                                             $ringColors = ['ring-[#DC143C]', 'ring-[#1E90FF]', 'ring-[#FFD700]', 'ring-[#8A2BE2]'];
                                             $ring = $ringColors[$index % count($ringColors)];
                                             
-                                            // Badge Warna untuk Kelas
                                             $classBadges = [
                                                 'bg-pink-100 text-pink-700 border-pink-300 dark:bg-pink-900 dark:text-pink-300 dark:border-pink-700',
                                                 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700',
@@ -292,9 +345,8 @@
                                             $classBadge = $classBadges[$index % count($classBadges)];
                                         @endphp
                                         
-                                        {{-- 2 Kartu di HP, 4 Kartu di Laptop --}}
                                         <div class="flex-none w-[calc((100%-24px)/2)] md:w-[calc((100%-72px)/4)]">
-                                            <div class="bg-white dark:bg-gray-800 rounded-3xl border-4 border-gray-200 dark:border-gray-700 shadow-md p-6 text-center hover:scale-105 transition-all duration-300 h-full flex flex-col justify-between">
+                                            <div class="bg-white dark:bg-gray-800 rounded-3xl border-4 border-gray-200 dark:border-gray-700 shadow-md p-6 text-center hover:scale-105 transition-all duration-300 h-full flex flex-col justify-between relative z-10">
                                                 <div>
                                                     <div class="w-24 h-24 mx-auto bg-gray-100 dark:bg-gray-900 rounded-full mb-4 overflow-hidden flex items-center justify-center ring-4 {{ $ring }} ring-offset-4 dark:ring-offset-gray-800">
                                                         @if ($guru->profile_photo_path)
@@ -307,7 +359,6 @@
                                                     <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p>
                                                 </div>
                                                 
-                                                {{-- Info Kelas yang diajar --}}
                                                 <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
                                                     @if (!empty($guru->kelas))
                                                         <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">Kelas {{ $guru->kelas }}</span>
@@ -321,8 +372,8 @@
                                 </div>
                             </div>
 
-                            {{-- Tombol Kanan --}}
-                            <button id="nextGuru" class="absolute right-[-5px] md:right-[-15px] top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
+                            {{-- PERBAIKAN: Menambahkan z-30 pada Tombol Kanan --}}
+                            <button id="nextGuru" class="absolute right-[-5px] md:right-[-15px] top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
                                 <svg class="w-6 h-6 mr-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 5l7 7-7 7"></path></svg>
                             </button>
 
@@ -332,19 +383,19 @@
 
                 {{-- KONTEN / SOSMED --}}
                 @if (!empty($contents) && $contents->count())
-                    <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300">
+                    <div id="konten-sosmed" class="mb-14 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-4 border-[#1E90FF] dark:border-blue-600 shadow-[0_10px_0_#104E8B] dark:shadow-[0_10px_0_#1e3a8a] pt-8 transition-colors duration-300 mb-8 relative z-10">
                         <div class="text-center mb-8">
                             <h2 class="font-playful text-3xl md:text-4xl text-[#1E90FF] dark:text-blue-400 drop-shadow-sm">📸 Galeri Keseruan 🎨</h2>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                             @foreach ($contents as $index => $content)
-                                <div class="bg-[#F0F8FF] dark:bg-slate-700 rounded-2xl border-4 border-blue-200 dark:border-blue-900 p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif transition-colors">
+                                <div class="bg-[#F0F8FF] dark:bg-slate-700 rounded-2xl border-4 border-blue-200 dark:border-blue-900 p-4 flex flex-col h-full @if($index >= 3) hidden js-extra-content @endif transition-colors relative z-10">
                                     @if ($content->platform === 'instagram')
-                                        <div class="rounded-xl overflow-hidden bg-white">
+                                        <div class="instagram-embed-wrap rounded-xl bg-white p-2 relative z-10 overflow-hidden">
                                             <blockquote class="instagram-media w-full" data-instgrm-permalink="{{ $content->url }}" data-instgrm-version="14" style="background:#FFF; border:0; margin: 0; max-width:none; padding:0; width:100%;"></blockquote>
                                         </div>
                                     @endif
-                                    <div class="mt-4 flex-1 flex flex-col">
+                                    <div class="mt-4 flex-1 flex flex-col relative z-10">
                                         <div class="font-bold text-lg text-[#0C2C55] dark:text-white mb-2">{{ $content->title ?? 'Postingan Spesial' }}</div>
                                         @if (!empty($content->description))
                                             <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ $content->description }}</p>
@@ -354,7 +405,7 @@
                             @endforeach
                         </div>
                         @if ($contents->count() > 3)
-                            <div class="mt-8 text-center">
+                            <div class="mt-8 text-center relative z-10">
                                 <button id="toggle_contents" type="button" class="bg-[#FF8C00] dark:bg-orange-600 text-white border-4 border-white dark:border-gray-800 px-8 py-3 rounded-full shadow-[0_6px_0_#CD6600] dark:shadow-[0_6px_0_#9a3412] hover:translate-y-[2px] hover:shadow-[0_4px_0_#CD6600] font-playful text-xl transition-all">
                                     Lihat Lebih Banyak!
                                 </button>
@@ -494,6 +545,60 @@
                             expanded = !expanded;
                         });
                     }
+                })();
+
+                // SCRIPT PROGRAM UNGGULAN LIHAT SELENGKAPNYA
+                (function(){
+                    const btn = document.getElementById('toggle_programs');
+                    if (!btn) return;
+                    let expanded = false;
+                    btn.addEventListener('click', function(){
+                        const extras = document.querySelectorAll('.js-extra-program');
+                        if (!expanded) {
+                            extras.forEach(el => el.classList.remove('hidden'));
+                            btn.textContent = 'Tutup';
+                        } else {
+                            extras.forEach(el => el.classList.add('hidden'));
+                            btn.textContent = 'Lihat Selengkapnya';
+                        }
+                        expanded = !expanded;
+                    });
+                })();
+
+                // Animasi tombol navbar + smooth section scrolling di halaman welcome.
+                (function(){
+                    const navLinks = document.querySelectorAll('header nav a[href]');
+                    if (!navLinks.length) return;
+
+                    navLinks.forEach(function(link){
+                        link.style.transition = 'transform 160ms ease, box-shadow 160ms ease';
+                        link.addEventListener('click', function(event){
+                            const href = link.getAttribute('href');
+                            if (!href) return;
+
+                            link.classList.add('nav-pressing');
+
+                            const url = new URL(href, window.location.origin);
+                            const samePage = url.pathname === window.location.pathname;
+
+                            if (samePage && url.hash) {
+                                event.preventDefault();
+                                const target = document.querySelector(url.hash);
+                                setTimeout(function(){
+                                    link.classList.remove('nav-pressing');
+                                    if (target) {
+                                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
+                                }, 140);
+                                return;
+                            }
+
+                            event.preventDefault();
+                            setTimeout(function(){
+                                window.location.href = href;
+                            }, 140);
+                        });
+                    });
                 })();
             </script>
     </body>

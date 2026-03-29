@@ -21,11 +21,12 @@ class BeritaPublikController extends Controller
 		$beritas = $query
 			->orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->get();
+			->paginate(15)
+			->withQueryString();
 
 		$recentBeritas = Berita::orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->limit(5)
+			->limit(7)
 			->get();
 
 		$schoolProfile = SchoolProfile::first();
@@ -44,7 +45,7 @@ class BeritaPublikController extends Controller
 
 		$recentBeritas = Berita::orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->limit(5)
+			->limit(7)
 			->get();
 
 		return view('publik.berita.baca_berita', [

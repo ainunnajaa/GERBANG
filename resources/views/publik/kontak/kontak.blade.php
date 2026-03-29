@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kontak</title>
+    @include('partials.favicon')
 
     <script>
         (function() {
@@ -32,8 +33,17 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        html.dark body[data-bg-overlay="1"] {
+            background-image: linear-gradient(rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0.78)), var(--bg-image) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+        }
+    </style>
 </head>
-<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1)); color-scheme: light;" data-theme="light" @endif>
+<body id="top" class="min-h-full text-gray-900 dark:text-gray-100 @if (empty($schoolProfile?->background_overlay_path)) bg-gradient-to-b from-sky-50 to-white dark:from-gray-900 dark:to-gray-950 @endif" @if (!empty($schoolProfile?->background_overlay_path)) data-bg-overlay="1" style="--bg-image: url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), var(--bg-image); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
     <main class="flex-1">
@@ -45,13 +55,90 @@
                     $waNumber = '';
                     if (!empty($schoolProfile?->contact_phone)) {
                         $waNumber = preg_replace('/[^0-9]/', '', $schoolProfile->contact_phone);
+                        if (str_starts_with($waNumber, '0')) {
+                            $waNumber = '62' . substr($waNumber, 1);
+                        }
+                    }
+                    
+                    $rawMapsUrl = trim($schoolProfile?->contact_maps_url ?? '');
+                    $mapsSourceUrl = $rawMapsUrl !== '' ? $rawMapsUrl : null;
+                    $mapsEmbedUrl = null;
+                    $mapsDirectUrl = null;
+                    $mapsLocationName = null;
+
+                    if ($mapsSourceUrl) {
+                        $mapsSourceUrl = html_entity_decode($mapsSourceUrl, ENT_QUOTES | ENT_HTML5);
+                        $parts = parse_url($mapsSourceUrl);
+                        $query = [];
+                        if (!empty($parts['query'])) {
+                            parse_str($parts['query'], $query);
+                        }
+
+                        $latitude = null;
+                        $longitude = null;
+
+                        // Prioritaskan koordinat place (!3d/!4d) karena lebih akurat daripada titik viewport (@lat,lng).
+                        if (preg_match('/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/', $mapsSourceUrl, $coordMatches)) {
+                            $latitude = $coordMatches[1];
+                            $longitude = $coordMatches[2];
+                        } elseif (preg_match('/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/', $mapsSourceUrl, $coordMatches)) {
+                            $latitude = $coordMatches[1];
+                            $longitude = $coordMatches[2];
+                        } elseif (!empty($query['q']) && preg_match('/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/', (string) $query['q'], $coordMatches)) {
+                            $latitude = $coordMatches[1];
+                            $longitude = $coordMatches[2];
+                        }
+
+                        if (str_contains($mapsSourceUrl, '/maps/embed') || str_contains($mapsSourceUrl, 'google.com/maps/embed')) {
+                            $mapsEmbedUrl = $mapsSourceUrl;
+                            if (!empty($query['q']) && filter_var($query['q'], FILTER_VALIDATE_URL)) {
+                                $mapsDirectUrl = $query['q'];
+                            }
+                        } elseif ($latitude !== null && $longitude !== null) {
+                            $mapsEmbedUrl = 'https://www.google.com/maps?q=' . $latitude . ',' . $longitude . '&z=18&hl=id&output=embed';
+                            $mapsDirectUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($latitude . ',' . $longitude);
+                        } else {
+                            $searchQuery = null;
+                            if (preg_match('/\/place\/([^\/]+)/', $mapsSourceUrl, $placeMatches)) {
+                                $searchQuery = urldecode(str_replace('+', ' ', $placeMatches[1]));
+                            } elseif (!empty($query['q']) && !filter_var($query['q'], FILTER_VALIDATE_URL)) {
+                                $searchQuery = urldecode((string) $query['q']);
+                            }
+
+                            if (!empty($searchQuery)) {
+                                $mapsEmbedUrl = 'https://www.google.com/maps?output=embed&q=' . urlencode($searchQuery);
+                                $mapsDirectUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($searchQuery);
+                            } else {
+                                $mapsEmbedUrl = 'https://www.google.com/maps?output=embed&q=' . urlencode($mapsSourceUrl);
+                                $mapsDirectUrl = $mapsSourceUrl;
+                            }
+                        }
+
+                        if (preg_match('/\/place\/([^\/]+)/', $mapsSourceUrl, $matches)) {
+                            $mapsLocationName = urldecode(str_replace('+', ' ', $matches[1]));
+                        } elseif (!empty($query['q']) && !filter_var($query['q'], FILTER_VALIDATE_URL)) {
+                            $mapsLocationName = urldecode((string) $query['q']);
+                        } elseif (!empty($schoolProfile?->school_name)) {
+                            $mapsLocationName = $schoolProfile->school_name;
+                        } elseif (!empty($schoolProfile?->contact_address)) {
+                            $mapsLocationName = $schoolProfile->contact_address;
+                        } else {
+                            $mapsLocationName = 'Lokasi Sekolah';
+                        }
+
+                        if (!$mapsDirectUrl) {
+                            $fallbackQuery = $schoolProfile?->contact_address ?: $schoolProfile?->school_name;
+                            if (!empty($fallbackQuery)) {
+                                $mapsDirectUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($fallbackQuery);
+                            }
+                        }
                     }
                 @endphp
 
                 <div class="mt-6" id="kontak-form" data-wa-number="{{ $waNumber }}">
                     <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">Hubungi Kami</h2>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div class="grid grid-cols-1 {{ $mapsEmbedUrl ? 'md:grid-cols-2' : '' }} gap-6 items-start">
                         <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-100 dark:border-gray-700">
                             @if (session('success'))
                                 <div class="mb-4 rounded-md bg-green-50 text-green-700 border border-green-200 px-4 py-2 text-sm">
@@ -98,16 +185,27 @@
                                 </button>
                             </form>
                         </div>
+                        
 
-                        <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 md:h-full min-h-[320px]">
-                            <iframe
-                                class="w-full h-full"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.1309112275558!2d110.36249037477106!3d-6.9938590930072575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b28fb7fd66b%3A0xa879527c9597e52!2sTK%20ABA%2054%20SEMARANG!5e0!3m2!1sid!2sid!4v1772675953261!5m2!1sid!2sid"
-                                style="border:0;"
-                                allowfullscreen=""
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                        </div>
+                        @if ($mapsEmbedUrl)
+                            <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                <div class="h-80 md:h-[360px] min-h-[320px]">
+                                    <iframe
+                                        class="w-full h-full"
+                                        src="{{ $mapsEmbedUrl }}"
+                                        style="border:0;"
+                                        allowfullscreen=""
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $mapsLocationName }}</p>
+                                    @if ($mapsDirectUrl)
+                                        <a href="{{ $mapsDirectUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex items-center rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">Lihat selengkapnya di Google Maps</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -152,75 +250,18 @@
                 window.open(url, '_blank');
             });
 
-            const themeButton = document.getElementById('welcome_theme_button');
-            const themeMenu = document.getElementById('welcome_theme_menu');
-            const themeLabel = document.getElementById('welcome_theme_label');
-            function getInitialTheme() {
-                return localStorage.getItem('theme') || 'system';
-            }
-            function isDarkFromMode(mode) {
-                if (mode === 'light') return false;
-                if (mode === 'dark') return true;
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            function updateThemeLabel(mode) {
-                if (!themeLabel) return;
-                if (mode === 'light') {
-                    themeLabel.textContent = 'Tema: Terang';
-                } else if (mode === 'dark') {
-                    themeLabel.textContent = 'Tema: Gelap';
-                } else {
-                    themeLabel.textContent = 'Tema: Sistem';
-                }
-            }
-            function applyTheme(mode, persist = true) {
-                if (persist) {
-                    localStorage.setItem('theme', mode);
-                }
-                const dark = isDarkFromMode(mode);
-                document.documentElement.classList.toggle('dark', dark);
-                updateThemeLabel(mode);
-            }
-            if (themeButton && themeMenu) {
-                applyTheme(getInitialTheme(), false);
-                let menuOpen = false;
-                function closeMenu() {
-                    if (!themeMenu) return;
-                    themeMenu.classList.add('hidden');
-                    menuOpen = false;
-                }
-                themeButton.addEventListener('click', function(e){
-                    e.stopPropagation();
-                    if (menuOpen) {
-                        closeMenu();
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
                     } else {
-                        themeMenu.classList.remove('hidden');
-                        menuOpen = true;
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
                     }
                 });
-                const options = themeMenu.querySelectorAll('[data-theme-mode]');
-                options.forEach(function(btn){
-                    btn.addEventListener('click', function(e){
-                        e.stopPropagation();
-                        const mode = this.getAttribute('data-theme-mode');
-                        if (!mode) return;
-                        applyTheme(mode, true);
-                        closeMenu();
-                    });
-                });
-                document.addEventListener('click', function(){
-                    if (!menuOpen) return;
-                    closeMenu();
-                });
-                const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                if (media && media.addEventListener) {
-                    media.addEventListener('change', function(){
-                        const saved = getInitialTheme();
-                        if (saved === 'system') {
-                            applyTheme('system', false);
-                        }
-                    });
-                }
             }
 
             const profilButton = document.getElementById('profil_menu_button');

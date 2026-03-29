@@ -42,7 +42,6 @@ class RiwayatPresensiController extends Controller
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
 		$selectedPeriod = $this->getSelectedGuruPeriod($request);
-
 		if (! $selectedPeriod) {
 			return redirect()->route('guru.kehadiran.periods')->with('error', 'Pilih periode kehadiran terlebih dahulu.');
 		}
@@ -721,6 +720,11 @@ class RiwayatPresensiController extends Controller
 			return '-';
 		}
 
+		$periodForDate = $selectedPeriod ?? $this->getPresensiPeriodForDate($date);
+		if (! $periodForDate || ! $this->canApplyBulkStatusOnDate($date, $periodForDate)) {
+			return '-';
+		}
+
 		if ($manualStatus !== null && in_array($manualStatus, self::AVAILABLE_STATUSES, true)) {
 			return $manualStatus;
 		}
@@ -736,7 +740,7 @@ class RiwayatPresensiController extends Controller
 			return 'I';
 		}
 
-		return $this->shouldMarkAlpha($date, $selectedPeriod) ? 'A' : '-';
+		return $this->shouldMarkAlpha($date, $periodForDate) ? 'A' : '-';
 	}
 
 	private function getManualStatusOverrides(array $userIds, array $dateKeys): array
@@ -1027,17 +1031,16 @@ class RiwayatPresensiController extends Controller
 			return $this->holidayDateCache[$year];
 		}
 
-		$cacheKey = "hari_libur_nasional_{$year}";
-		$cached = Cache::get($cacheKey);
-
-		if (! is_array($cached)) {
-			$cached = $this->fetchHariLiburNasional($year);
-		}
+		$cached = $this->getHariLiburNasionalGlobal();
 
 		$dateSet = [];
 		foreach ($cached as $holiday) {
 			$startDate = $holiday['start'] ?? null;
 			if (! $startDate) {
+				continue;
+			}
+
+			if (! str_starts_with((string) $startDate, (string) $year . '-')) {
 				continue;
 			}
 
@@ -1047,9 +1050,24 @@ class RiwayatPresensiController extends Controller
 		return $this->holidayDateCache[$year] = $dateSet;
 	}
 
-	private function fetchHariLiburNasional(int $year): array
+	private function getHariLiburNasionalGlobal(): array
 	{
-		$cacheKey = "hari_libur_nasional_{$year}";
+		$cacheKey = 'hari_libur_nasional_global';
+		$cached = Cache::get($cacheKey);
+
+		if (is_array($cached)) {
+			return $cached;
+		}
+
+		$cached = $this->fetchHariLiburNasionalGlobal();
+		Cache::put($cacheKey, $cached, now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+
+		return $cached;
+	}
+
+	private function fetchHariLiburNasionalGlobal(): array
+	{
+		$cacheKey = 'hari_libur_nasional_global';
 		$apiKey = config('services.api_co_id.key');
 
 		if (empty($apiKey)) {
@@ -1063,9 +1081,7 @@ class RiwayatPresensiController extends Controller
 			/** @var Response $response */
 			$response = Http::withHeaders([
 				'x-api-co-id' => $apiKey,
-			])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/', [
-				'year' => $year,
-			]);
+			])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/');
 
 			if (! $response->successful()) {
 				Log::error('API Holiday gagal: HTTP ' . $response->status());
@@ -1077,7 +1093,7 @@ class RiwayatPresensiController extends Controller
 			$json = $response->json();
 
 			if (! ($json['is_success'] ?? false) || empty($json['data'])) {
-				Log::warning('API Holiday response tidak berhasil atau data kosong untuk tahun ' . $year);
+				Log::warning('API Holiday response tidak berhasil atau data kosong.');
 				Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
 				return [];

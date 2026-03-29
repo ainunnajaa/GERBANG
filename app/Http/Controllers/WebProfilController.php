@@ -8,6 +8,7 @@ use App\Models\SchoolProgram;
 use App\Models\SchoolProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class WebProfilController extends Controller
@@ -19,7 +20,10 @@ class WebProfilController extends Controller
 			? SchoolProgram::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
 		$contents = $profile
-			? SchoolContent::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
+			? SchoolContent::where('school_profile_id', $profile->id)->where('platform', 'instagram')->orderByDesc('created_at')->get()
+			: collect();
+		$videos = $profile
+			? SchoolContent::where('school_profile_id', $profile->id)->where('platform', 'youtube')->orderByDesc('created_at')->get()
 			: collect();
 		$backgrounds = $profile
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
@@ -29,6 +33,7 @@ class WebProfilController extends Controller
 			'profile' => $profile,
 			'programs' => $programs,
 			'contents' => $contents,
+			'videos' => $videos,
 			'backgrounds' => $backgrounds,
 		]);
 	}
@@ -70,11 +75,31 @@ class WebProfilController extends Controller
 		}
 
 		if ($section === 'contact') {
+			$instagramInput = $request->input('social_instagram_url');
+			$normalizedInstagram = $this->normalizeInstagramInput($instagramInput);
+			$mapsInput = $request->input('contact_maps_url');
+			$normalizedMapsUrl = $this->normalizeMapsInput($mapsInput);
+
+			if (!empty($normalizedInstagram) && !filter_var($normalizedInstagram, FILTER_VALIDATE_URL)) {
+				return back()
+					->withErrors(['social_instagram_url' => 'Format Instagram tidak valid. Gunakan username atau URL yang benar.'])
+					->withInput();
+			}
+
+			if (!empty(trim((string) $mapsInput)) && empty($normalizedMapsUrl)) {
+				return back()
+					->withErrors(['contact_maps_url' => 'Format Google Maps tidak valid. Gunakan link Google Maps yang benar.'])
+					->withInput();
+			}
+
 			$validated = $request->validate([
 				'contact_address' => ['nullable', 'string', 'max:255'],
 				'contact_email' => ['nullable', 'email', 'max:255'],
 				'contact_phone' => ['nullable', 'string', 'max:50'],
 				'contact_opening_hours' => ['nullable', 'string', 'max:255'],
+				'social_facebook_url' => ['nullable', 'url', 'max:255'],
+				'social_youtube_url' => ['nullable', 'url', 'max:255'],
+				'contact_maps_url' => ['nullable', 'string', 'max:5000'],
 			]);
 
 			$profile = SchoolProfile::firstOrNew(['id' => 1]);
@@ -82,6 +107,10 @@ class WebProfilController extends Controller
 			$profile->contact_email = $validated['contact_email'] ?? null;
 			$profile->contact_phone = $validated['contact_phone'] ?? null;
 			$profile->contact_opening_hours = $validated['contact_opening_hours'] ?? null;
+			$profile->social_facebook_url = $validated['social_facebook_url'] ?? null;
+			$profile->social_instagram_url = $normalizedInstagram;
+			$profile->social_youtube_url = $validated['social_youtube_url'] ?? null;
+			$profile->contact_maps_url = $normalizedMapsUrl;
 			$profile->updated_by = Auth::id();
 			$profile->save();
 
@@ -95,6 +124,7 @@ class WebProfilController extends Controller
 			'school_name' => ['nullable', 'string', 'max:255'],
 			'school_logo' => ['nullable', 'image', 'max:4096'],
 			'welcome_message' => ['required', 'string'],
+			'school_profile' => ['nullable', 'string'],
 			'vision' => ['nullable', 'string'],
 			'mission' => ['nullable', 'string'],
 		]);
@@ -113,6 +143,7 @@ class WebProfilController extends Controller
 		}
 		$profile->school_name = $validated['school_name'] ?? null;
 		$profile->welcome_message = $validated['welcome_message'];
+		$profile->school_profile = $validated['school_profile'] ?? null;
 		$profile->vision = $validated['vision'] ?? null;
 		$profile->mission = $validated['mission'] ?? null;
 		$profile->updated_by = Auth::id();
@@ -122,6 +153,99 @@ class WebProfilController extends Controller
 			'status' => 'Profil sekolah berhasil disimpan.',
 			'open_section' => 'profile',
 		]);
+	}
+
+	private function normalizeInstagramInput(?string $value): ?string
+	{
+		if ($value === null) {
+			return null;
+		}
+
+		$value = trim($value);
+		if ($value === '') {
+			return null;
+		}
+
+		if (preg_match('/^https?:\/\//i', $value)) {
+			return $value;
+		}
+
+		$value = ltrim($value, '@');
+		$value = preg_replace('/^instagram\.com\//i', '', $value);
+		$value = trim((string) $value, '/');
+
+		if ($value === '') {
+			return null;
+		}
+
+		return 'https://instagram.com/' . $value;
+	}
+
+	private function normalizeMapsInput(?string $value): ?string
+	{
+		if ($value === null) {
+			return null;
+		}
+
+		$value = trim($value);
+		if ($value === '') {
+			return null;
+		}
+
+		$decodedValue = html_entity_decode($value, ENT_QUOTES | ENT_HTML5);
+		if (preg_match('/<iframe\b/i', $decodedValue)) {
+			if (preg_match('/\bsrc\s*=\s*["\']([^"\']+)["\']/i', $decodedValue, $matches)) {
+				$value = trim($matches[1]);
+			} else {
+				return null;
+			}
+		}
+
+		if (!filter_var($value, FILTER_VALIDATE_URL)) {
+			return null;
+		}
+
+		$resolvedUrl = $this->resolveRedirectUrl($value);
+
+		if (!filter_var($resolvedUrl, FILTER_VALIDATE_URL)) {
+			return null;
+		}
+
+		return $resolvedUrl;
+	}
+
+	private function resolveRedirectUrl(string $url): string
+	{
+		$currentUrl = $url;
+
+		for ($i = 0; $i < 4; $i++) {
+			try {
+				$response = Http::withOptions(['allow_redirects' => false])
+					->withHeaders(['User-Agent' => 'Mozilla/5.0'])
+					->timeout(8)
+					->get($currentUrl);
+
+				if (!in_array($response->status(), [301, 302, 303, 307, 308], true)) {
+					break;
+				}
+
+				$location = $response->header('Location');
+				if (empty($location)) {
+					break;
+				}
+
+				if (!preg_match('/^https?:\/\//i', $location)) {
+					$base = parse_url($currentUrl, PHP_URL_SCHEME) . '://' . parse_url($currentUrl, PHP_URL_HOST);
+					$location = rtrim((string) $base, '/') . '/' . ltrim($location, '/');
+				}
+
+				$currentUrl = $location;
+			} catch (\Throwable $e) {
+				break;
+			}
+		}
+
+		return $currentUrl;
 	}
 
 	public function deletePrincipalPhoto()
@@ -279,6 +403,107 @@ class WebProfilController extends Controller
 			'status' => 'Konten dihapus.',
 			'open_section' => 'contents',
 		]);
+	}
+
+	public function storeVideo(Request $request)
+	{
+		$validated = $request->validate([
+			'youtube_url' => ['required', 'url'],
+			'title' => ['required', 'string', 'max:255'],
+			'description' => ['nullable', 'string'],
+			'order' => ['nullable', 'integer'],
+		]);
+
+		$normalizedVideoUrl = $this->normalizeYouTubeUrl($validated['youtube_url']);
+		if (!$normalizedVideoUrl) {
+			return back()
+				->withErrors(['youtube_url' => 'Link YouTube tidak valid. Gunakan link video YouTube yang benar.'])
+				->withInput();
+		}
+
+		$profile = SchoolProfile::firstOrCreate(['id' => 1]);
+
+		SchoolContent::create([
+			'school_profile_id' => $profile->id,
+			'platform' => 'youtube',
+			'url' => $normalizedVideoUrl,
+			'title' => $validated['title'],
+			'description' => $validated['description'] ?? null,
+			'order' => $validated['order'] ?? 0,
+		]);
+
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Video YouTube berhasil ditambahkan.',
+			'open_section' => 'videos',
+		]);
+	}
+
+	public function updateVideo(Request $request, SchoolContent $video)
+	{
+		$validated = $request->validate([
+			'youtube_url' => ['required', 'url'],
+			'title' => ['required', 'string', 'max:255'],
+			'description' => ['nullable', 'string'],
+			'order' => ['nullable', 'integer'],
+		]);
+
+		$normalizedVideoUrl = $this->normalizeYouTubeUrl($validated['youtube_url']);
+		if (!$normalizedVideoUrl) {
+			return back()
+				->withErrors(['youtube_url' => 'Link YouTube tidak valid. Gunakan link video YouTube yang benar.'])
+				->withInput();
+		}
+
+		$video->update([
+			'platform' => 'youtube',
+			'url' => $normalizedVideoUrl,
+			'title' => $validated['title'],
+			'description' => $validated['description'] ?? null,
+			'order' => $validated['order'] ?? 0,
+		]);
+
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Video YouTube berhasil diperbarui.',
+			'open_section' => 'videos',
+		]);
+	}
+
+	public function deleteVideo(SchoolContent $video)
+	{
+		$video->delete();
+
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Video YouTube dihapus.',
+			'open_section' => 'videos',
+		]);
+	}
+
+	private function normalizeYouTubeUrl(string $url): ?string
+	{
+		$videoId = $this->extractYouTubeVideoId($url);
+		if (!$videoId) {
+			return null;
+		}
+
+		return 'https://www.youtube.com/watch?v=' . $videoId;
+	}
+
+	private function extractYouTubeVideoId(string $url): ?string
+	{
+		$patterns = [
+			'~(?:youtube\.com/watch\?v=)([A-Za-z0-9_-]{11})~i',
+			'~(?:youtu\.be/)([A-Za-z0-9_-]{11})~i',
+			'~(?:youtube\.com/embed/)([A-Za-z0-9_-]{11})~i',
+			'~(?:youtube\.com/shorts/)([A-Za-z0-9_-]{11})~i',
+		];
+
+		foreach ($patterns as $pattern) {
+			if (preg_match($pattern, $url, $matches)) {
+				return $matches[1];
+			}
+		}
+
+		return null;
 	}
 
 	// Background CRUD

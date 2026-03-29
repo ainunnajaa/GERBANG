@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Berita Sekolah</title>
+    @include('partials.favicon')
     <script>
         (function() {
             try {
@@ -30,8 +31,17 @@
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        html.dark body[data-bg-overlay="1"] {
+            background-image: linear-gradient(rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0.78)), var(--bg-image) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+        }
+    </style>
 </head>
-<body id="top" class="min-h-full text-gray-900 dark:text-gray-100" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1)); color-scheme: light;" data-theme="light" @endif>
+<body id="top" class="min-h-full text-gray-900 dark:text-gray-100 @if (empty($schoolProfile?->background_overlay_path)) bg-gradient-to-b from-sky-50 to-white dark:from-gray-900 dark:to-gray-950 @endif" @if (!empty($schoolProfile?->background_overlay_path)) data-bg-overlay="1" style="--bg-image: url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), var(--bg-image); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
 	<main class="flex-1">
@@ -97,6 +107,10 @@
                                 </a>
                             @endforeach
                         </div>
+
+                        <div class="mt-8">
+                            {{ $beritas->links() }}
+                        </div>
                     @endif
                 </div>
 
@@ -126,75 +140,18 @@
 
     <script>
         (function(){
-            const themeButton = document.getElementById('welcome_theme_button');
-            const themeMenu = document.getElementById('welcome_theme_menu');
-            const themeLabel = document.getElementById('welcome_theme_label');
-            function getInitialTheme() {
-                return localStorage.getItem('theme') || 'system';
-            }
-            function isDarkFromMode(mode) {
-                if (mode === 'light') return false;
-                if (mode === 'dark') return true;
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            function updateThemeLabel(mode) {
-                if (!themeLabel) return;
-                if (mode === 'light') {
-                    themeLabel.textContent = 'Tema: Terang';
-                } else if (mode === 'dark') {
-                    themeLabel.textContent = 'Tema: Gelap';
-                } else {
-                    themeLabel.textContent = 'Tema: Sistem';
-                }
-            }
-            function applyTheme(mode, persist = true) {
-                if (persist) {
-                    localStorage.setItem('theme', mode);
-                }
-                const dark = isDarkFromMode(mode);
-                document.documentElement.classList.toggle('dark', dark);
-                updateThemeLabel(mode);
-            }
-            if (themeButton && themeMenu) {
-                applyTheme(getInitialTheme(), false);
-                let menuOpen = false;
-                function closeMenu() {
-                    if (!themeMenu) return;
-                    themeMenu.classList.add('hidden');
-                    menuOpen = false;
-                }
-                themeButton.addEventListener('click', function(e){
-                    e.stopPropagation();
-                    if (menuOpen) {
-                        closeMenu();
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
                     } else {
-                        themeMenu.classList.remove('hidden');
-                        menuOpen = true;
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
                     }
                 });
-                const options = themeMenu.querySelectorAll('[data-theme-mode]');
-                options.forEach(function(btn){
-                    btn.addEventListener('click', function(e){
-                        e.stopPropagation();
-                        const mode = this.getAttribute('data-theme-mode');
-                        if (!mode) return;
-                        applyTheme(mode, true);
-                        closeMenu();
-                    });
-                });
-                document.addEventListener('click', function(){
-                    if (!menuOpen) return;
-                    closeMenu();
-                });
-                const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                if (media && media.addEventListener) {
-                    media.addEventListener('change', function(){
-                        const saved = getInitialTheme();
-                        if (saved === 'system') {
-                            applyTheme('system', false);
-                        }
-                    });
-                }
             }
 
             const profilButton = document.getElementById('profil_menu_button');

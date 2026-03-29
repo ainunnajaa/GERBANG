@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Daftar Guru - {{ config('app.name', 'Laravel') }}</title>
+        @include('partials.favicon')
 
         <script>
             (function() {

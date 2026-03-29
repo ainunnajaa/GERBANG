@@ -79,6 +79,20 @@ class WelcomeController extends Controller
 
 		return back()->with('success', 'Terima kasih, pesan Anda telah dikirim.');
 	}
+
+	public function video()
+	{
+		$profile = SchoolProfile::first();
+		$videos = $profile
+			? SchoolContent::where('school_profile_id', $profile->id)->where('platform', 'youtube')->orderByDesc('created_at')->get()
+			: collect();
+
+		return view('publik.video.video', [
+			'schoolProfile' => $profile,
+			'videos' => $videos,
+		]);
+	}
+
 	public function guru()
     {
         // Ambil data user yang memiliki role 'guru'

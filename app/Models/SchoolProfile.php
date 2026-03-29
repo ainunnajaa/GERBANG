@@ -13,6 +13,7 @@ class SchoolProfile extends Model
         'school_name',
         'school_logo_path',
         'welcome_message',
+        'school_profile',
         'principal_name',
         'principal_photo_path',
         'principal_greeting',
@@ -22,6 +23,10 @@ class SchoolProfile extends Model
         'contact_email',
         'contact_phone',
         'contact_opening_hours',
+        'social_facebook_url',
+        'social_instagram_url',
+        'social_youtube_url',
+        'contact_maps_url',
         'updated_by',
         // Optional: add page title/content into the same model if needed later
         // 'title',
