@@ -109,7 +109,7 @@
                             </svg>
                         </button>
 
-                        <a href="{{ url('/') }}" class="ml-4 md:ml-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white border-4 border-[#FFD700] overflow-hidden shadow-sm hover:scale-105 transition-transform" aria-label="Kembali ke halaman utama">
+                        <a href="{{ url('/') }}" class="ml-4 md:ml-5 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white border-4 border-[#FFD700] overflow-hidden shadow-sm hover:scale-105 transition-transform" aria-label="Kembali ke halaman utama">
                             @if (!empty($schoolProfile?->school_logo_path))
                                 <img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo Sekolah" class="h-full w-full object-contain">
                             @else

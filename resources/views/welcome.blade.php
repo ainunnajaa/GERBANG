@@ -18,7 +18,7 @@
         </script>
 
         <style>
-            /* FONT PLAYFUL UNTUK ANAK TK */
+            /* FONT PLAYFUL UNAK TK */
             @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
             
             body {
@@ -144,7 +144,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body id="top" class="text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
-        @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header', 'compactUi' => true])
+        @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
             <main class="flex-1">
                 
@@ -244,8 +244,14 @@
                 <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12 relative z-20 bg-[#FDFCE0] dark:bg-gray-900 transition-colors duration-300 rounded-t-[3rem] mt-[-30px]">
                 
                 @if (!empty($schoolProfile?->welcome_message))
-                    {{-- CARD 1: SELAMAT DATANG (PLAYFUL) --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300 scroll-reveal" data-reveal>
+                    {{-- CARD 1: SELAMAT DATANG (PLAYFUL) - PERBAIKAN: Label Halo & Rotasi Dinamis --}}
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal>
+                        
+                        {{-- Label Halo Melayang --}}
+                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30">
+                            Halo! 👋
+                        </div>
+
                         <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang di Dunia Ceria!</h2>
                         <div class="rtf-content text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed prose dark:prose-invert max-w-none">{!! $schoolProfile->welcome_message !!}</div>
                     </div>
@@ -284,9 +290,12 @@
                     </div>
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transition-colors duration-300 scroll-reveal" data-reveal>
+                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal>
+                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30">
+                            Halo! 👋
+                        </div>
                         <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang!</h2>
-                        <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold">Halo, selamat datang di {{ config('app.name', 'Laravel') }}.</p>
+                        <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold">Senang sekali melihat Anda di sini! Selamat menjelajahi {{ config('app.name', 'Laravel') }}.</p>
                     </div>
                 @endif
 
@@ -342,14 +351,12 @@
                         </div>
 
                         {{-- Wrapper Carousel --}}
-                        <div class="relative px-2 md:px-4" id="guru-carousel-container" @mouseenter="pauseCarousel()" @mouseleave="startCarousel()">
+                        <div class="relative px-2 md:px-4" id="guru-carousel-container">
                             
-                            {{-- PERBAIKAN: Menambahkan z-30 pada Tombol Kiri --}}
                             <button id="prevGuru" class="absolute left-[-5px] md:left-[-15px] top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
                                 <svg class="w-6 h-6 ml-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
 
-                            {{-- Area Track Slide --}}
                             <div class="overflow-hidden w-full py-4 relative z-10"> 
                                 <div id="guru-track" class="flex transition-transform duration-500 ease-out gap-6" style="transform: translateX(0px);">
                                     @foreach ($gurus as $index => $guru)
@@ -393,7 +400,6 @@
                                 </div>
                             </div>
 
-                            {{-- PERBAIKAN: Menambahkan z-30 pada Tombol Kanan --}}
                             <button id="nextGuru" class="absolute right-[-5px] md:right-[-15px] top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center bg-[#FF8C00] text-white rounded-full shadow-[0_4px_0_#CD6600] hover:translate-y-[calc(-50%+2px)] hover:shadow-[0_2px_0_#CD6600] transition-all border-2 border-white dark:border-gray-800">
                                 <svg class="w-6 h-6 mr-[-2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M9 5l7 7-7 7"></path></svg>
                             </button>
@@ -438,7 +444,7 @@
                 </div>
             </main>
 
-            @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer', 'compactUi' => true])
+            @include('publik.tampilan.footer_navbar', ['slotPosition' => 'footer'])
 
             <script>
                 // SCRIPT UNTUK TOMBOL THEME (LIGHT / DARK MODE)
@@ -501,13 +507,12 @@
                             const visibleCards = isMobile ? 2 : 4; 
                             const maxIndex = Math.max(0, totalCards - visibleCards);
                             
-                            // Logika Looping: Jika mentok kanan, balik ke kiri. Jika mentok kiri, pergi ke kanan.
                             if (currentIndex > maxIndex) currentIndex = 0; 
                             if (currentIndex < 0) currentIndex = maxIndex;
                             
                             if(cards.length > 0) {
                                 const cardWidth = cards[0].getBoundingClientRect().width;
-                                const gap = 24; // 24px = gap-6 Tailwind
+                                const gap = 24; 
                                 const moveAmount = (cardWidth + gap) * currentIndex;
                                 track.style.transform = `translateX(-${moveAmount}px)`;
                             }
@@ -519,7 +524,6 @@
                         }
 
                         function startAutoSlide() {
-                            // Geser otomatis setiap 3 detik (3000ms)
                             autoSlideInterval = setInterval(nextGuruSlide, 3000);
                         }
 
@@ -531,7 +535,7 @@
                             currentIndex++; 
                             updateCarousel(); 
                             stopAutoSlide(); 
-                            startAutoSlide(); // Reset timer saat diklik manual
+                            startAutoSlide(); 
                         });
                         
                         prevBtn.addEventListener('click', () => { 
@@ -541,7 +545,6 @@
                             startAutoSlide(); 
                         });
 
-                        // Hentikan auto-slide saat mouse berada di area carousel agar nyaman dibaca
                         if(container){
                             container.addEventListener('mouseenter', stopAutoSlide);
                             container.addEventListener('mouseleave', startAutoSlide);
@@ -550,7 +553,7 @@
                         window.addEventListener('resize', updateCarousel);
                         
                         setTimeout(updateCarousel, 100);
-                        startAutoSlide(); // Mulai jalankan otomatis saat web dimuat
+                        startAutoSlide(); 
                     }
                 })();
 
@@ -586,7 +589,7 @@
                     });
                 })();
 
-                // Animasi tombol navbar + smooth section scrolling di halaman welcome.
+                // Animasi tombol navbar + smooth section scrolling
                 (function(){
                     const navLinks = document.querySelectorAll('header nav a[href]');
                     if (!navLinks.length) return;
@@ -622,7 +625,7 @@
                     });
                 })();
 
-                // Animasi reveal saat section masuk viewport ketika scroll.
+                // Animasi reveal saat section masuk viewport
                 (function () {
                     const targets = document.querySelectorAll('[data-reveal]');
                     if (!targets.length) return;

@@ -1,27 +1,10 @@
 @php
     $position = $slotPosition ?? 'both';
-    $compactUi = $compactUi ?? false;
 @endphp
-
-@if ($compactUi)
-    <style>
-        .ui-compact {
-            zoom: 0.94;
-        }
-
-        @supports not (zoom: 1) {
-            .ui-compact {
-                transform: scale(0.94);
-                transform-origin: top center;
-                width: 106.383%;
-            }
-        }
-    </style>
-@endif
 
 @if ($position === 'header' || $position === 'both')
     {{-- Header dengan warna Biru Langit (Light) & Slate/Gray Gelap (Dark Mode) --}}
-    <header data-main-header class="{{ $compactUi ? 'ui-compact h-[3.798rem]' : 'h-[3.570rem]' }} px-4 md:px-8 lg:px-16 flex items-center justify-between gap-2 bg-[#87CEEB] dark:bg-gray-900 sticky top-0 z-30 transition-colors duration-300 shadow-[0_4px_0_rgba(0,0,0,0.1)] border-b-4 border-[#5CA0C4] dark:border-gray-800">
+    <header data-main-header class="h-[3.570rem] -mb-px md:mb-0 px-4 md:px-8 lg:px-16 flex items-center justify-between gap-2 bg-[#87CEEB] dark:bg-gray-900 sticky top-0 z-30 border-0 shadow-none transition-colors duration-300">
         <div data-header-left class="flex items-center gap-4 min-w-0">
             
             {{-- LOGO SEKOLAH (Sekarang selalu muncul di semua halaman) --}}
@@ -127,7 +110,7 @@
                         @endif
                         
                         @if (Route::has('register') && !request()->routeIs('register'))
-                            <a href="{{ route('register') }}" class="inline-block px-4 py-2 rounded-full bg-[#DC143C] dark:bg-red-700 text-white shadow-[0_3px_0_#8B0000] dark:shadow-[0_3px_0_#7f1d1d] hover:translate-y-[2px] hover:shadow-[0_1px_0_#8B0000] font-bold text-sm transition-all">Register</a>
+                            <a href="{{ route('register') }}" class="{{ request()->routeIs('login') ? 'inline-block' : 'hidden md:inline-block' }} px-4 py-2 rounded-full bg-[#DC143C] dark:bg-red-700 text-white shadow-[0_3px_0_#8B0000] dark:shadow-[0_3px_0_#7f1d1d] hover:translate-y-[2px] hover:shadow-[0_1px_0_#8B0000] font-bold text-sm transition-all">Register</a>
                         @endif
                     @endauth
                 </nav>
@@ -153,7 +136,7 @@
             }
         @endphp
         
-        <footer id="kontak" class="{{ $compactUi ? 'ui-compact' : '' }} mt-10 bg-[#FFD700] dark:bg-gray-900 border-t-8 border-[#FF8C00] dark:border-gray-800 text-sm text-gray-800 dark:text-gray-200 transition-colors duration-300">
+        <footer id="kontak" class="mt-10 bg-[#FFD700] dark:bg-gray-900 border-t-8 border-[#FF8C00] dark:border-gray-800 text-sm text-gray-800 dark:text-gray-200 transition-colors duration-300">
             <div class="px-4 md:px-8 lg:px-16 py-8 md:py-12">
                 
                 <h2 class="text-2xl font-playful font-bold mb-6 text-[#DC143C] dark:text-red-400 uppercase tracking-widest text-center md:text-left">
