@@ -182,7 +182,7 @@ class DashboardController extends Controller
                 }
 
                 if ($selectedMonthKey) {
-                    $monthDate = Carbon::createFromFormat('Y-m', $selectedMonthKey)->startOfMonth();
+                    $monthDate = Carbon::createFromFormat('!Y-m', $selectedMonthKey)->startOfMonth();
                     $monthStart = $monthDate->copy()->startOfMonth()->lt($periodStart) ? $periodStart->copy() : $monthDate->copy()->startOfMonth();
                     $monthEnd = $monthDate->copy()->endOfMonth()->gt($periodEnd) ? $periodEnd->copy() : $monthDate->copy()->endOfMonth();
                     $totalWeeks = 1;

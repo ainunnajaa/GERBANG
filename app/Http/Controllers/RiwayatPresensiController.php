@@ -969,7 +969,7 @@ class RiwayatPresensiController extends Controller
 
 	private function getMonthDateRangeWithinPeriod(string $monthKey, PresensiPeriod $period): array
 	{
-		$monthDate = Carbon::createFromFormat('Y-m', $monthKey)->startOfMonth();
+		$monthDate = Carbon::createFromFormat('!Y-m', $monthKey)->startOfMonth();
 		$periodStart = Carbon::parse($period->start_date)->startOfDay();
 		$periodEnd = Carbon::parse($period->end_date)->endOfDay();
 		$monthStart = $monthDate->copy()->startOfMonth();
