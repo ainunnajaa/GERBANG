@@ -3,7 +3,13 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        
+        {{-- SEO TAGS UNTUK GOOGLE --}}
+        <title>TK Pembina ABA 54 Semarang - {{ config('app.name', 'GERBANG') }}</title>
+        <meta name="description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
+        <meta name="keywords" content="TK Pembina ABA 54 Semarang, TK ABA 54, Taman Kanak-Kanak Semarang, TK Aisyiyah Bustanul Athfal 54, Pendidikan Anak Usia Dini">
+        <meta name="author" content="TK Pembina ABA 54 Semarang">
+
         @include('partials.favicon')
 
         <script>
