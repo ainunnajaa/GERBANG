@@ -40,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'youtube_token_payload',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'youtube_token_expires_at' => 'datetime',
         ];
     }
 }

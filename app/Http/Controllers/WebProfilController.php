@@ -6,8 +6,15 @@ use App\Models\SchoolBackground;
 use App\Models\SchoolContent;
 use App\Models\SchoolProgram;
 use App\Models\SchoolProfile;
+use Google\Client as GoogleClient;
+use Google\Http\MediaFileUpload;
+use Google\Service\YouTube;
+use Google\Service\YouTube\Video;
+use Google\Service\YouTube\VideoSnippet;
+use Google\Service\YouTube\VideoStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,7 +42,94 @@ class WebProfilController extends Controller
 			'contents' => $contents,
 			'videos' => $videos,
 			'backgrounds' => $backgrounds,
+			'youtubeConnected' => $this->getValidYouTubeAccessToken() !== null,
+			'youtubeUploadMaxBytes' => $this->getYouTubeUploadCapBytes(),
+			'youtubeUploadMaxMb' => max(1, (int) floor($this->getYouTubeUploadCapBytes() / (1024 * 1024))),
 		]);
+	}
+
+	public function connectYouTube()
+	{
+		try {
+			if (empty((string) config('services.youtube.client_id')) || empty((string) config('services.youtube.client_secret'))) {
+				return redirect()->route('admin.web_profil')
+					->withErrors(['youtube_upload' => 'Konfigurasi YouTube API belum lengkap di file .env.'])
+					->with('open_section', 'videos');
+			}
+
+			$client = $this->buildYouTubeClient();
+
+			return redirect()->away($client->createAuthUrl());
+		} catch (\Throwable $e) {
+			report($e);
+
+			return redirect()->route('admin.web_profil')
+				->withErrors([
+					'youtube_upload' => 'Gagal memulai proses koneksi YouTube: ' . $this->formatYouTubeApiError($e),
+				])
+				->with('open_section', 'videos');
+		}
+	}
+
+	public function disconnectYouTube()
+	{
+		$token = $this->getStoredYouTubeToken();
+		if (is_array($token) && !empty($token['access_token'])) {
+			try {
+				$client = $this->buildYouTubeClient($token);
+				$client->revokeToken($token['access_token']);
+			} catch (\Throwable $e) {
+				// Jika revoke ke Google gagal, token lokal tetap dibersihkan.
+			}
+		}
+
+		$this->clearStoredYouTubeToken();
+
+		return redirect()->route('admin.web_profil')->with([
+			'status' => 'Koneksi YouTube berhasil diputus.',
+			'open_section' => 'videos',
+		]);
+	}
+
+	public function handleYouTubeCallback(Request $request)
+	{
+		try {
+			$code = (string) $request->query('code', '');
+			if ($code === '') {
+				return redirect()->route('admin.web_profil')->with([
+					'status' => 'Autorisasi YouTube dibatalkan atau gagal.',
+					'open_section' => 'videos',
+				]);
+			}
+
+			$client = $this->buildYouTubeClient();
+			$token = $client->fetchAccessTokenWithAuthCode($code);
+
+			if (isset($token['error'])) {
+				$errorDescription = $token['error_description'] ?? $token['error'];
+
+				return redirect()->route('admin.web_profil')
+					->withErrors([
+						'youtube_upload' => 'Gagal menghubungkan akun YouTube: ' . $errorDescription,
+					])
+					->with('open_section', 'videos');
+			}
+
+			$this->storeYouTubeAccessToken($token);
+
+			return redirect()->route('admin.web_profil')->with([
+				'status' => 'Akun YouTube berhasil terhubung. Sekarang Anda bisa upload video langsung.',
+				'open_section' => 'videos',
+			]);
+		} catch (\Throwable $e) {
+			report($e);
+
+			return redirect()->route('admin.web_profil')
+				->withErrors([
+					'youtube_upload' => 'Gagal menyelesaikan callback YouTube: ' . $this->formatYouTubeApiError($e),
+				])
+				->with('open_section', 'videos');
+		}
 	}
 
 	public function save(Request $request)
@@ -438,6 +532,126 @@ class WebProfilController extends Controller
 		]);
 	}
 
+	public function uploadVideoToYouTube(Request $request)
+	{
+		$effectiveUploadLimitBytes = $this->getYouTubeUploadCapBytes();
+		$maxRuleKb = (int) floor($effectiveUploadLimitBytes / 1024);
+
+		$validated = $request->validate([
+			'upload_title' => ['required', 'string', 'max:100'],
+			'upload_description' => ['nullable', 'string', 'max:5000'],
+			'upload_privacy_status' => ['required', 'in:public,unlisted,private'],
+			'video_file' => ['required', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm', 'max:' . max(1, $maxRuleKb)],
+		], [
+			'video_file.uploaded' => 'File video gagal diupload ke server. Biasanya karena ukuran file melebihi batas server (saat ini sekitar ' . max(1, (int) floor($effectiveUploadLimitBytes / (1024 * 1024))) . ' MB).',
+			'video_file.max' => 'Ukuran video melebihi batas server saat ini (sekitar ' . max(1, (int) floor($effectiveUploadLimitBytes / (1024 * 1024))) . ' MB).',
+			'video_file.mimetypes' => 'Format video tidak didukung. Gunakan MP4, MOV, AVI, MKV, atau WEBM.',
+		]);
+
+		$token = $this->getValidYouTubeAccessToken();
+		if ($token === null) {
+			if ($request->expectsJson()) {
+				return response()->json([
+					'message' => 'Akun YouTube belum terhubung. Silakan hubungkan akun YouTube terlebih dahulu.',
+					'redirect' => route('admin.youtube.connect'),
+				], 401);
+			}
+
+			return redirect()->route('admin.youtube.connect');
+		}
+
+		try {
+			$client = $this->buildYouTubeClient($token);
+			$youtube = new YouTube($client);
+
+			$videoSnippet = new VideoSnippet();
+			$videoSnippet->setTitle($validated['upload_title']);
+			$videoSnippet->setDescription($validated['upload_description'] ?? '');
+
+			$videoStatus = new VideoStatus();
+			$videoStatus->setPrivacyStatus($validated['upload_privacy_status']);
+			$videoStatus->setEmbeddable(true);
+			$videoStatus->setPublicStatsViewable(true);
+
+			$video = new Video();
+			$video->setSnippet($videoSnippet);
+			$video->setStatus($videoStatus);
+
+			$client->setDefer(true);
+			$insertRequest = $youtube->videos->insert('snippet,status', $video);
+
+			$uploadedFile = $request->file('video_file');
+			$chunkSizeBytes = 2 * 1024 * 1024;
+			$media = new MediaFileUpload(
+				$client,
+				$insertRequest,
+				$uploadedFile->getMimeType() ?: 'video/*',
+				null,
+				true,
+				$chunkSizeBytes
+			);
+			$media->setFileSize($uploadedFile->getSize());
+
+			$handle = fopen($uploadedFile->getRealPath(), 'rb');
+			if ($handle === false) {
+				throw new \RuntimeException('File video tidak dapat dibaca.');
+			}
+
+			$uploadStatus = false;
+			while (!$uploadStatus && !feof($handle)) {
+				$chunk = fread($handle, $chunkSizeBytes);
+				$uploadStatus = $media->nextChunk($chunk);
+			}
+			fclose($handle);
+			$client->setDefer(false);
+
+			$youtubeVideoId = is_array($uploadStatus)
+				? ($uploadStatus['id'] ?? null)
+				: (method_exists($uploadStatus, 'getId') ? $uploadStatus->getId() : null);
+
+			if (empty($youtubeVideoId)) {
+				throw new \RuntimeException('Upload ke YouTube gagal. ID video tidak ditemukan.');
+			}
+
+			$normalizedVideoUrl = 'https://www.youtube.com/watch?v=' . $youtubeVideoId;
+			$profile = SchoolProfile::firstOrCreate(['id' => 1]);
+
+			SchoolContent::create([
+				'school_profile_id' => $profile->id,
+				'platform' => 'youtube',
+				'url' => $normalizedVideoUrl,
+				'title' => $validated['upload_title'],
+				'description' => $validated['upload_description'] ?? null,
+				'order' => 0,
+			]);
+
+			if ($request->expectsJson()) {
+				return response()->json([
+					'message' => 'Video berhasil diupload ke YouTube dan tersimpan di daftar video.',
+					'redirect' => route('admin.web_profil'),
+				], 200);
+			}
+
+			return redirect()->route('admin.web_profil')->with([
+				'status' => 'Video berhasil diupload ke YouTube dan tersimpan di daftar video.',
+				'open_section' => 'videos',
+			]);
+		} catch (\Throwable $e) {
+			report($e);
+
+			if ($request->expectsJson()) {
+				return response()->json([
+					'message' => 'Upload video ke YouTube gagal: ' . $e->getMessage(),
+				], 500);
+			}
+
+			return redirect()->route('admin.web_profil')
+				->withErrors(['youtube_upload' => 'Upload video ke YouTube gagal: ' . $e->getMessage()])
+				->withInput()
+				->with('open_section', 'videos');
+		}
+	}
+
 	public function updateVideo(Request $request, SchoolContent $video)
 	{
 		$validated = $request->validate([
@@ -452,6 +666,34 @@ class WebProfilController extends Controller
 			return back()
 				->withErrors(['youtube_url' => 'Link YouTube tidak valid. Gunakan link video YouTube yang benar.'])
 				->withInput();
+		}
+
+		$videoId = $this->extractYouTubeVideoId($normalizedVideoUrl);
+		if (!$videoId) {
+			return back()
+				->withErrors(['youtube_upload' => 'ID video YouTube tidak ditemukan untuk sinkronisasi.'])
+				->withInput()
+				->with('open_section', 'videos');
+		}
+
+		try {
+			$this->updateYouTubeVideoMetadata($videoId, $validated['title'], $validated['description'] ?? '');
+		} catch (\Throwable $e) {
+			report($e);
+
+			if ($this->isInsufficientScopeError($e)) {
+				$this->clearStoredYouTubeToken();
+
+				return redirect()->route('admin.youtube.connect')->with([
+					'status' => 'Perlu izin tambahan YouTube untuk edit metadata. Silakan login ulang untuk melanjutkan.',
+					'open_section' => 'videos',
+				]);
+			}
+
+			return back()
+				->withErrors(['youtube_upload' => 'Gagal sinkron judul/deskripsi ke YouTube: ' . $this->formatYouTubeApiError($e)])
+				->withInput()
+				->with('open_section', 'videos');
 		}
 
 		$video->update([
@@ -470,10 +712,36 @@ class WebProfilController extends Controller
 
 	public function deleteVideo(SchoolContent $video)
 	{
+		$videoId = $this->extractYouTubeVideoId((string) $video->url);
+		if (!$videoId) {
+			return redirect()->route('admin.web_profil')
+				->withErrors(['youtube_upload' => 'Video tidak dapat dihapus dari YouTube karena ID video tidak valid.'])
+				->with('open_section', 'videos');
+		}
+
+		try {
+			$this->deleteYouTubeVideo($videoId);
+		} catch (\Throwable $e) {
+			report($e);
+
+			if ($this->isInsufficientScopeError($e)) {
+				$this->clearStoredYouTubeToken();
+
+				return redirect()->route('admin.youtube.connect')->with([
+					'status' => 'Perlu izin tambahan YouTube untuk hapus video. Silakan login ulang untuk melanjutkan.',
+					'open_section' => 'videos',
+				]);
+			}
+
+			return redirect()->route('admin.web_profil')
+				->withErrors(['youtube_upload' => 'Gagal menghapus video di YouTube: ' . $this->formatYouTubeApiError($e)])
+				->with('open_section', 'videos');
+		}
+
 		$video->delete();
 
 		return redirect()->route('admin.web_profil')->with([
-			'status' => 'Video YouTube dihapus.',
+			'status' => 'Video YouTube dihapus dari channel dan daftar website.',
 			'open_section' => 'videos',
 		]);
 	}
@@ -504,6 +772,230 @@ class WebProfilController extends Controller
 		}
 
 		return null;
+	}
+
+	private function buildYouTubeClient(?array $accessToken = null): GoogleClient
+	{
+		$client = new GoogleClient();
+		$client->setClientId((string) config('services.youtube.client_id'));
+		$client->setClientSecret((string) config('services.youtube.client_secret'));
+		$client->setRedirectUri($this->getYouTubeRedirectUri());
+		$client->setAccessType('offline');
+		$client->setPrompt('consent');
+		$client->setIncludeGrantedScopes(true);
+		$client->setScopes([YouTube::YOUTUBE_UPLOAD, YouTube::YOUTUBE]);
+
+		if ($accessToken !== null) {
+			$client->setAccessToken($accessToken);
+		}
+
+		return $client;
+	}
+
+	private function getYouTubeRedirectUri(): string
+	{
+		$configured = trim((string) config('services.youtube.redirect'));
+		if ($configured !== '' && filter_var($configured, FILTER_VALIDATE_URL)) {
+			return $configured;
+		}
+
+		return route('admin.youtube.callback');
+	}
+
+	private function storeYouTubeAccessToken(array $token): void
+	{
+		$existingToken = $this->getStoredYouTubeToken();
+		if (!empty($existingToken['refresh_token']) && empty($token['refresh_token'])) {
+			$token['refresh_token'] = $existingToken['refresh_token'];
+		}
+
+		$user = Auth::user();
+		if ($user) {
+			$user->youtube_token_payload = Crypt::encryptString(json_encode($token));
+			$user->youtube_token_expires_at = now()->addSeconds((int) ($token['expires_in'] ?? 3600));
+			$user->save();
+
+			return;
+		}
+
+		session(['youtube_access_token' => $token]);
+	}
+
+	private function getValidYouTubeAccessToken(): ?array
+	{
+		$token = $this->getStoredYouTubeToken();
+		if (!is_array($token) || empty($token)) {
+			return null;
+		}
+
+		$client = $this->buildYouTubeClient($token);
+		if (!$client->isAccessTokenExpired()) {
+			return $token;
+		}
+
+		$refreshToken = $client->getRefreshToken();
+		if (empty($refreshToken)) {
+			$this->clearStoredYouTubeToken();
+			return null;
+		}
+
+		$newToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+		if (isset($newToken['error'])) {
+			$this->clearStoredYouTubeToken();
+			return null;
+		}
+
+		$this->storeYouTubeAccessToken($newToken);
+
+		return $this->getStoredYouTubeToken();
+	}
+
+	private function getStoredYouTubeToken(): ?array
+	{
+		$user = Auth::user();
+		if ($user && !empty($user->youtube_token_payload)) {
+			try {
+				$payload = Crypt::decryptString($user->youtube_token_payload);
+				$decoded = json_decode($payload, true);
+
+				return is_array($decoded) ? $decoded : null;
+			} catch (\Throwable $e) {
+				$this->clearStoredYouTubeToken();
+				return null;
+			}
+		}
+
+		$sessionToken = session('youtube_access_token');
+
+		return is_array($sessionToken) ? $sessionToken : null;
+	}
+
+	private function clearStoredYouTubeToken(): void
+	{
+		$user = Auth::user();
+		if ($user) {
+			$user->youtube_token_payload = null;
+			$user->youtube_token_expires_at = null;
+			$user->save();
+
+			return;
+		}
+
+		session()->forget('youtube_access_token');
+	}
+
+	private function getEffectiveUploadLimitBytes(): int
+	{
+		$uploadMax = $this->parseIniSizeToBytes((string) ini_get('upload_max_filesize'));
+		$postMax = $this->parseIniSizeToBytes((string) ini_get('post_max_size'));
+
+		if ($uploadMax <= 0 && $postMax <= 0) {
+			return 250 * 1024 * 1024;
+		}
+
+		if ($uploadMax <= 0) {
+			return $postMax;
+		}
+
+		if ($postMax <= 0) {
+			return $uploadMax;
+		}
+
+		return min($uploadMax, $postMax);
+	}
+
+	private function getYouTubeUploadCapBytes(): int
+	{
+		$serverLimit = $this->getEffectiveUploadLimitBytes();
+
+		if ($serverLimit <= 0) {
+			return 128 * 1024 * 1024;
+		}
+
+		return $serverLimit;
+	}
+
+	private function parseIniSizeToBytes(string $value): int
+	{
+		$value = trim($value);
+		if ($value === '') {
+			return 0;
+		}
+
+		$unit = strtolower(substr($value, -1));
+		$number = (float) $value;
+
+		switch ($unit) {
+			case 'g':
+				return (int) ($number * 1024 * 1024 * 1024);
+			case 'm':
+				return (int) ($number * 1024 * 1024);
+			case 'k':
+				return (int) ($number * 1024);
+			default:
+				return (int) $number;
+		}
+	}
+
+	private function getAuthorizedYouTubeService(): YouTube
+	{
+		$token = $this->getValidYouTubeAccessToken();
+		if ($token === null) {
+			throw new \RuntimeException('Akun YouTube belum terhubung atau token sudah tidak valid. Silakan hubungkan ulang YouTube.');
+		}
+
+		$client = $this->buildYouTubeClient($token);
+
+		return new YouTube($client);
+	}
+
+	private function updateYouTubeVideoMetadata(string $videoId, string $title, string $description): void
+	{
+		$youtube = $this->getAuthorizedYouTubeService();
+		$existingResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId, 'maxResults' => 1]);
+		$items = $existingResponse->getItems();
+
+		if (empty($items)) {
+			throw new \RuntimeException('Video tidak ditemukan di YouTube atau tidak dapat diakses oleh akun ini.');
+		}
+
+		$youtubeVideo = $items[0];
+		$snippet = $youtubeVideo->getSnippet();
+		$snippet->setTitle($title);
+		$snippet->setDescription($description);
+
+		// categoryId wajib tersedia saat update snippet.
+		if (!$snippet->getCategoryId()) {
+			$snippet->setCategoryId('22');
+		}
+
+		$youtubeVideo->setSnippet($snippet);
+		$youtube->videos->update('snippet', $youtubeVideo);
+	}
+
+	private function deleteYouTubeVideo(string $videoId): void
+	{
+		$youtube = $this->getAuthorizedYouTubeService();
+		$youtube->videos->delete($videoId);
+	}
+
+	private function formatYouTubeApiError(\Throwable $e): string
+	{
+		$message = trim($e->getMessage());
+		if ($message !== '') {
+			return $message;
+		}
+
+		return 'Terjadi kesalahan API YouTube.';
+	}
+
+	private function isInsufficientScopeError(\Throwable $e): bool
+	{
+		$message = strtoupper((string) $e->getMessage());
+
+		return str_contains($message, 'ACCESS_TOKEN_SCOPE_INSUFFICIENT')
+			|| str_contains($message, 'INSUFFICIENT AUTHENTICATION SCOPES')
+			|| str_contains($message, 'INSUFFICIENT PERMISSION');
 	}
 
 	// Background CRUD

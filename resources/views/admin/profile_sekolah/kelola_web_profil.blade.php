@@ -740,35 +740,127 @@
                             </button>
                             <div x-show="showVideos" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
 
-                                <div class="mb-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-300">
-                                    Upload langsung ke YouTube memerlukan OAuth API YouTube. Untuk saat ini, unggah videonya ke YouTube terlebih dahulu lalu tempel link video di form berikut.
-                                </div>
-
-                                <form method="POST" action="{{ route('admin.videos.store') }}" class="space-y-4 mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    @csrf
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label for="video_title" class="block text-sm font-medium mb-1">Judul Video</label>
-                                            <input id="video_title" name="title" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Pentas Seni TK 2026" required>
-                                        </div>
-                                        <div>
-                                            <label for="youtube_url" class="block text-sm font-medium mb-1">Link YouTube</label>
-                                            <input id="youtube_url" name="youtube_url" type="url" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://www.youtube.com/watch?v=..." required>
-                                            @error('youtube_url')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label for="video_description" class="block text-sm font-medium mb-1">Deskripsi Video</label>
-                                            <textarea id="video_description" name="description" rows="2" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Deskripsi singkat video..."></textarea>
-                                        </div>
+                                @error('youtube_upload')
+                                    <div class="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900/30 dark:text-red-300">
+                                        {{ $message }}
                                     </div>
-                                    <div class="flex items-center justify-end pt-2">
-                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#DC143C] dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 font-bold shadow-md transition-all">
-                                            + Tambah Video
+                                @enderror
+
+                                <div class="mb-5 flex flex-col gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-4 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Status Koneksi YouTube API</p>
+                                        @if(!empty($youtubeConnected) && $youtubeConnected)
+                                            <p class="mt-1 text-xs font-medium text-green-700 dark:text-green-400">Terhubung. Anda bisa upload video langsung ke channel YouTube.</p>
+                                        @else
+                                            <p class="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">Belum terhubung. Klik tombol Hubungkan YouTube terlebih dahulu.</p>
+                                        @endif
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <a href="{{ route('admin.youtube.connect') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-sm shadow-sm transition-colors">
+                                            {{ (!empty($youtubeConnected) && $youtubeConnected) ? 'Rehubungkan YouTube' : 'Hubungkan YouTube' }}
+                                        </a>
+                                        @if(!empty($youtubeConnected) && $youtubeConnected)
+                                            <form method="POST" action="{{ route('admin.youtube.disconnect') }}" onsubmit="return confirm('Putuskan koneksi YouTube untuk akun admin ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-md border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/20 font-semibold text-sm shadow-sm transition-colors">
+                                                    Putus Koneksi
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                                @php
+                                    $videoFormMode = $errors->hasAny(['upload_title', 'upload_description', 'upload_privacy_status', 'video_file']) ? 'upload' : 'link';
+                                @endphp
+                                <div x-data="{ videoFormMode: '{{ $videoFormMode }}' }" class="mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                                    <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">Tambah Video YouTube</h4>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <button type="button" @click="videoFormMode = 'upload'" :class="videoFormMode === 'upload' ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'" class="w-full px-4 py-2 rounded-md border text-sm font-semibold transition-colors">
+                                            Upload Video Langsung
+                                        </button>
+                                        <button type="button" @click="videoFormMode = 'link'" :class="videoFormMode === 'link' ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'" class="w-full px-4 py-2 rounded-md border text-sm font-semibold transition-colors">
+                                            Input Link YouTube
                                         </button>
                                     </div>
-                                </form>
+
+                                    <form id="youtube-upload-form" method="POST" action="{{ route('admin.videos.upload') }}" enctype="multipart/form-data" class="space-y-4" x-show="videoFormMode === 'upload'" x-cloak>
+                                        @csrf
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="upload_title" class="block text-sm font-medium mb-1">Judul Video</label>
+                                                <input id="upload_title" name="upload_title" type="text" value="{{ old('upload_title') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Pentas Seni TK 2026" required>
+                                                @error('upload_title')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label for="upload_privacy_status" class="block text-sm font-medium mb-1">Privasi Video</label>
+                                                <select id="upload_privacy_status" name="upload_privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                                                    <option value="unlisted" {{ old('upload_privacy_status', 'unlisted') === 'unlisted' ? 'selected' : '' }}>Unlisted</option>
+                                                    <option value="public" {{ old('upload_privacy_status') === 'public' ? 'selected' : '' }}>Public</option>
+                                                    <option value="private" {{ old('upload_privacy_status') === 'private' ? 'selected' : '' }}>Private</option>
+                                                </select>
+                                                @error('upload_privacy_status')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <label for="video_file" class="block text-sm font-medium mb-1">File Video</label>
+                                                <input id="video_file" name="video_file" type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: MP4, MOV, AVI, MKV, WEBM. Maksimal {{ $youtubeUploadMaxMb ?? 1 }} MB (mengikuti batas server).</p>
+                                                @error('video_file')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <label for="upload_description" class="block text-sm font-medium mb-1">Deskripsi Video</label>
+                                                <textarea id="upload_description" name="upload_description" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Deskripsi singkat video...">{{ old('upload_description') }}</textarea>
+                                                @error('upload_description')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div id="youtube-upload-progress-wrapper" class="hidden">
+                                            <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                                <div id="youtube-upload-progress-bar" class="h-full w-0 bg-red-600 transition-all duration-150"></div>
+                                            </div>
+                                            <p id="youtube-upload-progress-text" class="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">Mengunggah video: 0%</p>
+                                        </div>
+                                        <div class="flex items-center justify-end pt-2">
+                                            <button id="youtube-upload-submit" type="submit" class="inline-flex items-center px-4 py-2 bg-[#DC143C] dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 font-bold shadow-md transition-all">
+                                                Upload ke YouTube
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('admin.videos.store') }}" class="space-y-4" x-show="videoFormMode === 'link'" x-cloak>
+                                        @csrf
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="video_title" class="block text-sm font-medium mb-1">Judul Video</label>
+                                                <input id="video_title" name="title" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Pentas Seni TK 2026" required>
+                                            </div>
+                                            <div>
+                                                <label for="youtube_url" class="block text-sm font-medium mb-1">Link YouTube</label>
+                                                <input id="youtube_url" name="youtube_url" type="url" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://www.youtube.com/watch?v=..." required>
+                                                @error('youtube_url')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <label for="video_description" class="block text-sm font-medium mb-1">Deskripsi Video</label>
+                                                <textarea id="video_description" name="description" rows="2" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Deskripsi singkat video..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-end pt-2">
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#DC143C] dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 font-bold shadow-md transition-all">
+                                                + Tambah Video
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
 
                                 <div class="space-y-6">
                                     <h3 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">Daftar Video Tersimpan</h3>
@@ -819,7 +911,7 @@
                                                         <div class="w-full aspect-video rounded-xl overflow-hidden bg-black">
                                                             <iframe
                                                                 class="w-full h-full"
-                                                                src="https://www.youtube-nocookie.com/embed/{{ $videoId }}"
+                                                                src="https://www.youtube.com/embed/{{ $videoId }}"
                                                                 title="{{ $video->title ?? 'Video YouTube' }}"
                                                                 loading="lazy"
                                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -1103,6 +1195,96 @@
                     } else {
                         profileForm.submit();
                     }
+                });
+            }
+
+            const youtubeUploadForm = document.getElementById('youtube-upload-form');
+            const youtubeUploadButton = document.getElementById('youtube-upload-submit');
+            const progressWrapper = document.getElementById('youtube-upload-progress-wrapper');
+            const progressBar = document.getElementById('youtube-upload-progress-bar');
+            const progressText = document.getElementById('youtube-upload-progress-text');
+            const maxUploadBytes = Number('{{ $youtubeUploadMaxBytes ?? 1048576 }}');
+
+            if (youtubeUploadForm && youtubeUploadButton && progressWrapper && progressBar && progressText) {
+                youtubeUploadForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    youtubeUploadButton.disabled = true;
+                    youtubeUploadButton.classList.add('opacity-70', 'cursor-not-allowed');
+                    youtubeUploadButton.textContent = 'Sedang Upload...';
+                    progressWrapper.classList.remove('hidden');
+                    progressBar.style.width = '0%';
+                    progressText.textContent = 'Mengunggah video: 0%';
+
+                    const videoInput = youtubeUploadForm.querySelector('#video_file');
+                    const selectedFile = videoInput && videoInput.files ? videoInput.files[0] : null;
+                    if (selectedFile && Number.isFinite(maxUploadBytes) && maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
+                        const limitMb = Math.max(1, Math.floor(maxUploadBytes / (1024 * 1024)));
+                        progressText.textContent = 'Ukuran file melebihi batas server (' + limitMb + ' MB).';
+                        youtubeUploadButton.disabled = false;
+                        youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                        youtubeUploadButton.textContent = 'Upload ke YouTube';
+                        return;
+                    }
+
+                    const formData = new FormData(youtubeUploadForm);
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', youtubeUploadForm.action, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Accept', 'application/json');
+
+                    xhr.upload.addEventListener('progress', function (e) {
+                        if (!e.lengthComputable) return;
+
+                        const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+                        progressBar.style.width = percent + '%';
+                        progressText.textContent = 'Mengunggah video: ' + percent + '%';
+                    });
+
+                    xhr.addEventListener('load', function () {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            progressBar.style.width = '100%';
+                            progressText.textContent = 'Upload selesai. Mengalihkan halaman...';
+                            try {
+                                const data = JSON.parse(xhr.responseText || '{}');
+                                window.location.href = data.redirect || xhr.responseURL || youtubeUploadForm.action;
+                            } catch (_error) {
+                                window.location.href = xhr.responseURL || youtubeUploadForm.action;
+                            }
+                            return;
+                        }
+
+                        let message = 'Upload gagal. Silakan coba lagi.';
+                        try {
+                            const data = JSON.parse(xhr.responseText || '{}');
+                            if (typeof data.message === 'string' && data.message.trim() !== '') {
+                                message = data.message;
+                            } else if (data.errors && typeof data.errors === 'object') {
+                                const firstField = Object.keys(data.errors)[0];
+                                if (firstField && Array.isArray(data.errors[firstField]) && data.errors[firstField][0]) {
+                                    message = data.errors[firstField][0];
+                                }
+                            }
+                        } catch (_error) {
+                            if (xhr.status === 413) {
+                                message = 'Ukuran file terlalu besar untuk batas server. Cek upload_max_filesize dan post_max_size di PHP.';
+                            }
+                        }
+
+                        progressText.textContent = message;
+                        youtubeUploadButton.disabled = false;
+                        youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                        youtubeUploadButton.textContent = 'Upload ke YouTube';
+                    });
+
+                    xhr.addEventListener('error', function () {
+                        progressText.textContent = 'Terjadi kesalahan jaringan saat upload.';
+                        youtubeUploadButton.disabled = false;
+                        youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
+                        youtubeUploadButton.textContent = 'Upload ke YouTube';
+                    });
+
+                    xhr.send(formData);
                 });
             }
 

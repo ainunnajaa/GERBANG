@@ -93,6 +93,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/konten/{content}', [WebProfilController::class, 'deleteContent'])->name('admin.contents.delete');
 
     // Video YouTube CRUD
+    Route::get('/admin/youtube/connect', [WebProfilController::class, 'connectYouTube'])->name('admin.youtube.connect');
+    Route::delete('/admin/youtube/disconnect', [WebProfilController::class, 'disconnectYouTube'])->name('admin.youtube.disconnect');
+    Route::get('/youtube/callback', [WebProfilController::class, 'handleYouTubeCallback'])->name('admin.youtube.callback');
+    Route::post('/admin/video/upload', [WebProfilController::class, 'uploadVideoToYouTube'])->name('admin.videos.upload');
     Route::post('/admin/video', [WebProfilController::class, 'storeVideo'])->name('admin.videos.store');
     Route::patch('/admin/video/{video}', [WebProfilController::class, 'updateVideo'])->name('admin.videos.update');
     Route::delete('/admin/video/{video}', [WebProfilController::class, 'deleteVideo'])->name('admin.videos.delete');
