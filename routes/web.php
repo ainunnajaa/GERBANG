@@ -96,6 +96,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/youtube/connect', [WebProfilController::class, 'connectYouTube'])->name('admin.youtube.connect');
     Route::delete('/admin/youtube/disconnect', [WebProfilController::class, 'disconnectYouTube'])->name('admin.youtube.disconnect');
     Route::get('/youtube/callback', [WebProfilController::class, 'handleYouTubeCallback'])->name('admin.youtube.callback');
+    Route::post('/admin/youtube/init-upload', [WebProfilController::class, 'initDirectUpload'])->name('admin.youtube.init_upload');
+    Route::post('/admin/youtube/save-upload', [WebProfilController::class, 'saveDirectUpload'])->name('admin.youtube.save_upload');
     Route::post('/admin/video/upload', [WebProfilController::class, 'uploadVideoToYouTube'])->name('admin.videos.upload');
     Route::post('/admin/video', [WebProfilController::class, 'storeVideo'])->name('admin.videos.store');
     Route::patch('/admin/video/{video}', [WebProfilController::class, 'updateVideo'])->name('admin.videos.update');

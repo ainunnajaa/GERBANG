@@ -505,6 +505,7 @@ class WebProfilController extends Controller
 			'youtube_url' => ['required', 'url'],
 			'title' => ['required', 'string', 'max:255'],
 			'description' => ['nullable', 'string'],
+			'privacy_status' => ['required', 'in:public,unlisted,private'],
 			'order' => ['nullable', 'integer'],
 		]);
 
@@ -523,6 +524,7 @@ class WebProfilController extends Controller
 			'url' => $normalizedVideoUrl,
 			'title' => $validated['title'],
 			'description' => $validated['description'] ?? null,
+			'privacy_status' => $validated['privacy_status'],
 			'order' => $validated['order'] ?? 0,
 		]);
 
@@ -530,6 +532,137 @@ class WebProfilController extends Controller
 			'status' => 'Video YouTube berhasil ditambahkan.',
 			'open_section' => 'videos',
 		]);
+	}
+
+	public function initDirectUpload(Request $request)
+	{
+		$token = $this->getValidYouTubeAccessToken();
+		if ($token === null || empty($token['access_token'])) {
+			return response()->json([
+				'message' => 'Akun YouTube belum terhubung. Silakan hubungkan akun YouTube terlebih dahulu.',
+				'redirect' => route('admin.youtube.connect'),
+			], 401);
+		}
+
+		$validated = $request->validate([
+			'title' => ['required', 'string', 'max:100'],
+			'description' => ['nullable', 'string', 'max:5000'],
+			'privacy' => ['required', 'in:public,unlisted,private'],
+			'file_size' => ['required', 'integer', 'min:1'],
+			'file_type' => ['required', 'string', 'max:100'],
+		]);
+
+		if (!str_starts_with((string) $validated['file_type'], 'video/')) {
+			return response()->json([
+				'message' => 'Tipe file tidak valid. Hanya file video yang diizinkan.',
+			], 422);
+		}
+
+		$endpoint = 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status';
+
+		$response = Http::withToken((string) $token['access_token'])
+			->acceptJson()
+			->withHeaders([
+				'X-Upload-Content-Length' => (string) $validated['file_size'],
+				'X-Upload-Content-Type' => (string) $validated['file_type'],
+			])
+			->post($endpoint, [
+				'snippet' => [
+					'title' => $validated['title'],
+					'description' => $validated['description'] ?? '',
+					'categoryId' => '22',
+				],
+				'status' => [
+					'privacyStatus' => $validated['privacy'],
+					'embeddable' => true,
+					'publicStatsViewable' => true,
+				],
+			]);
+
+		$uploadUrl = (string) ($response->header('Location') ?? '');
+
+		if (!$response->successful() || $uploadUrl === '') {
+			$errorMessage = 'Gagal mendapatkan URL upload dari Google API.';
+			$body = $response->json();
+			if (is_array($body)) {
+				$errorMessage = (string) data_get($body, 'error.message', $errorMessage);
+			}
+
+			return response()->json([
+				'message' => $errorMessage,
+			], $response->status() >= 400 ? $response->status() : 500);
+		}
+
+		return response()->json([
+			'upload_url' => $uploadUrl,
+		]);
+	}
+
+	public function saveDirectUpload(Request $request)
+	{
+		$validated = $request->validate([
+			'youtube_video_id' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{11}$/'],
+			'title' => ['required', 'string', 'max:255'],
+			'description' => ['nullable', 'string'],
+			'privacy_status' => ['nullable', 'in:public,unlisted,private'],
+			'upload_url' => ['nullable', 'url', 'max:5000'],
+			'file_size' => ['nullable', 'integer', 'min:1'],
+		]);
+
+		$youtubeVideoId = $validated['youtube_video_id'] ?? null;
+		if (empty($youtubeVideoId) && !empty($validated['upload_url']) && !empty($validated['file_size'])) {
+			$youtubeVideoId = $this->resolveVideoIdFromResumableSession((string) $validated['upload_url'], (int) $validated['file_size']);
+		}
+
+		if (empty($youtubeVideoId)) {
+			return response()->json([
+				'message' => 'Upload sudah terkirim, tetapi ID video belum bisa dipastikan. Silakan tunggu beberapa detik lalu coba simpan ulang.',
+			], 422);
+		}
+
+		$profile = SchoolProfile::firstOrCreate(['id' => 1]);
+
+		SchoolContent::create([
+			'school_profile_id' => $profile->id,
+			'platform' => 'youtube',
+			'url' => 'https://www.youtube.com/watch?v=' . $youtubeVideoId,
+			'title' => $validated['title'],
+			'description' => $validated['description'] ?? null,
+			'privacy_status' => $validated['privacy_status'] ?? 'unlisted',
+			'order' => 0,
+		]);
+
+		return response()->json([
+			'message' => 'Video berhasil disimpan ke daftar website.',
+			'redirect' => route('admin.web_profil'),
+		]);
+	}
+
+	private function resolveVideoIdFromResumableSession(string $uploadUrl, int $fileSize): ?string
+	{
+		$token = $this->getValidYouTubeAccessToken();
+		if ($token === null || empty($token['access_token'])) {
+			return null;
+		}
+
+		$response = Http::withToken((string) $token['access_token'])
+			->withHeaders([
+				'Content-Length' => '0',
+				'Content-Range' => 'bytes */' . $fileSize,
+			])
+			->send('PUT', $uploadUrl);
+
+		if (!$response->successful()) {
+			return null;
+		}
+
+		$body = $response->json();
+
+		if (is_array($body) && !empty($body['id']) && is_string($body['id'])) {
+			return $body['id'];
+		}
+
+		return null;
 	}
 
 	public function uploadVideoToYouTube(Request $request)
@@ -622,6 +755,7 @@ class WebProfilController extends Controller
 				'url' => $normalizedVideoUrl,
 				'title' => $validated['upload_title'],
 				'description' => $validated['upload_description'] ?? null,
+				'privacy_status' => $validated['upload_privacy_status'],
 				'order' => 0,
 			]);
 
@@ -658,6 +792,7 @@ class WebProfilController extends Controller
 			'youtube_url' => ['required', 'url'],
 			'title' => ['required', 'string', 'max:255'],
 			'description' => ['nullable', 'string'],
+			'privacy_status' => ['required', 'in:public,unlisted,private'],
 			'order' => ['nullable', 'integer'],
 		]);
 
@@ -677,7 +812,12 @@ class WebProfilController extends Controller
 		}
 
 		try {
-			$this->updateYouTubeVideoMetadata($videoId, $validated['title'], $validated['description'] ?? '');
+			$this->updateYouTubeVideoMetadata(
+				$videoId,
+				$validated['title'],
+				$validated['description'] ?? '',
+				$validated['privacy_status']
+			);
 		} catch (\Throwable $e) {
 			report($e);
 
@@ -701,6 +841,7 @@ class WebProfilController extends Controller
 			'url' => $normalizedVideoUrl,
 			'title' => $validated['title'],
 			'description' => $validated['description'] ?? null,
+			'privacy_status' => $validated['privacy_status'],
 			'order' => $validated['order'] ?? 0,
 		]);
 
@@ -949,10 +1090,10 @@ class WebProfilController extends Controller
 		return new YouTube($client);
 	}
 
-	private function updateYouTubeVideoMetadata(string $videoId, string $title, string $description): void
+	private function updateYouTubeVideoMetadata(string $videoId, string $title, string $description, string $privacyStatus): void
 	{
 		$youtube = $this->getAuthorizedYouTubeService();
-		$existingResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId, 'maxResults' => 1]);
+		$existingResponse = $youtube->videos->listVideos('snippet,status', ['id' => $videoId, 'maxResults' => 1]);
 		$items = $existingResponse->getItems();
 
 		if (empty($items)) {
@@ -969,8 +1110,17 @@ class WebProfilController extends Controller
 			$snippet->setCategoryId('22');
 		}
 
+		$status = $youtubeVideo->getStatus();
+		if ($status === null) {
+			$status = new VideoStatus();
+		}
+		$status->setPrivacyStatus($privacyStatus);
+		$status->setEmbeddable(true);
+		$status->setPublicStatsViewable(true);
+
 		$youtubeVideo->setSnippet($snippet);
-		$youtube->videos->update('snippet', $youtubeVideo);
+		$youtubeVideo->setStatus($status);
+		$youtube->videos->update('snippet,status', $youtubeVideo);
 	}
 
 	private function deleteYouTubeVideo(string $videoId): void

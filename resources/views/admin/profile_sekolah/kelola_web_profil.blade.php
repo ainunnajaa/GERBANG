@@ -798,9 +798,9 @@
                                             <div>
                                                 <label for="upload_privacy_status" class="block text-sm font-medium mb-1">Privasi Video</label>
                                                 <select id="upload_privacy_status" name="upload_privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                                                    <option value="unlisted" {{ old('upload_privacy_status', 'unlisted') === 'unlisted' ? 'selected' : '' }}>Unlisted</option>
-                                                    <option value="public" {{ old('upload_privacy_status') === 'public' ? 'selected' : '' }}>Public</option>
-                                                    <option value="private" {{ old('upload_privacy_status') === 'private' ? 'selected' : '' }}>Private</option>
+                                                    <option value="private" {{ old('upload_privacy_status') === 'private' ? 'selected' : '' }}>Pribadi</option>
+                                                    <option value="unlisted" {{ old('upload_privacy_status', 'unlisted') === 'unlisted' ? 'selected' : '' }}>Tidak publik</option>
+                                                    <option value="public" {{ old('upload_privacy_status') === 'public' ? 'selected' : '' }}>Publik</option>
                                                 </select>
                                                 @error('upload_privacy_status')
                                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -809,7 +809,7 @@
                                             <div class="md:col-span-2">
                                                 <label for="video_file" class="block text-sm font-medium mb-1">File Video</label>
                                                 <input id="video_file" name="video_file" type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: MP4, MOV, AVI, MKV, WEBM. Maksimal {{ $youtubeUploadMaxMb ?? 1 }} MB (mengikuti batas server).</p>
+                                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: MP4, MOV, AVI, MKV, WEBM. Upload dilakukan langsung dari browser ke YouTube (bypass batas upload PHP hosting).</p>
                                                 @error('video_file')
                                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                                 @enderror
@@ -853,6 +853,14 @@
                                                 <label for="video_description" class="block text-sm font-medium mb-1">Deskripsi Video</label>
                                                 <textarea id="video_description" name="description" rows="2" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Deskripsi singkat video..."></textarea>
                                             </div>
+                                            <div class="md:col-span-2">
+                                                <label for="video_privacy_status" class="block text-sm font-medium mb-1">Privasi Video</label>
+                                                <select id="video_privacy_status" name="privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                                                    <option value="private">Pribadi</option>
+                                                    <option value="unlisted" selected>Tidak publik</option>
+                                                    <option value="public">Publik</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div class="flex items-center justify-end pt-2">
                                             <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#DC143C] dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 font-bold shadow-md transition-all">
@@ -890,6 +898,14 @@
                                                         <div>
                                                             <label class="block text-xs font-semibold mb-1 text-gray-500 dark:text-gray-400">Link YouTube</label>
                                                             <input name="youtube_url" type="url" value="{{ $video->url }}" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm" required />
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs font-semibold mb-1 text-gray-500 dark:text-gray-400">Privasi Video</label>
+                                                            <select name="privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm" required>
+                                                                <option value="private" {{ ($video->privacy_status ?? 'unlisted') === 'private' ? 'selected' : '' }}>Pribadi</option>
+                                                                <option value="unlisted" {{ ($video->privacy_status ?? 'unlisted') === 'unlisted' ? 'selected' : '' }}>Tidak publik</option>
+                                                                <option value="public" {{ ($video->privacy_status ?? 'unlisted') === 'public' ? 'selected' : '' }}>Publik</option>
+                                                            </select>
                                                         </div>
                                                     </form>
 
@@ -1203,10 +1219,11 @@
             const progressWrapper = document.getElementById('youtube-upload-progress-wrapper');
             const progressBar = document.getElementById('youtube-upload-progress-bar');
             const progressText = document.getElementById('youtube-upload-progress-text');
-            const maxUploadBytes = Number('{{ $youtubeUploadMaxBytes ?? 1048576 }}');
+            const initUploadUrl = '{{ route('admin.youtube.init_upload') }}';
+            const saveUploadUrl = '{{ route('admin.youtube.save_upload') }}';
 
             if (youtubeUploadForm && youtubeUploadButton && progressWrapper && progressBar && progressText) {
-                youtubeUploadForm.addEventListener('submit', function (event) {
+                youtubeUploadForm.addEventListener('submit', async function (event) {
                     event.preventDefault();
 
                     youtubeUploadButton.disabled = true;
@@ -1214,77 +1231,161 @@
                     youtubeUploadButton.textContent = 'Sedang Upload...';
                     progressWrapper.classList.remove('hidden');
                     progressBar.style.width = '0%';
-                    progressText.textContent = 'Mengunggah video: 0%';
+                    progressText.textContent = 'Menyiapkan upload ke YouTube...';
 
                     const videoInput = youtubeUploadForm.querySelector('#video_file');
-                    const selectedFile = videoInput && videoInput.files ? videoInput.files[0] : null;
-                    if (selectedFile && Number.isFinite(maxUploadBytes) && maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
-                        const limitMb = Math.max(1, Math.floor(maxUploadBytes / (1024 * 1024)));
-                        progressText.textContent = 'Ukuran file melebihi batas server (' + limitMb + ' MB).';
+                    const selectedFile = (videoInput && videoInput.files) ? videoInput.files[0] : null;
+                    if (!selectedFile) {
+                        progressText.textContent = 'Pilih file video terlebih dahulu.';
                         youtubeUploadButton.disabled = false;
                         youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
                         youtubeUploadButton.textContent = 'Upload ke YouTube';
                         return;
                     }
 
-                    const formData = new FormData(youtubeUploadForm);
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', youtubeUploadForm.action, true);
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.setRequestHeader('Accept', 'application/json');
-
-                    xhr.upload.addEventListener('progress', function (e) {
-                        if (!e.lengthComputable) return;
-
-                        const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
-                        progressBar.style.width = percent + '%';
-                        progressText.textContent = 'Mengunggah video: ' + percent + '%';
-                    });
-
-                    xhr.addEventListener('load', function () {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            progressBar.style.width = '100%';
-                            progressText.textContent = 'Upload selesai. Mengalihkan halaman...';
-                            try {
-                                const data = JSON.parse(xhr.responseText || '{}');
-                                window.location.href = data.redirect || xhr.responseURL || youtubeUploadForm.action;
-                            } catch (_error) {
-                                window.location.href = xhr.responseURL || youtubeUploadForm.action;
+                    const getErrorMessage = (payload, fallbackMessage) => {
+                        if (payload && typeof payload.message === 'string' && payload.message.trim() !== '') {
+                            return payload.message;
+                        }
+                        if (payload && payload.errors && typeof payload.errors === 'object') {
+                            const firstField = Object.keys(payload.errors)[0];
+                            if (firstField && Array.isArray(payload.errors[firstField]) && payload.errors[firstField][0]) {
+                                return payload.errors[firstField][0];
                             }
-                            return;
                         }
 
-                        let message = 'Upload gagal. Silakan coba lagi.';
+                        return fallbackMessage;
+                    };
+
+                    try {
+                        const initPayload = {
+                            title: (youtubeUploadForm.querySelector('#upload_title')?.value || '').trim(),
+                            description: youtubeUploadForm.querySelector('#upload_description')?.value || '',
+                            privacy: youtubeUploadForm.querySelector('#upload_privacy_status')?.value || 'unlisted',
+                            file_size: selectedFile.size,
+                            file_type: selectedFile.type || 'video/mp4',
+                        };
+
+                        const initResponse = await fetch(initUploadUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify(initPayload),
+                        });
+
+                        let initData = {};
                         try {
-                            const data = JSON.parse(xhr.responseText || '{}');
-                            if (typeof data.message === 'string' && data.message.trim() !== '') {
-                                message = data.message;
-                            } else if (data.errors && typeof data.errors === 'object') {
-                                const firstField = Object.keys(data.errors)[0];
-                                if (firstField && Array.isArray(data.errors[firstField]) && data.errors[firstField][0]) {
-                                    message = data.errors[firstField][0];
-                                }
-                            }
-                        } catch (_error) {
-                            if (xhr.status === 413) {
-                                message = 'Ukuran file terlalu besar untuk batas server. Cek upload_max_filesize dan post_max_size di PHP.';
-                            }
+                            initData = await initResponse.json();
+                        } catch (_jsonError) {
+                            initData = {};
                         }
+
+                        if (!initResponse.ok) {
+                            const initMessage = getErrorMessage(initData, 'Gagal meminta URL upload dari server.');
+                            if (initData && initData.redirect) {
+                                window.location.href = initData.redirect;
+                                return;
+                            }
+
+                            throw new Error(initMessage);
+                        }
+
+                        const uploadUrl = initData.upload_url;
+                        if (!uploadUrl) {
+                            throw new Error('URL upload YouTube tidak diterima dari server.');
+                        }
+
+                        progressText.textContent = 'Mengunggah video ke YouTube: 0%';
+
+                        const uploadResult = await new Promise((resolve, reject) => {
+                            const uploadXhr = new XMLHttpRequest();
+                            uploadXhr.open('PUT', uploadUrl, true);
+                            uploadXhr.setRequestHeader('Content-Type', selectedFile.type || 'video/mp4');
+
+                            uploadXhr.upload.addEventListener('progress', function (e) {
+                                if (!e.lengthComputable) return;
+
+                                const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+                                progressBar.style.width = percent + '%';
+                                progressText.textContent = 'Mengunggah video ke YouTube: ' + percent + '%';
+                            });
+
+                            uploadXhr.addEventListener('load', function () {
+                                if (uploadXhr.status !== 200 && uploadXhr.status !== 201) {
+                                    reject(new Error('Upload video ke YouTube gagal.'));
+                                    return;
+                                }
+
+                                try {
+                                    const payload = JSON.parse(uploadXhr.responseText || '{}');
+                                    if (!payload.id) {
+                                        reject(new Error('Upload berhasil tetapi ID video YouTube tidak ditemukan.'));
+                                        return;
+                                    }
+
+                                    resolve(payload);
+                                } catch (_parseError) {
+                                    reject(new Error('Respon YouTube tidak valid.'));
+                                }
+                            });
+
+                            uploadXhr.addEventListener('error', function () {
+                                // Pada beberapa browser/hosting, respon CORS YouTube tidak terbaca
+                                // walau upload sebenarnya berhasil. Lanjutkan ke tahap finalisasi backend.
+                                resolve({ id: null, unresolvedByCors: true });
+                            });
+
+                            uploadXhr.send(selectedFile);
+                        });
+
+                        progressBar.style.width = '100%';
+                        progressText.textContent = uploadResult.unresolvedByCors
+                            ? 'Upload selesai. Memastikan status video dari server...'
+                            : 'Upload selesai. Menyimpan data video...';
+
+                        const saveResponse = await fetch(saveUploadUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                youtube_video_id: uploadResult.id,
+                                title: initPayload.title,
+                                description: initPayload.description,
+                                privacy_status: initPayload.privacy,
+                                upload_url: uploadUrl,
+                                file_size: selectedFile.size,
+                            }),
+                        });
+
+                        let saveData = {};
+                        try {
+                            saveData = await saveResponse.json();
+                        } catch (_jsonError) {
+                            saveData = {};
+                        }
+
+                        if (!saveResponse.ok) {
+                            throw new Error(getErrorMessage(saveData, 'Video berhasil diupload, tetapi gagal disimpan ke database website.'));
+                        }
+
+                        progressText.textContent = 'Berhasil. Mengalihkan halaman...';
+                        window.location.href = saveData.redirect || '{{ route('admin.web_profil') }}';
+                    } catch (error) {
+                        const message = (error && error.message) ? error.message : 'Upload gagal. Silakan coba lagi.';
 
                         progressText.textContent = message;
                         youtubeUploadButton.disabled = false;
                         youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
                         youtubeUploadButton.textContent = 'Upload ke YouTube';
-                    });
-
-                    xhr.addEventListener('error', function () {
-                        progressText.textContent = 'Terjadi kesalahan jaringan saat upload.';
-                        youtubeUploadButton.disabled = false;
-                        youtubeUploadButton.classList.remove('opacity-70', 'cursor-not-allowed');
-                        youtubeUploadButton.textContent = 'Upload ke YouTube';
-                    });
-
-                    xhr.send(formData);
+                    }
                 });
             }
 
