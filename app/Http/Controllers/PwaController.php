@@ -11,6 +11,32 @@ class PwaController extends Controller
 {
     private const ICON_STYLE_VERSION = 'mono-v2';
 
+    public function assetLinks(): Response
+    {
+        $packageName = env('TWA_PACKAGE_NAME', 'com.gerbang.tkaba54');
+        $sha256 = env(
+            'TWA_SHA256_FINGERPRINT',
+            'A3:82:15:4B:DC:59:C4:A4:E3:C2:C1:A8:63:5D:8B:7F:7D:B3:CD:D4:16:73:95:67:2A:79:10:FB:D0:38:07:03'
+        );
+
+        $assetLinks = [
+            [
+                'relation' => ['delegate_permission/common.handle_all_urls'],
+                'target' => [
+                    'namespace' => 'android_app',
+                    'package_name' => $packageName,
+                    'sha256_cert_fingerprints' => [$sha256],
+                ],
+            ],
+        ];
+
+        return response(
+            json_encode($assetLinks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            200,
+            ['Content-Type' => 'application/json; charset=utf-8']
+        );
+    }
+
     public function manifest(): Response
     {
         $appName = 'GERBANG';

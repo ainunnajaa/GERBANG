@@ -15,6 +15,7 @@ use App\Http\Controllers\PwaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+Route::get('/.well-known/assetlinks.json', [PwaController::class, 'assetLinks'])->name('pwa.assetlinks');
 Route::get('/pwa/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
 Route::get('/pwa/icon/{size}.png', [PwaController::class, 'icon'])
     ->whereNumber('size')

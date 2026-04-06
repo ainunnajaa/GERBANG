@@ -12,8 +12,8 @@
 <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
 <link rel="shortcut icon" href="{{ $faviconUrl }}">
 <link rel="apple-touch-icon" href="{{ route('pwa.apple-touch-icon', ['v' => $pwaVersion]) }}">
-<link rel="manifest" href="{{ route('pwa.manifest', ['v' => $pwaVersion]) }}">
-<meta name="theme-color" content="#1E90FF">
+<link rel="manifest" href="{{ asset('manifest.json') }}?v={{ $pwaVersion }}">
+<meta name="theme-color" content="#4CAF50">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
