@@ -13,6 +13,7 @@ use Google\Service\YouTube;
 use Google\Service\YouTube\Video;
 use Google\Service\YouTube\VideoSnippet;
 use Google\Service\YouTube\VideoStatus;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -319,6 +320,7 @@ class WebProfilController extends Controller
 
 		for ($i = 0; $i < 4; $i++) {
 			try {
+				/** @var Response $response */
 				$response = Http::withOptions(['allow_redirects' => false])
 					->withHeaders(['User-Agent' => 'Mozilla/5.0'])
 					->timeout(8)
@@ -565,6 +567,7 @@ class WebProfilController extends Controller
 
 		$endpoint = 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status';
 
+		/** @var Response $response */
 		$response = Http::withToken((string) $token['access_token'])
 			->acceptJson()
 			->withHeaders([
@@ -650,6 +653,7 @@ class WebProfilController extends Controller
 			return null;
 		}
 
+		/** @var Response $response */
 		$response = Http::withToken((string) $token['access_token'])
 			->withHeaders([
 				'Content-Length' => '0',
