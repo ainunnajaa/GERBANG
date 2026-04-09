@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Presensi;
 
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
@@ -8,6 +8,7 @@ use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
 use App\Models\SchoolProfile;
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Berita;
 
+use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\SchoolProfile;
 use Illuminate\Http\Request;

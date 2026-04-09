@@ -1,16 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\WebProfilController;
-use App\Http\Controllers\KelolaBeritaController;
-use App\Http\Controllers\BeritaPublikController;
-use App\Http\Controllers\BeritaController;
-use App\Http\Controllers\KelolaPenggunaController;
-use App\Http\Controllers\PresensiPeriodController;
-use App\Http\Controllers\WelcomeController;
-use App\Http\Controllers\PresensiController;
-use App\Http\Controllers\RiwayatPresensiController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\Admin\WebProfilController;
+use App\Http\Controllers\Berita\KelolaBeritaController;
+use App\Http\Controllers\Berita\BeritaPublikController;
+use App\Http\Controllers\Berita\BeritaController;
+use App\Http\Controllers\Admin\KelolaPenggunaController;
+use App\Http\Controllers\Presensi\PresensiPeriodController;
+use App\Http\Controllers\Admin\WelcomeController;
+use App\Http\Controllers\Presensi\PresensiController;
+use App\Http\Controllers\Presensi\RiwayatPresensiController;
 use App\Http\Controllers\PwaController;
 use Illuminate\Support\Facades\Route;
 
