@@ -6,13 +6,15 @@ use App\Models\SchoolBackground;
 use App\Models\SchoolContent;
 use App\Models\SchoolProgram;
 use App\Models\SchoolProfile;
+use App\Models\User;
 use Google\Client as GoogleClient;
-use Google\Http\MediaFileUpload;
 use Google\Service\YouTube;
 use Google\Service\YouTube\Video;
 use Google\Service\YouTube\VideoSnippet;
 use Google\Service\YouTube\VideoStatus;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
@@ -190,6 +192,7 @@ class WebProfilController extends Controller
 				'contact_address' => ['nullable', 'string', 'max:255'],
 				'contact_email' => ['nullable', 'email', 'max:255'],
 				'contact_phone' => ['nullable', 'string', 'max:50'],
+				'principal_phone' => ['nullable', 'string', 'max:50'],
 				'contact_opening_hours' => ['nullable', 'string', 'max:255'],
 				'social_facebook_url' => ['nullable', 'url', 'max:255'],
 				'social_youtube_url' => ['nullable', 'url', 'max:255'],
@@ -200,6 +203,7 @@ class WebProfilController extends Controller
 			$profile->contact_address = $validated['contact_address'] ?? null;
 			$profile->contact_email = $validated['contact_email'] ?? null;
 			$profile->contact_phone = $validated['contact_phone'] ?? null;
+			$profile->principal_phone = $validated['principal_phone'] ?? null;
 			$profile->contact_opening_hours = $validated['contact_opening_hours'] ?? null;
 			$profile->social_facebook_url = $validated['social_facebook_url'] ?? null;
 			$profile->social_instagram_url = $normalizedInstagram;
@@ -710,37 +714,23 @@ class WebProfilController extends Controller
 			$video->setSnippet($videoSnippet);
 			$video->setStatus($videoStatus);
 
-			$client->setDefer(true);
-			$insertRequest = $youtube->videos->insert('snippet,status', $video);
-
 			$uploadedFile = $request->file('video_file');
-			$chunkSizeBytes = 2 * 1024 * 1024;
-			$media = new MediaFileUpload(
-				$client,
-				$insertRequest,
-				$uploadedFile->getMimeType() ?: 'video/*',
-				null,
-				true,
-				$chunkSizeBytes
-			);
-			$media->setFileSize($uploadedFile->getSize());
+			if (!($uploadedFile instanceof UploadedFile)) {
+				throw new \RuntimeException('File video tidak valid.');
+			}
 
-			$handle = fopen($uploadedFile->getRealPath(), 'rb');
-			if ($handle === false) {
+			$fileBinary = file_get_contents($uploadedFile->getRealPath());
+			if ($fileBinary === false) {
 				throw new \RuntimeException('File video tidak dapat dibaca.');
 			}
 
-			$uploadStatus = false;
-			while (!$uploadStatus && !feof($handle)) {
-				$chunk = fread($handle, $chunkSizeBytes);
-				$uploadStatus = $media->nextChunk($chunk);
-			}
-			fclose($handle);
-			$client->setDefer(false);
+			$uploadResult = $youtube->videos->insert('snippet,status', $video, [
+				'uploadType' => 'multipart',
+				'data' => $fileBinary,
+				'mimeType' => $uploadedFile->getMimeType() ?: 'video/*',
+			]);
 
-			$youtubeVideoId = is_array($uploadStatus)
-				? ($uploadStatus['id'] ?? null)
-				: (method_exists($uploadStatus, 'getId') ? $uploadStatus->getId() : null);
+			$youtubeVideoId = $uploadResult->getId();
 
 			if (empty($youtubeVideoId)) {
 				throw new \RuntimeException('Upload ke YouTube gagal. ID video tidak ditemukan.');
@@ -830,6 +820,22 @@ class WebProfilController extends Controller
 				]);
 			}
 
+			if ($this->isYouTubeForbiddenOwnershipError($e)) {
+				$video->update([
+					'platform' => 'youtube',
+					'url' => $normalizedVideoUrl,
+					'title' => $validated['title'],
+					'description' => $validated['description'] ?? null,
+					'privacy_status' => $validated['privacy_status'],
+					'order' => $validated['order'] ?? 0,
+				]);
+
+				return redirect()->route('admin.web_profil')->with([
+					'status' => 'Perubahan disimpan di website, tetapi tidak bisa sinkron ke YouTube. Pastikan akun YouTube yang terhubung adalah pemilik video ini.',
+					'open_section' => 'videos',
+				]);
+			}
+
 			return back()
 				->withErrors(['youtube_upload' => 'Gagal sinkron judul/deskripsi ke YouTube: ' . $this->formatYouTubeApiError($e)])
 				->withInput()
@@ -870,6 +876,15 @@ class WebProfilController extends Controller
 
 				return redirect()->route('admin.youtube.connect')->with([
 					'status' => 'Perlu izin tambahan YouTube untuk hapus video. Silakan login ulang untuk melanjutkan.',
+					'open_section' => 'videos',
+				]);
+			}
+
+			if ($this->isYouTubeForbiddenOwnershipError($e)) {
+				$video->delete();
+
+				return redirect()->route('admin.web_profil')->with([
+					'status' => 'Video dihapus dari daftar website, tetapi tidak dapat dihapus dari YouTube. Pastikan akun YouTube yang terhubung adalah pemilik video ini.',
 					'open_section' => 'videos',
 				]);
 			}
@@ -950,10 +965,10 @@ class WebProfilController extends Controller
 			$token['refresh_token'] = $existingToken['refresh_token'];
 		}
 
-		$user = Auth::user();
+		$user = $this->getAuthenticatedUser();
 		if ($user) {
 			$user->youtube_token_payload = Crypt::encryptString(json_encode($token));
-			$user->youtube_token_expires_at = now()->addSeconds((int) ($token['expires_in'] ?? 3600));
+			$user->youtube_token_expires_at = Carbon::now()->addSeconds((int) ($token['expires_in'] ?? 3600));
 			$user->save();
 
 			return;
@@ -993,7 +1008,7 @@ class WebProfilController extends Controller
 
 	private function getStoredYouTubeToken(): ?array
 	{
-		$user = Auth::user();
+		$user = $this->getAuthenticatedUser();
 		if ($user && !empty($user->youtube_token_payload)) {
 			try {
 				$payload = Crypt::decryptString($user->youtube_token_payload);
@@ -1013,7 +1028,7 @@ class WebProfilController extends Controller
 
 	private function clearStoredYouTubeToken(): void
 	{
-		$user = Auth::user();
+		$user = $this->getAuthenticatedUser();
 		if ($user) {
 			$user->youtube_token_payload = null;
 			$user->youtube_token_expires_at = null;
@@ -1146,6 +1161,23 @@ class WebProfilController extends Controller
 		return str_contains($message, 'ACCESS_TOKEN_SCOPE_INSUFFICIENT')
 			|| str_contains($message, 'INSUFFICIENT AUTHENTICATION SCOPES')
 			|| str_contains($message, 'INSUFFICIENT PERMISSION');
+	}
+
+	private function isYouTubeForbiddenOwnershipError(\Throwable $e): bool
+	{
+		$message = strtoupper((string) $e->getMessage());
+
+		return str_contains($message, '"REASON":"FORBIDDEN"')
+			|| str_contains($message, 'YOUTUBE.VIDEO')
+			|| str_contains($message, 'CANNOT BE DELETED')
+			|| str_contains($message, 'REQUEST MIGHT NOT BE PROPERLY AUTHORIZED');
+	}
+
+	private function getAuthenticatedUser(): ?User
+	{
+		$authUser = Auth::user();
+
+		return $authUser instanceof User ? $authUser : null;
 	}
 
 	// Background CRUD

@@ -6,6 +6,21 @@
         'wali_murid' => 'Wali Murid',
         default => 'User'
     };
+
+    $adminPresensiActive = request()->routeIs(
+        'admin.presensi',
+        'admin.presensi.settings.*',
+        'admin.presensi.periods*'
+    );
+
+    $adminRiwayatActive = request()->routeIs(
+        'admin.riwayat*',
+        'admin.presensi.all*',
+        'admin.presensi.bulanan*',
+        'admin.presensi.guru*',
+        'admin.presensi.delete',
+        'admin.presensi.status.*'
+    );
 @endphp
 
 <div class="h-full w-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl">
@@ -35,7 +50,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.presensi') }}" class="flex items-center rounded-md transition {{ request()->routeIs('admin.presensi*') ? 'bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 text-green-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kelola Presensi' : ''">
+                <a href="{{ route('admin.presensi') }}" class="flex items-center rounded-md transition {{ $adminPresensiActive ? 'bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 text-green-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kelola Presensi' : ''">
                     <svg class="w-5 h-5 text-green-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2.25-10.5H6.75A2.25 2.25 0 004.5 8.25v9A2.25 2.25 0 006.75 19.5h8.379c.597 0 1.17-.237 1.591-.659l2.121-2.121A2.25 2.25 0 0019.5 15.129V8.25a2.25 2.25 0 00-2.25-2.25z" />
                     </svg>
@@ -43,7 +58,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.riwayat') }}" class="flex items-center rounded-md transition {{ request()->routeIs('admin.riwayat*') ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Riwayat Presensi' : ''">
+                <a href="{{ route('admin.riwayat') }}" class="flex items-center rounded-md transition {{ $adminRiwayatActive ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Riwayat Presensi' : ''">
                     <svg class="w-5 h-5 text-cyan-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
                     </svg>

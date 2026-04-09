@@ -61,6 +61,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/kelola-presensi', [PresensiController::class, 'adminIndex'])->name('admin.presensi');
     Route::post('/admin/kelola-presensi/jam', [PresensiController::class, 'updateSettings'])->name('admin.presensi.settings.update');
+    Route::get('/admin/kelola-presensi/template-qr/edit', [PresensiController::class, 'editQrTemplate'])->name('admin.presensi.template.edit');
+    Route::patch('/admin/kelola-presensi/template-qr', [PresensiController::class, 'updateQrTemplate'])->name('admin.presensi.template.update');
     Route::get('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'index'])->name('admin.presensi.periods.index');
     Route::get('/admin/kelola-presensi/periode/create', [PresensiPeriodController::class, 'create'])->name('admin.presensi.periods.create');
     Route::post('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'store'])->name('admin.presensi.periods.store');

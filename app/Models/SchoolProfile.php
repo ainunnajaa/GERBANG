@@ -15,6 +15,7 @@ class SchoolProfile extends Model
         'welcome_message',
         'school_profile',
         'principal_name',
+        'principal_phone',
         'principal_photo_path',
         'principal_greeting',
         'vision',

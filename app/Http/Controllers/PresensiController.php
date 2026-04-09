@@ -6,9 +6,11 @@ use App\Models\Presensi;
 use App\Models\PresensiIzin;
 use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
+use App\Models\SchoolProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -110,6 +112,7 @@ class PresensiController extends Controller
 	{
 		$settings = $this->getOrCreateSettings();
 		$activePeriod = $this->getActivePeriod();
+		$schoolProfile = SchoolProfile::first();
 
 		$qrCodeText = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
 
@@ -124,6 +127,8 @@ class PresensiController extends Controller
 
 		return view('admin.presensi.kelola_presensi', [
 			'qrCodeText' => $qrCodeText,
+			'qrTemplateConfig' => $this->resolveQrTemplateConfig($settings),
+			'schoolLogoUrl' => !empty($schoolProfile?->school_logo_path) ? asset('storage/' . $schoolProfile->school_logo_path) : null,
 			'presensis' => $presensis,
 			'today' => $today,
 			'settings' => $settings,
@@ -131,6 +136,53 @@ class PresensiController extends Controller
 			'activePeriod' => $activePeriod,
 			'activePeriodDayLabels' => $activePeriod?->activeDayLabels() ?? [],
 		]);
+	}
+
+	public function editQrTemplate()
+	{
+		$settings = $this->getOrCreateSettings();
+		$schoolProfile = SchoolProfile::first();
+		$qrCodeText = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
+
+		return view('admin.presensi.crud_template_qr', [
+			'settings' => $settings,
+			'qrCodeText' => $qrCodeText,
+			'qrTemplateConfig' => $this->resolveQrTemplateConfig($settings),
+			'schoolLogoUrl' => !empty($schoolProfile?->school_logo_path) ? asset('storage/' . $schoolProfile->school_logo_path) : null,
+		]);
+	}
+
+	public function updateQrTemplate(Request $request)
+	{
+		$data = $request->validate([
+			'qr_template_image' => ['nullable', 'image', 'max:5120'],
+			'remove_qr_template' => ['nullable', 'boolean'],
+			'qr_template_x' => ['required', 'numeric', 'between:0,100'],
+			'qr_template_y' => ['required', 'numeric', 'between:0,100'],
+			'qr_template_size' => ['required', 'numeric', 'between:5,90'],
+		]);
+
+		$settings = $this->getOrCreateSettings();
+
+		if (!empty($data['remove_qr_template']) && $settings->qr_template_path) {
+			Storage::disk('public')->delete($settings->qr_template_path);
+			$settings->qr_template_path = null;
+		}
+
+		if ($request->hasFile('qr_template_image')) {
+			if ($settings->qr_template_path) {
+				Storage::disk('public')->delete($settings->qr_template_path);
+			}
+
+			$settings->qr_template_path = $request->file('qr_template_image')->store('presensi-qr-templates', 'public');
+		}
+
+		$settings->qr_template_x = round((float) $data['qr_template_x'], 2);
+		$settings->qr_template_y = round((float) $data['qr_template_y'], 2);
+		$settings->qr_template_size = round((float) $data['qr_template_size'], 2);
+		$settings->save();
+
+		return redirect()->route('admin.presensi.template.edit')->with('success', 'Template QR berhasil diperbarui.');
 	}
 
 	public function updateSettings(Request $request)
@@ -352,7 +404,22 @@ class PresensiController extends Controller
 			'latitude' => null,
 			'longitude' => null,
 			'radius_meter' => null,
+			'qr_template_path' => null,
+			'qr_template_x' => 50,
+			'qr_template_y' => 50,
+			'qr_template_size' => 28,
 		]);
+	}
+
+	private function resolveQrTemplateConfig(PresensiSetting $settings): array
+	{
+		return [
+			'path' => $settings->qr_template_path,
+			'url' => $settings->qr_template_path ? asset('storage/' . $settings->qr_template_path) : null,
+			'x' => (float) ($settings->qr_template_x ?? 50),
+			'y' => (float) ($settings->qr_template_y ?? 50),
+			'size' => (float) ($settings->qr_template_size ?? 28),
+		];
 	}
 
 	private function getActivePeriod(): ?PresensiPeriod

@@ -26,6 +26,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $role = $request->user()->role ?? 'wali_murid';
+        $today = Carbon::today();
 
         $adminAttendance = $this->getAdminTodayAttendanceSummary();
 
@@ -38,6 +39,10 @@ class DashboardController extends Controller
                 'activePeriod' => PresensiPeriod::query()->active()->orderByDesc('start_date')->first(),
                 'periodTypeOptions' => PresensiPeriod::TYPE_OPTIONS,
                 'todayAttendanceSummary' => $adminAttendance,
+                'hariLibur' => array_merge(
+                    $this->getHariLiburNasional($today->year),
+                    $this->getHariLiburNasional($today->year + 1)
+                ),
             ]),
             'guru' => $this->guruDashboard($request),
             default => view('dashboard.wali_murid'),

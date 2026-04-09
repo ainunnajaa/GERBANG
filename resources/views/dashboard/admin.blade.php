@@ -14,7 +14,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-1">
+    <div class="py-4 sm:py-6">
         <div class="px-4 sm:px-6 lg:px-8 space-y-6">
             
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -115,28 +115,189 @@
                             </div>
                         </div>
 
-                      <div class="grid grid-cols-2 gap-4 w-full">
-    <div class="rounded-lg border border-green-200 dark:border-green-900/60 bg-green-50 dark:bg-green-900/20 p-3 flex flex-col justify-center">
-        <p class="text-xs font-semibold text-green-700 dark:text-green-300">Hadir</p>
-        <p class="text-xl font-bold text-green-800 dark:text-green-200">{{ $attendance['H'] ?? 0 }}</p>
-    </div>
-    <div class="rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-900/20 p-3 flex flex-col justify-center">
-        <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">Terlambat</p>
-        <p class="text-xl font-bold text-amber-800 dark:text-amber-200">{{ $attendance['T'] ?? 0 }}</p>
-    </div>
-    <div class="rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-900/20 p-3 flex flex-col justify-center">
-        <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">Izin</p>
-        <p class="text-xl font-bold text-blue-800 dark:text-blue-200">{{ $attendance['I'] ?? 0 }}</p>
-    </div>
-    <div class="rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-900/20 p-3 flex flex-col justify-center">
-        <p class="text-xs font-semibold text-red-700 dark:text-red-300">Tidak Hadir</p>
-        <p class="text-xl font-bold text-red-800 dark:text-red-200">{{ $attendance['A'] ?? 0 }}</p>
-    </div>
-</div>
+                        <div class="grid grid-cols-2 gap-4 w-full">
+                            <div class="rounded-lg border border-green-200 dark:border-green-900/60 bg-green-50 dark:bg-green-900/20 p-3 flex flex-col justify-center">
+                                <p class="text-xs font-semibold text-green-700 dark:text-green-300">Hadir</p>
+                                <p class="text-xl font-bold text-green-800 dark:text-green-200">{{ $attendance['H'] ?? 0 }}</p>
+                            </div>
+                            <div class="rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-900/20 p-3 flex flex-col justify-center">
+                                <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">Terlambat</p>
+                                <p class="text-xl font-bold text-amber-800 dark:text-amber-200">{{ $attendance['T'] ?? 0 }}</p>
+                            </div>
+                            <div class="rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-900/20 p-3 flex flex-col justify-center">
+                                <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">Izin</p>
+                                <p class="text-xl font-bold text-blue-800 dark:text-blue-200">{{ $attendance['I'] ?? 0 }}</p>
+                            </div>
+                            <div class="rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-900/20 p-3 flex flex-col justify-center">
+                                <p class="text-xs font-semibold text-red-700 dark:text-red-300">Tidak Hadir</p>
+                                <p class="text-xl font-bold text-red-800 dark:text-red-200">{{ $attendance['A'] ?? 0 }}</p>
+                            </div>
+                        </div>
 
                     </div>
                 </div>
 
-            </div> </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <style>
+                    #adminCalendar {
+                        --fc-border-color: #f1f5f9;
+                        --fc-today-bg-color: transparent;
+                    }
+                    .dark #adminCalendar { --fc-border-color: #334155; }
+
+                    #adminCalendar .fc-toolbar-title {
+                        font-size: 1.1rem !important;
+                        font-weight: 700 !important;
+                        color: #1e293b;
+                    }
+                    .dark #adminCalendar .fc-toolbar-title { color: #f8fafc !important; }
+
+                    #adminCalendar .fc-toolbar.fc-header-toolbar {
+                        padding: 0 0 0.75rem 0;
+                        margin-bottom: 0 !important;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 0.5rem;
+                    }
+
+                    #adminCalendar .fc-toolbar-chunk {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                    }
+
+                    #adminCalendar .fc-col-header-cell-cushion {
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: #94a3b8;
+                        padding: 0.75rem 0;
+                        text-transform: capitalize;
+                    }
+
+                    #adminCalendar .fc-daygrid-day-top {
+                        display: flex;
+                        justify-content: center;
+                        padding-top: 4px;
+                        margin-bottom: 2px;
+                    }
+
+                    #adminCalendar .fc-daygrid-day-number {
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: #475569;
+                        padding: 4px;
+                    }
+                    .dark #adminCalendar .fc-daygrid-day-number { color: #cbd5e1; }
+                    #adminCalendar .fc-day-other .fc-daygrid-day-number { opacity: 0.3; }
+                    #adminCalendar .fc-day-today .fc-daygrid-day-number { color: #3b82f6 !important; }
+
+                    #adminCalendar .fc-event {
+                        border-radius: 3px !important;
+                        padding: 2px !important;
+                        font-size: 0.65rem !important;
+                        font-weight: 500 !important;
+                        border: none !important;
+                        margin: 1px 2px !important;
+                    }
+
+                    #adminCalendar .fc-button {
+                        background-color: #64748b !important;
+                        border: none !important;
+                        color: #fff !important;
+                        font-size: 0.75rem !important;
+                        font-weight: 500 !important;
+                        padding: 4px 12px !important;
+                        border-radius: 4px !important;
+                        text-transform: lowercase;
+                    }
+                    #adminCalendar .fc-button:hover { background-color: #475569 !important; }
+
+                    @media (max-width: 640px) {
+                        #adminCalendar .fc-toolbar-title {
+                            font-size: 1rem !important;
+                        }
+
+                        #adminCalendar .fc-col-header-cell-cushion,
+                        #adminCalendar .fc-daygrid-day-number {
+                            font-size: 0.7rem !important;
+                        }
+                    }
+                </style>
+
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Kalender Hari Libur Nasional</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Menampilkan tanggal libur nasional untuk referensi operasional presensi.</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <div id="adminCalendar" class="w-full min-w-[760px] lg:min-w-0"></div>
+                </div>
+
+                <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const holidays = @json($hariLibur ?? []);
+                        let adminCalendarInstance = null;
+
+                        function syncCalendarSize() {
+                            if (!adminCalendarInstance) return;
+                            adminCalendarInstance.updateSize();
+
+                            // Trigger extra recalculations because dashboard layout width can settle after initial paint.
+                            requestAnimationFrame(() => adminCalendarInstance && adminCalendarInstance.updateSize());
+                            setTimeout(() => adminCalendarInstance && adminCalendarInstance.updateSize(), 150);
+                            setTimeout(() => adminCalendarInstance && adminCalendarInstance.updateSize(), 450);
+                        }
+
+                        function initAdminCalendar() {
+                            const calendarEl = document.getElementById('adminCalendar');
+                            if (!calendarEl || !window.FullCalendar) return;
+
+                            adminCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                                initialView: 'dayGridMonth',
+                                locale: 'id',
+                                firstDay: 0,
+                                headerToolbar: {
+                                    left: 'title',
+                                    right: 'today prev,next'
+                                },
+                                events: holidays,
+                                height: 'auto',
+                                dayMaxEvents: 2,
+                                displayEventTime: false,
+                                fixedWeekCount: false,
+                                handleWindowResize: true,
+                                windowResize: function() {
+                                    syncCalendarSize();
+                                },
+                            });
+
+                            adminCalendarInstance.render();
+                            syncCalendarSize();
+
+                            const resizeObserver = new ResizeObserver(() => {
+                                syncCalendarSize();
+                            });
+                            resizeObserver.observe(calendarEl.parentElement || calendarEl);
+
+                            window.addEventListener('load', syncCalendarSize, { once: true });
+                            document.addEventListener('visibilitychange', function () {
+                                if (document.visibilityState === 'visible') {
+                                    syncCalendarSize();
+                                }
+                            });
+                        }
+
+                        if (window.FullCalendar) {
+                            initAdminCalendar();
+                        } else {
+                            setTimeout(initAdminCalendar, 500);
+                        }
+                    });
+                </script>
+            </div>
+        </div>
     </div>
 </x-app-layout>

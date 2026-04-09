@@ -23,5 +23,9 @@ class PresensiSetting extends Model
         'latitude',
         'longitude',
         'radius_meter',
+        'qr_template_path',
+        'qr_template_x',
+        'qr_template_y',
+        'qr_template_size',
     ];
 }

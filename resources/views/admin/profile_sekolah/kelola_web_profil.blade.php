@@ -976,9 +976,15 @@
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
 
-                                            <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">No. WhatsApp / Telepon</label>
+                                            <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">No. WhatsApp / Telepon Sekolah</label>
                                             <input id="contact_phone" name="contact_phone" type="text" value="{{ old('contact_phone', $profile->contact_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
                                             @error('contact_phone')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+
+                                            <label for="principal_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">No. Telepon Kepala Sekolah</label>
+                                            <input id="principal_phone" name="principal_phone" type="text" value="{{ old('principal_phone', $profile->principal_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
+                                            @error('principal_phone')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
                                         </div>

@@ -121,7 +121,7 @@
 
 {{-- BAGIAN FOOTER DESAIN BARU --}}
 @if ($position === 'footer' || $position === 'both')
-    @if (!empty($schoolProfile) && (!empty($schoolProfile->contact_address) || !empty($schoolProfile->contact_email) || !empty($schoolProfile->contact_phone) || !empty($schoolProfile->contact_opening_hours) || !empty($schoolProfile->social_facebook_url) || !empty($schoolProfile->social_instagram_url) || !empty($schoolProfile->social_youtube_url) || !empty($schoolProfile->school_logo_path) || !empty($schoolProfile->school_name)))
+    @if (!empty($schoolProfile) && (!empty($schoolProfile->contact_address) || !empty($schoolProfile->contact_email) || !empty($schoolProfile->contact_phone) || !empty($schoolProfile->principal_phone) || !empty($schoolProfile->contact_opening_hours) || !empty($schoolProfile->social_facebook_url) || !empty($schoolProfile->social_instagram_url) || !empty($schoolProfile->social_youtube_url) || !empty($schoolProfile->school_logo_path) || !empty($schoolProfile->school_name)))
         @php
             $waNumber = '';
             $waLink = null;
@@ -205,8 +205,15 @@
                         
                         @if (!empty($schoolProfile->contact_phone))
                             <div>
-                                <div class="font-bold text-[#32CD32] dark:text-green-400 text-base mb-1">☎️ No. Telepon</div>
+                                <div class="font-bold text-[#32CD32] dark:text-green-400 text-base mb-1">☎️ No. Telepon Sekolah</div>
                                 <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $schoolProfile->contact_phone }}</p>
+                            </div>
+                        @endif
+
+                        @if (!empty($schoolProfile->principal_phone))
+                            <div>
+                                <div class="font-bold text-[#2563EB] dark:text-blue-400 text-base mb-1">👩‍🏫 No. Telepon Kepala Sekolah</div>
+                                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ $schoolProfile->principal_phone }}</p>
                             </div>
                         @endif
                         

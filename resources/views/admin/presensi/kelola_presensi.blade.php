@@ -264,6 +264,15 @@
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    @php
+                        $qrTemplateUrl = $qrTemplateConfig['url'] ?? null;
+                        $qrTemplateX = $qrTemplateConfig['x'] ?? 50;
+                        $qrTemplateY = $qrTemplateConfig['y'] ?? 50;
+                        $qrTemplateSize = $qrTemplateConfig['size'] ?? 28;
+                        $qrImageSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' . urlencode($qrCodeText);
+                        $hasSchoolLogo = !empty($schoolLogoUrl ?? null);
+                    @endphp
+
                     <h3 class="text-lg font-semibold mb-4">QR Presensi Statis</h3>
 
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
@@ -271,13 +280,82 @@
                         dengan memindai QR ini dari halaman presensi guru.
                     </p>
 
+                    @if($qrTemplateUrl)
+                        <div class="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Template QR sudah tersimpan. Gunakan tombol di bawah untuk mengatur posisi/ukuran atau menghapus template.</p>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{{ route('admin.presensi.template.edit') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded hover:bg-gray-900">
+                                    Edit
+                                </a>
+
+                                <form method="POST" action="{{ route('admin.presensi.template.update') }}" onsubmit="return confirm('Hapus template QR yang tersimpan?');">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="remove_qr_template" value="1">
+                                    <input type="hidden" name="qr_template_x" value="{{ old('qr_template_x', $qrTemplateX) }}">
+                                    <input type="hidden" name="qr_template_y" value="{{ old('qr_template_y', $qrTemplateY) }}">
+                                    <input type="hidden" name="qr_template_size" value="{{ old('qr_template_size', $qrTemplateSize) }}">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <form method="POST" action="{{ route('admin.presensi.template.update') }}" enctype="multipart/form-data" class="mb-6 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="qr_template_x" value="{{ old('qr_template_x', $qrTemplateX) }}">
+                            <input type="hidden" name="qr_template_y" value="{{ old('qr_template_y', $qrTemplateY) }}">
+                            <input type="hidden" name="qr_template_size" value="{{ old('qr_template_size', $qrTemplateSize) }}">
+
+                            <div>
+                                <label for="qr_template_image" class="block text-sm font-medium mb-1">Gambar Template QR</label>
+                                <input id="qr_template_image" name="qr_template_image" type="file" accept="image/*" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload gambar template untuk menampilkan preview QR dengan background custom.</p>
+                                @error('qr_template_image')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
+                                    Simpan Gambar Template
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+
                     <div class="flex flex-col items-center gap-4">
-                        <img
-                            id="qr-image"
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ urlencode($qrCodeText) }}"
-                            alt="QR Presensi"
-                            class="border rounded-lg shadow"
-                        >
+                        @if($qrTemplateUrl)
+                            <div id="qr-preview-container" class="relative w-full max-w-md rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow">
+                                <img src="{{ $qrTemplateUrl }}" alt="Template QR Presensi" class="w-full h-auto block">
+                                <div id="qr-image" class="absolute" style="left: {{ $qrTemplateX }}%; top: {{ $qrTemplateY }}%; width: {{ $qrTemplateSize }}%; transform: translate(-50%, -50%);">
+                                    <img src="{{ $qrImageSrc }}" alt="QR Presensi" class="block w-full h-auto">
+                                    @if($hasSchoolLogo)
+                                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div class="w-[16%] aspect-square rounded-full overflow-hidden shadow-sm">
+                                                <img src="{{ $schoolLogoUrl }}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-full scale-110">
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div id="qr-preview-container" class="relative w-[220px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white shadow overflow-hidden">
+                                <div id="qr-image" class="relative w-full">
+                                    <img src="{{ $qrImageSrc }}" alt="QR Presensi" class="block w-full h-auto">
+                                    @if($hasSchoolLogo)
+                                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div class="w-[16%] aspect-square rounded-full overflow-hidden shadow-sm">
+                                                <img src="{{ $schoolLogoUrl }}" alt="Logo Sekolah" class="w-full h-full object-cover rounded-full scale-110">
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="text-sm text-gray-700 dark:text-gray-300 break-all">
                             <span class="font-semibold">Kode QR:</span>
@@ -295,8 +373,37 @@
 
                     <script>
                         function printQrCode() {
-                            const img = document.getElementById('qr-image');
-                            if (!img) return;
+                            const qrSrc = @json($qrImageSrc);
+                            const templateSrc = @json($qrTemplateUrl);
+                            const schoolLogoSrc = @json($schoolLogoUrl ?? null);
+                            const hasTemplate = @json(!empty($qrTemplateUrl));
+                            const hasSchoolLogo = @json(!empty($schoolLogoUrl ?? null));
+                            const qrX = @json((float) $qrTemplateX);
+                            const qrY = @json((float) $qrTemplateY);
+                            const qrSize = @json((float) $qrTemplateSize);
+
+                            if (!qrSrc) return;
+
+                            const logoOverlay = hasSchoolLogo
+                                ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                                        <div style="width:16%;aspect-ratio:1/1;border-radius:9999px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                                            <img src="${schoolLogoSrc}" alt="Logo Sekolah" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;transform:scale(1.1);display:block;">
+                                        </div>
+                                   </div>`
+                                : '';
+
+                            const content = hasTemplate
+                                ? `<div style="position:relative;width:min(92vw,520px);margin:0 auto;">
+                                        <img src="${templateSrc}" alt="Template QR Presensi" style="width:100%;height:auto;display:block;">
+                                        <div style="position:absolute;left:${qrX}%;top:${qrY}%;width:${qrSize}%;transform:translate(-50%,-50%);">
+                                            <img src="${qrSrc}" alt="QR Presensi" style="width:100%;height:auto;display:block;">
+                                            ${logoOverlay}
+                                        </div>
+                                   </div>`
+                                : `<div style="position:relative;width:260px;margin:0 auto;">
+                                        <img src="${qrSrc}" alt="QR Presensi" style="width:100%;height:auto;display:block;">
+                                        ${logoOverlay}
+                                   </div>`;
 
                             const printWindow = window.open('', '_blank');
                             printWindow.document.write(`<!DOCTYPE html>
@@ -305,12 +412,20 @@
                                     <meta charset="utf-8">
                                     <title>Print QR Presensi</title>
                                     <style>
-                                        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                                        img { max-width: 100%; height: auto; }
+                                        @page { margin: 12mm; }
+                                        body {
+                                            margin: 0;
+                                            min-height: 100vh;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            font-family: Arial, sans-serif;
+                                            background: #fff;
+                                        }
                                     </style>
                                 </head>
                                 <body>
-                                    <img src="${img.src}" alt="QR Presensi">
+                                    ${content}
                                 </body>
                                 </html>`);
                             printWindow.document.close();

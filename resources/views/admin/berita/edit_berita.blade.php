@@ -105,6 +105,15 @@
                         </div>
 
                         <div>
+                            <label for="youtube_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link YouTube (opsional)</label>
+                            <input id="youtube_url" name="youtube_url" type="url" value="{{ old('youtube_url', $berita->youtube_url) }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://www.youtube.com/watch?v=...">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Isi dengan link video YouTube untuk menampilkan player di halaman baca berita. Kosongkan jika tidak ingin menampilkan.</p>
+                            @error('youtube_url')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label for="instagram_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link Instagram (opsional)</label>
                             <input id="instagram_url" name="instagram_url" type="url" value="{{ old('instagram_url', $berita->instagram_url) }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://www.instagram.com/p/...">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Isi dengan link postingan Instagram untuk menampilkan preview seperti di halaman utama. Kosongkan jika tidak ingin menampilkan.</p>

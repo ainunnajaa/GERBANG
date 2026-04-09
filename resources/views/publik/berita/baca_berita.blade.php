@@ -89,6 +89,30 @@
                         {!! $berita->isi !!}
                     </div>
 
+                    @if(!empty($berita->youtube_url))
+                        @php
+                            $youtubeEmbedUrl = null;
+                            if (preg_match('~(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/))([A-Za-z0-9_-]{11})~', (string) $berita->youtube_url, $matches)) {
+                                $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                            }
+                        @endphp
+                        @if($youtubeEmbedUrl)
+                            <div class="mt-8">
+                                <h3 class="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-100">Video YouTube</h3>
+                                <div class="w-full rounded-lg overflow-hidden bg-black aspect-video">
+                                    <iframe
+                                        class="w-full h-full"
+                                        src="{{ $youtubeEmbedUrl }}"
+                                        title="Video YouTube {{ $berita->judul }}"
+                                        loading="lazy"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
                     @if(!empty($berita->instagram_url))
                         <div class="mt-8">
                             <h3 class="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-100">Preview Instagram</h3>

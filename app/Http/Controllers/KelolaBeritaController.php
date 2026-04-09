@@ -26,6 +26,7 @@ class KelolaBeritaController extends Controller
 			'tanggal_berita' => ['required', 'date'],
 			'judul' => ['required', 'string', 'max:255'],
 			'isi' => ['required', 'string'],
+			'youtube_url' => ['nullable', 'url'],
 			'instagram_url' => ['nullable', 'url'],
 			'gambar' => ['nullable', 'image', 'max:2048'],
 		]);
@@ -40,6 +41,7 @@ class KelolaBeritaController extends Controller
 			'judul' => $validated['judul'],
 			'isi' => $validated['isi'],
 			'gambar_path' => $gambarPath,
+			'youtube_url' => $validated['youtube_url'] ?? null,
 			'instagram_url' => $validated['instagram_url'] ?? null,
 		]);
 
@@ -70,6 +72,7 @@ class KelolaBeritaController extends Controller
 			'tanggal_berita' => ['required', 'date'],
 			'judul' => ['required', 'string', 'max:255'],
 			'isi' => ['required', 'string'],
+			'youtube_url' => ['nullable', 'url'],
 			'instagram_url' => ['nullable', 'url'],
 			'gambar' => ['nullable', 'image', 'max:2048'],
 		]);
@@ -87,6 +90,7 @@ class KelolaBeritaController extends Controller
 			'judul' => $validated['judul'],
 			'isi' => $validated['isi'],
 			'gambar_path' => $gambarPath,
+			'youtube_url' => $validated['youtube_url'] ?? null,
 			'instagram_url' => $validated['instagram_url'] ?? null,
 		]);
 
