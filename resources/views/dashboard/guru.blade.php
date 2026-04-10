@@ -411,10 +411,17 @@
                         
                         /* Styling Tanggal Hari Ini (Today) */
                         #guruCalendar .fc-day-today {
-                            background-color: transparent !important;
+                            background: linear-gradient(135deg, rgba(125, 211, 252, 0.72) 0%, rgba(186, 230, 253, 0.72) 100%) !important;
+                        }
+                        .dark #guruCalendar .fc-day-today {
+                            background: linear-gradient(135deg, rgba(14, 116, 144, 0.45) 0%, rgba(2, 132, 199, 0.45) 100%) !important;
                         }
                         #guruCalendar .fc-day-today .fc-daygrid-day-number { 
-                            color: #3b82f6 !important; 
+                            color: #111827 !important;
+                            font-weight: 800 !important;
+                        }
+                        .dark #guruCalendar .fc-day-today .fc-daygrid-day-number {
+                            color: #f8fafc !important;
                         }
                         
                         /* Event Bar / Kotak Warna-Warni */
@@ -447,7 +454,6 @@
                         /* Styling Kotak Sel Kalender agar Persegi Panjang */
                         #guruCalendar .fc-scrollgrid { 
                             border: none !important; 
-                            height: 100% !important; /* Paksa grid 100% */
                         }
                         #guruCalendar .fc-theme-standard td, 
                         #guruCalendar .fc-theme-standard th { 
@@ -473,6 +479,7 @@
                         /* Mobile Responsiveness */
                         @media (max-width: 1023px) {
                             #guruCalendar { min-height: 400px !important; }
+                            #guruCalendar .fc-scrollgrid { height: 100% !important; }
                             #guruCalendar .fc-daygrid-day-frame { min-height: 50px !important; }
                         }
                     </style>
@@ -483,12 +490,23 @@
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const holidays = @json($hariLibur ?? []);
+                            let guruCalendarInstance = null;
+
+                            function syncCalendarSize() {
+                                if (!guruCalendarInstance) return;
+
+                                guruCalendarInstance.updateSize();
+                                requestAnimationFrame(() => guruCalendarInstance && guruCalendarInstance.updateSize());
+                                setTimeout(() => guruCalendarInstance && guruCalendarInstance.updateSize(), 150);
+                                setTimeout(() => guruCalendarInstance && guruCalendarInstance.updateSize(), 450);
+                            }
+
                             function initCalendar() {
                                 const calendarEl = document.getElementById('guruCalendar');
                                 if (!calendarEl || !window.FullCalendar) return;
-                                const isMobile = window.innerWidth < 1024;
+                                let isMobile = window.innerWidth < 1024;
 
-                                const calendar = new FullCalendar.Calendar(calendarEl, {
+                                guruCalendarInstance = new FullCalendar.Calendar(calendarEl, {
                                     initialView: 'dayGridMonth',
                                     locale: 'id',
                                     firstDay: 0,
@@ -497,19 +515,50 @@
                                         right: 'today prev,next' 
                                     },
                                     events: holidays,
-                                    // Gunakan 100% dan expandRows agar dipaksa melar/gepeng menyamai parent
-                                    height: '100%', 
-                                    contentHeight: '100%',
-                                    expandRows: true, // INI KUNCI UTAMA AGAR BARIS TANGGAL DIBAGI RATA
+                                    // Mobile tetap memakai tinggi penuh; desktop pakai auto agar responsif saat resize.
+                                    height: isMobile ? '100%' : 'auto',
+                                    contentHeight: isMobile ? '100%' : 'auto',
+                                    expandRows: isMobile,
                                     dayMaxEvents: 2,
                                     displayEventTime: false,
                                     fixedWeekCount: false,
+                                    handleWindowResize: true,
+                                    windowResize: function() {
+                                        syncCalendarSize();
+                                    },
                                 });
-                                calendar.render();
+                                guruCalendarInstance.render();
+
+                                function applyResponsiveLayout() {
+                                    const mobileNow = window.innerWidth < 1024;
+
+                                    if (mobileNow !== isMobile) {
+                                        isMobile = mobileNow;
+                                        guruCalendarInstance.setOption('height', isMobile ? '100%' : 'auto');
+                                        guruCalendarInstance.setOption('contentHeight', isMobile ? '100%' : 'auto');
+                                        guruCalendarInstance.setOption('expandRows', isMobile);
+                                    }
+
+                                    syncCalendarSize();
+                                }
 
                                 window.addEventListener('resize', function() {
-                                    calendar.updateSize();
+                                    applyResponsiveLayout();
                                 });
+
+                                const resizeObserver = new ResizeObserver(() => {
+                                    syncCalendarSize();
+                                });
+                                resizeObserver.observe(calendarEl.parentElement || calendarEl);
+
+                                window.addEventListener('load', syncCalendarSize, { once: true });
+                                document.addEventListener('visibilitychange', function () {
+                                    if (document.visibilityState === 'visible') {
+                                        syncCalendarSize();
+                                    }
+                                });
+
+                                applyResponsiveLayout();
                             }
                             if (window.FullCalendar) initCalendar(); else setTimeout(initCalendar, 500);
                         });

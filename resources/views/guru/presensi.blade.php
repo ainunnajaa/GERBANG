@@ -108,26 +108,12 @@
                 <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">
                     
                     <div id="section-presensi">
-                        <div class="mb-6 rounded-xl border {{ $activePeriod ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20' }} p-4">
-                            <h4 class="text-sm font-semibold {{ $activePeriod ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300' }} mb-2">Periode Presensi Saat Ini</h4>
-                            @if ($activePeriod)
-                                <div class="space-y-1 text-sm {{ $activePeriod ? 'text-emerald-700 dark:text-emerald-200' : 'text-red-700 dark:text-red-200' }}">
-                                    <p><span class="font-semibold">{{ $activePeriod->name }}</span></p>
-                                    <p>{{ $activePeriod->start_date->format('d M Y') }} - {{ $activePeriod->end_date->format('d M Y') }}</p>
-                                    <p>Hari presensi: {{ implode(', ', $activePeriodDayLabels) }}</p>
-                                </div>
-                            @else
-                                <p class="text-sm text-red-700 dark:text-red-200">
-                                    Presensi belum bisa digunakan karena admin belum mengatur periode presensi yang aktif.
-                                </p>
-                            @endif
-                        </div>
-
-                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-6">
-                            <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">Jadwal Presensi Hari Ini:</h4>
-                            <ul class="space-y-1 text-sm text-blue-700 dark:text-blue-200">
+                       
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-3 mb-4">
+                            <h4 class="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1.5">Jadwal Presensi Hari Ini:</h4>
+                            <ul class="space-y-0.5 text-xs sm:text-sm text-blue-700 dark:text-blue-200">
                                 <li class="flex items-center">
-                                    <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                    <svg class="w-3.5 h-3.5 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                                     <span>Masuk: <span class="font-bold">{{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}</span>
                                     @if($settings->jam_masuk_toleransi)
                                         <span class="text-xs opacity-80">(Toleransi {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})</span>
@@ -135,7 +121,7 @@
                                     </span>
                                 </li>
                                 <li class="flex items-center">
-                                    <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    <svg class="w-3.5 h-3.5 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                     <span>Pulang: <span class="font-bold">{{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</span></span>
                                 </li>
                             </ul>

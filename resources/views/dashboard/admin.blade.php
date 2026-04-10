@@ -155,18 +155,17 @@
                     .dark #adminCalendar .fc-toolbar-title { color: #f8fafc !important; }
 
                     #adminCalendar .fc-toolbar.fc-header-toolbar {
-                        padding: 0 0 0.75rem 0;
+                        padding: 1rem 1.25rem 0.5rem 1.25rem;
                         margin-bottom: 0 !important;
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 0.5rem;
                     }
 
-                    #adminCalendar .fc-toolbar-chunk {
-                        display: flex;
-                        align-items: center;
-                        gap: 0.35rem;
+                    #adminCalendar .fc-col-header-cell {
+                        border-top: none !important;
+                        border-left: none !important;
+                        border-right: none !important;
+                        border-bottom: 1px solid #f1f5f9;
                     }
+                    .dark #adminCalendar .fc-col-header-cell { border-bottom-color: #334155; }
 
                     #adminCalendar .fc-col-header-cell-cushion {
                         font-size: 0.75rem;
@@ -191,7 +190,20 @@
                     }
                     .dark #adminCalendar .fc-daygrid-day-number { color: #cbd5e1; }
                     #adminCalendar .fc-day-other .fc-daygrid-day-number { opacity: 0.3; }
-                    #adminCalendar .fc-day-today .fc-daygrid-day-number { color: #3b82f6 !important; }
+
+                    #adminCalendar .fc-day-today {
+                        background: linear-gradient(135deg, rgba(125, 211, 252, 0.72) 0%, rgba(186, 230, 253, 0.72) 100%) !important;
+                    }
+                    .dark #adminCalendar .fc-day-today {
+                        background: linear-gradient(135deg, rgba(14, 116, 144, 0.45) 0%, rgba(2, 132, 199, 0.45) 100%) !important;
+                    }
+                    #adminCalendar .fc-day-today .fc-daygrid-day-number {
+                        color: #111827 !important;
+                        font-weight: 800 !important;
+                    }
+                    .dark #adminCalendar .fc-day-today .fc-daygrid-day-number {
+                        color: #f8fafc !important;
+                    }
 
                     #adminCalendar .fc-event {
                         border-radius: 3px !important;
@@ -201,6 +213,7 @@
                         border: none !important;
                         margin: 1px 2px !important;
                     }
+                    #adminCalendar .fc-daygrid-day-events { margin: 0 !important; }
 
                     #adminCalendar .fc-button {
                         background-color: #64748b !important;
@@ -214,6 +227,37 @@
                     }
                     #adminCalendar .fc-button:hover { background-color: #475569 !important; }
 
+                    #adminCalendar .fc-button-group { gap: 4px; }
+                    #adminCalendar .fc-button-group > .fc-button { border-radius: 4px !important; }
+
+                    #adminCalendar .fc-scrollgrid {
+                        border: none !important;
+                    }
+                    #adminCalendar .fc-theme-standard td,
+                    #adminCalendar .fc-theme-standard th {
+                        border-color: #f1f5f9;
+                    }
+                    .dark #adminCalendar .fc-theme-standard td,
+                    .dark #adminCalendar .fc-theme-standard th {
+                        border-color: #334155;
+                    }
+
+                    #adminCalendar .fc-daygrid-day-frame {
+                        min-height: 35px !important;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                    }
+
+                    #adminCalendar .fc-day-sun .fc-daygrid-day-number { color: #ef4444; }
+                    .dark #adminCalendar .fc-day-sun .fc-daygrid-day-number { color: #f87171; }
+
+                    @media (max-width: 1023px) {
+                        #adminCalendar { min-height: 400px !important; }
+                        #adminCalendar .fc-scrollgrid { height: 100% !important; }
+                        #adminCalendar .fc-daygrid-day-frame { min-height: 50px !important; }
+                    }
+
                     @media (max-width: 640px) {
                         #adminCalendar .fc-toolbar-title {
                             font-size: 1rem !important;
@@ -226,14 +270,9 @@
                     }
                 </style>
 
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Kalender Hari Libur Nasional</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Menampilkan tanggal libur nasional untuk referensi operasional presensi.</p>
-                </div>
+             
 
-                <div class="overflow-x-auto">
-                    <div id="adminCalendar" class="w-full min-w-[760px] lg:min-w-0"></div>
-                </div>
+                <div id="adminCalendar" class="w-full"></div>
 
                 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
                 <script>
@@ -254,6 +293,7 @@
                         function initAdminCalendar() {
                             const calendarEl = document.getElementById('adminCalendar');
                             if (!calendarEl || !window.FullCalendar) return;
+                            const isMobile = window.innerWidth < 1024;
 
                             adminCalendarInstance = new FullCalendar.Calendar(calendarEl, {
                                 initialView: 'dayGridMonth',
@@ -264,7 +304,9 @@
                                     right: 'today prev,next'
                                 },
                                 events: holidays,
-                                height: 'auto',
+                                height: isMobile ? '100%' : 'auto',
+                                contentHeight: isMobile ? '100%' : 'auto',
+                                expandRows: isMobile,
                                 dayMaxEvents: 2,
                                 displayEventTime: false,
                                 fixedWeekCount: false,

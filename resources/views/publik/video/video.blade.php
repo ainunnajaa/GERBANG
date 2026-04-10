@@ -33,6 +33,15 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .video-description-clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col bg-[#FDFCE0] dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
@@ -53,7 +62,7 @@
                                 $videoId = $matches[1];
                             }
                         @endphp
-                        <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+                        <article class="h-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col">
                             @if($videoId)
                                 <div class="aspect-video bg-black">
                                     <iframe
@@ -71,18 +80,24 @@
                                 </div>
                             @endif
 
-                            <div class="p-4 space-y-2">
+                            <div class="p-4 flex-1 flex flex-col gap-2">
                                 <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ $video->title ?: 'Video Sekolah' }}</h2>
                                 @if(!empty($video->description))
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{{ $video->description }}</p>
+                                    <p class="video-description-clamp text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{{ $video->description }}</p>
                                 @endif
-                                <a href="{{ $video->url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm font-semibold text-red-600 dark:text-red-400 hover:underline">
+                                <a href="{{ $video->url }}" target="_blank" rel="noopener noreferrer" class="mt-auto inline-flex items-center text-sm font-semibold text-red-600 dark:text-red-400 hover:underline">
                                     Buka di YouTube
                                 </a>
                             </div>
                         </article>
                     @endforeach
                 </div>
+
+                @if($videos->hasPages())
+                    <div class="mt-8">
+                        {{ $videos->links() }}
+                    </div>
+                @endif
             @else
                 <div class="rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-8 text-center bg-white/70 dark:bg-gray-800/60">
                     <p class="text-sm text-gray-600 dark:text-gray-300">Belum ada video YouTube yang ditambahkan oleh admin.</p>

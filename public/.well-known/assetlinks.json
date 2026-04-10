@@ -12,5 +12,17 @@
         "A3:82:15:4B:DC:59:C4:A4:E3:C2:C1:A8:63:5D:8B:7F:7D:B3:CD:D4:16:73:95:67:2A:79:10:FB:D0:38:07:03"
       ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gerbang.beritaku",
+      "sha256_cert_fingerprints": [
+        "ISI_KODE_SHA256_ANDA_DI_SINI"
+      ]
+    }
   }
 ]

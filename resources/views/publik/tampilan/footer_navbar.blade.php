@@ -60,6 +60,7 @@
                                 <a href="{{ url('/#guru') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#8A2BE2] shadow-[0_3px_0_#551A8B] hover:opacity-90">Guru</a>
                                 <a href="{{ url('/#konten-sosmed') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#DC143C] shadow-[0_3px_0_#8B0000] hover:opacity-90">Konten</a>
                                 <a href="{{ route('publik.video') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#6D28D9] shadow-[0_3px_0_#4C1D95] hover:opacity-90">Video</a>
+                                <a href="{{ route('app.berita.home') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#1E90FF] shadow-[0_3px_0_#104E8B] hover:opacity-90">News</a>
                                 <a href="{{ route('publik.visi_misi') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#FF8C00] shadow-[0_3px_0_#CD6600] hover:opacity-90">Visi & Misi</a>
                                 <a href="{{ route('publik.berita.index') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#00CED1] shadow-[0_3px_0_#008B8B] hover:opacity-90">Berita</a>
                                 <a href="{{ route('publik.kontak') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-gray-900 bg-[#FFD700] shadow-[0_3px_0_#CDAD00] hover:opacity-90">Kontak</a>
@@ -75,6 +76,7 @@
                     <a href="{{ url('/#guru') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#8A2BE2] shadow-[0_3px_0_#551A8B] hover:translate-y-[2px] hover:shadow-[0_1px_0_#551A8B] transition-all">Guru</a>
                     <a href="{{ url('/#konten-sosmed') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#DC143C] shadow-[0_3px_0_#8B0000] hover:translate-y-[2px] hover:shadow-[0_1px_0_#8B0000] transition-all">Konten</a>
                     <a href="{{ route('publik.video') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#6D28D9] shadow-[0_3px_0_#4C1D95] hover:translate-y-[2px] hover:shadow-[0_1px_0_#4C1D95] transition-all">Video</a>
+                    <a href="{{ route('app.berita.home') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#1E90FF] shadow-[0_3px_0_#104E8B] hover:translate-y-[2px] hover:shadow-[0_1px_0_#104E8B] transition-all">News</a>
                     <a href="{{ route('publik.visi_misi') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#FF8C00] shadow-[0_3px_0_#CD6600] hover:translate-y-[2px] hover:shadow-[0_1px_0_#CD6600] transition-all">Visi & Misi</a>
                     <a href="{{ route('publik.berita.index') }}" class="px-4 py-2 rounded-full text-sm font-bold text-white bg-[#00CED1] shadow-[0_3px_0_#008B8B] hover:translate-y-[2px] hover:shadow-[0_1px_0_#008B8B] transition-all">Berita</a>
                     <a href="{{ route('publik.kontak') }}" class="px-4 py-2 rounded-full text-sm font-bold text-gray-800 bg-[#FFD700] shadow-[0_3px_0_#CDAD00] hover:translate-y-[2px] hover:shadow-[0_1px_0_#CDAD00] transition-all">Kontak</a>
@@ -226,6 +228,14 @@
                         
                     </div>
                     
+                </div>
+
+                <div class="mt-6 border-t border-[#FF8C00]/40 dark:border-gray-700 pt-4 text-gray-600 dark:text-gray-300 md:flex md:items-center md:justify-between md:gap-4">
+                    <a href="{{ route('app.berita.home') }}" class="text-sm md:text-[15px] font-medium mb-2 md:mb-0 text-center md:text-left hover:text-sky-700 transition-colors">&copy; 2026 TK Pembina ABA 54 Semarang. All rights reserved.</a>
+                    <div class="flex items-center justify-center md:justify-end gap-6 text-sm md:text-[15px] font-semibold">
+                        <a href="#" class="hover:text-sky-700">Privacy Policy</a>
+                        <a href="#" class="hover:text-sky-700">Terms of Service</a>
+                    </div>
                 </div>
             </div>
         </footer>

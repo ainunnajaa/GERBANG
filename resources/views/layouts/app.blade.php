@@ -183,7 +183,7 @@
                 @endisset
 
                 <!-- Page Content -->
-                <main class="bg-gray-200 dark:bg-gray-900 flex-1 pb-16 md:pb-0">
+                <main class="bg-gray-200 dark:bg-gray-900 flex-1 pb-20 md:pb-0">
                     <div class="px-4 sm:px-6 lg:px-8 py-1">
                         {{ $slot }}
                     </div>
@@ -207,7 +207,7 @@
                 @endphp
 
                 <!-- Bottom Navbar (mobile) -->
-                <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-flow-col auto-cols-fr border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden">
+                <nav class="fixed inset-x-0 bottom-0 z-30 h-[4.25rem] grid grid-flow-col auto-cols-fr border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 md:hidden">
                     <a href="{{ route('dashboard') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-blue-400 border-t-2 border-blue-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
                         <svg class="w-5 h-5 mb-0.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a.75.75 0 011.06 0L21.75 12M4.5 9.75V21h15V9.75" />
@@ -272,6 +272,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75L18.75 21 22 16.5" />
                             </svg>
                             <span>Berita</span>
+                        </a>
+                        <a href="{{ route('guru.video') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.video*') ? 'text-rose-600 dark:text-rose-400 border-t-2 border-rose-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
+                            <svg class="w-5 h-5 mb-0.5 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-2.36a.75.75 0 011.08.67v6.38a.75.75 0 01-1.08.67l-4.72-2.36m-8.25 3h6A2.25 2.25 0 0015.75 14.25v-4.5A2.25 2.25 0 0013.5 7.5h-6A2.25 2.25 0 005.25 9.75v4.5A2.25 2.25 0 007.5 16.5z" />
+                            </svg>
+                            <span>Video</span>
                         </a>
                     @elseif($role === 'wali_murid')
                         <a href="{{ route('wali.daftar') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('wali.daftar*') ? 'text-orange-600 dark:text-orange-400 border-t-2 border-orange-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">

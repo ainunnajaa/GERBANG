@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\WelcomeController;
 use App\Http\Controllers\Presensi\PresensiController;
 use App\Http\Controllers\Presensi\RiwayatPresensiController;
 use App\Http\Controllers\PwaController;
+use App\Http\Controllers\App\BeritaAppController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
@@ -26,6 +27,12 @@ Route::get('/apple-touch-icon.png', [PwaController::class, 'appleTouchIcon'])->n
 Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.visi_misi');
 Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
 Route::get('/video', [WelcomeController::class, 'video'])->name('publik.video');
+Route::get('/news', [BeritaAppController::class, 'home'])->name('app.berita.home');
+Route::get('/news/berita', [BeritaAppController::class, 'news'])->name('app.berita.news');
+Route::get('/news/berita/{berita}', [BeritaAppController::class, 'showNews'])->name('app.berita.news.show');
+Route::get('/news/video', [BeritaAppController::class, 'video'])->name('app.berita.video');
+Route::get('/news/instagram', [BeritaAppController::class, 'instagram'])->name('app.berita.instagram');
+Route::get('/news/{berita}', [BeritaAppController::class, 'show'])->name('app.berita.show');
 Route::post('/contact', [WelcomeController::class, 'contact'])->name('contact.send');
 
 // Route untuk Halaman Daftar Guru (BARU DITAMBAHKAN)
@@ -127,6 +134,23 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:guru'])->group(function () {
     Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
+    Route::get('/guru/video', function () {
+        $profile = \App\Models\SchoolProfile::first();
+        $videoQuery = \App\Models\SchoolContent::where('platform', 'youtube')
+            ->orderByDesc('created_at');
+
+        if ($profile) {
+            $videoQuery->where('school_profile_id', $profile->id);
+        } else {
+            $videoQuery->whereRaw('1 = 0');
+        }
+
+        $videos = $videoQuery->paginate(15);
+
+        return view('guru.video_guru', [
+            'videos' => $videos,
+        ]);
+    })->name('guru.video');
     Route::get('/guru/izin', fn() => view('guru.Izin_guru'))->name('guru.izin.form');
     Route::post('/guru/izin', [PresensiController::class, 'guruIzin'])->name('guru.izin');
     Route::get('/guru/kehadiran/periode', [RiwayatPresensiController::class, 'guruKehadiranPeriods'])->name('guru.kehadiran.periods');

@@ -28,28 +28,42 @@
 
                     @php
                         $openSection = session('open_section');
+                        $allowedSections = ['profile', 'principal', 'background', 'programs', 'contents', 'videos', 'contact'];
+                        $initialSection = in_array($openSection, $allowedSections, true) ? $openSection : 'profile';
                     @endphp
                     <div
-                        x-data="{
-                            showProfile: {{ $openSection === 'profile' ? 'true' : 'false' }},
-                            showPrincipal: {{ $openSection === 'principal' ? 'true' : 'false' }},
-                            showBackground: {{ $openSection === 'background' ? 'true' : 'false' }},
-                            showPrograms: {{ $openSection === 'programs' ? 'true' : 'false' }},
-                            showContents: {{ $openSection === 'contents' ? 'true' : 'false' }},
-                            showVideos: {{ $openSection === 'videos' ? 'true' : 'false' }},
-                            showContact: {{ $openSection === 'contact' ? 'true' : 'false' }}
-                        }"
+                        x-data="{ activeSection: '{{ $initialSection }}' }"
                         class="space-y-6"
                     >
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showProfile = !showProfile">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Profil Sekolah</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showProfile }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showProfile" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40 p-2.5">
+                            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7 lg:gap-1.5">
+                                <button type="button" @click="activeSection = 'profile'" :class="activeSection === 'profile' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Profil Sekolah
+                                </button>
+                                <button type="button" @click="activeSection = 'principal'" :class="activeSection === 'principal' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Kepala Sekolah
+                                </button>
+                                <button type="button" @click="activeSection = 'background'" :class="activeSection === 'background' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Background
+                                </button>
+                                <button type="button" @click="activeSection = 'programs'" :class="activeSection === 'programs' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Program Unggulan
+                                </button>
+                                <button type="button" @click="activeSection = 'contents'" :class="activeSection === 'contents' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Instagram
+                                </button>
+                                <button type="button" @click="activeSection = 'videos'" :class="activeSection === 'videos' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Video
+                                </button>
+                                <button type="button" @click="activeSection = 'contact'" :class="activeSection === 'contact' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 shadow-sm border-blue-200 dark:border-blue-800' : 'bg-transparent text-gray-600 dark:text-gray-300 border-transparent hover:bg-white/60 dark:hover:bg-gray-800/60'" class="w-full px-3 py-2.5 rounded-md border text-[13px] sm:text-sm lg:text-[12.5px] xl:text-[13px] font-semibold leading-tight text-center whitespace-normal transition-colors lg:px-2.5 xl:px-3">
+                                    Kontak
+                                </button>
+                            </div>
+                        </div>
+
+                        <div x-show="activeSection === 'profile'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 <form id="profile-school-form" method="POST" action="{{ route('admin.web_profil.save') }}" enctype="multipart/form-data" class="space-y-6">
                                     @csrf
                                     <input type="hidden" name="section" value="profile">
@@ -141,65 +155,6 @@
                                         </div>
                                         <textarea id="welcome_message" name="welcome_message" class="hidden">{!! old('welcome_message', $profile->welcome_message ?? '') !!}</textarea>
                                         @error('welcome_message')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
-                                    <div>
-                                        <label for="school_profile" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Profil</label>
-                                        <div class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-md overflow-hidden bg-white dark:bg-gray-900 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
-                                            <div class="flex flex-wrap items-center gap-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1.5 transition-colors" data-rtf-toolbar data-target="school_profile_editor">
-                                                <select data-editor-format class="text-sm border-gray-300 dark:border-gray-600 rounded cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-1 pl-2 pr-8 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                                                    <option value="P">Normal</option>
-                                                    <option value="H1">Heading 1</option>
-                                                    <option value="H2">Heading 2</option>
-                                                    <option value="H3">Heading 3</option>
-                                                </select>
-
-                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
-
-                                                <button type="button" data-editor-btn data-cmd="bold" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold transition-colors" title="Bold">B</button>
-                                                <button type="button" data-editor-btn data-cmd="italic" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 italic font-serif transition-colors" title="Italic">I</button>
-                                                <button type="button" data-editor-btn data-cmd="underline" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 underline transition-colors" title="Underline">U</button>
-
-                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
-
-                                                <button type="button" data-editor-btn data-cmd="justifyLeft" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Left">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
-                                                </button>
-                                                <button type="button" data-editor-btn data-cmd="justifyCenter" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="18" y1="18" x2="6" y2="18"></line></svg>
-                                                </button>
-                                                <button type="button" data-editor-btn data-cmd="justifyRight" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
-                                                </button>
-                                                <button type="button" data-editor-btn data-cmd="justifyFull" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Justify">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>
-                                                </button>
-
-                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
-
-                                                <button type="button" data-editor-btn data-cmd="createLink" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Insert Link">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                                                </button>
-                                                <button type="button" data-editor-btn data-cmd="insertUnorderedList" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Bullet List">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                                                </button>
-                                                <button type="button" data-editor-btn data-cmd="insertOrderedList" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Numbered List">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
-                                                </button>
-
-                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
-
-                                                <button type="button" data-editor-btn data-cmd="removeFormat" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-serif font-semibold text-sm transition-colors" title="Clear Formatting">
-                                                    T<sub class="font-sans font-normal text-[10px] ml-0.5 mt-1 inline-block">x</sub>
-                                                </button>
-                                            </div>
-
-                                            <div id="school_profile_editor" data-rich-editor data-target-input="school_profile" contenteditable="true" class="rich-editor-content prose dark:prose-invert max-w-none w-full min-h-[200px] p-4 text-gray-800 dark:text-gray-200">{!! old('school_profile', $profile->school_profile ?? '') !!}</div>
-                                        </div>
-                                        <textarea id="school_profile" name="school_profile" class="hidden">{!! old('school_profile', $profile->school_profile ?? '') !!}</textarea>
-                                        @error('school_profile')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
@@ -322,6 +277,65 @@
                                         @enderror
                                     </div>
 
+                                    <div>
+                                        <label for="school_profile" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tujuan</label>
+                                        <div class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-md overflow-hidden bg-white dark:bg-gray-900 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                                            <div class="flex flex-wrap items-center gap-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-1.5 transition-colors" data-rtf-toolbar data-target="school_profile_editor">
+                                                <select data-editor-format class="text-sm border-gray-300 dark:border-gray-600 rounded cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-1 pl-2 pr-8 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                                                    <option value="P">Normal</option>
+                                                    <option value="H1">Heading 1</option>
+                                                    <option value="H2">Heading 2</option>
+                                                    <option value="H3">Heading 3</option>
+                                                </select>
+
+                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+
+                                                <button type="button" data-editor-btn data-cmd="bold" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold transition-colors" title="Bold">B</button>
+                                                <button type="button" data-editor-btn data-cmd="italic" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 italic font-serif transition-colors" title="Italic">I</button>
+                                                <button type="button" data-editor-btn data-cmd="underline" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 underline transition-colors" title="Underline">U</button>
+
+                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+
+                                                <button type="button" data-editor-btn data-cmd="justifyLeft" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Left">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+                                                </button>
+                                                <button type="button" data-editor-btn data-cmd="justifyCenter" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="18" y1="18" x2="6" y2="18"></line></svg>
+                                                </button>
+                                                <button type="button" data-editor-btn data-cmd="justifyRight" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Align Right">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
+                                                </button>
+                                                <button type="button" data-editor-btn data-cmd="justifyFull" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Justify">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>
+                                                </button>
+
+                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+
+                                                <button type="button" data-editor-btn data-cmd="createLink" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Insert Link">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                                </button>
+                                                <button type="button" data-editor-btn data-cmd="insertUnorderedList" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Bullet List">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                                </button>
+                                                <button type="button" data-editor-btn data-cmd="insertOrderedList" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors" title="Numbered List">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
+                                                </button>
+
+                                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+
+                                                <button type="button" data-editor-btn data-cmd="removeFormat" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-serif font-semibold text-sm transition-colors" title="Clear Formatting">
+                                                    T<sub class="font-sans font-normal text-[10px] ml-0.5 mt-1 inline-block">x</sub>
+                                                </button>
+                                            </div>
+
+                                            <div id="school_profile_editor" data-rich-editor data-target-input="school_profile" contenteditable="true" class="rich-editor-content prose dark:prose-invert max-w-none w-full min-h-[200px] p-4 text-gray-800 dark:text-gray-200">{!! old('school_profile', $profile->school_profile ?? '') !!}</div>
+                                        </div>
+                                        <textarea id="school_profile" name="school_profile" class="hidden">{!! old('school_profile', $profile->school_profile ?? '') !!}</textarea>
+                                        @error('school_profile')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
                                     <div class="flex items-center justify-end mt-4">
                                         <button id="save-profile-school-button" type="submit" form="profile-school-form" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm md:text-base">Simpan Profil Sekolah</button>
                                     </div>
@@ -329,14 +343,8 @@
                             </div>
                         </div>
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showPrincipal = !showPrincipal">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Profil Kepala Sekolah</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showPrincipal }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showPrincipal" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'principal'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 <div class="grid grid-cols-1 gap-6 items-start">
                                     <div class="w-full">
                                         <form method="POST" action="{{ route('admin.web_profil.save') }}" enctype="multipart/form-data" class="space-y-4">
@@ -450,14 +458,8 @@
                             </div>
                         </div>
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showBackground = !showBackground">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Gambar Background (Slider)</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showBackground }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showBackground" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'background'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 <form method="POST" action="{{ route('admin.backgrounds.store') }}" enctype="multipart/form-data" class="space-y-3 mb-6">
                                     @csrf
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
@@ -500,14 +502,8 @@
                             </div>
                         </div>
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showPrograms = !showPrograms">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Program Unggulan</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showPrograms }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showPrograms" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'programs'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 
                                 {{-- FORM TAMBAH PROGRAM --}}
                                 <form method="POST" action="{{ route('admin.programs.store') }}" class="space-y-4 mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -632,14 +628,8 @@
                             </div>
                         </div>
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showContents = !showContents">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Konten Sosial Media</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showContents }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showContents" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'contents'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 
                                 {{-- FORM TAMBAH KONTEN --}}
                                 <form method="POST" action="{{ route('admin.contents.store') }}" class="space-y-4 mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -731,14 +721,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showVideos = !showVideos">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Video YouTube</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showVideos }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showVideos" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'videos'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
 
                                 @error('youtube_upload')
                                     <div class="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900/30 dark:text-red-300">
@@ -799,8 +783,8 @@
                                                 <label for="upload_privacy_status" class="block text-sm font-medium mb-1">Privasi Video</label>
                                                 <select id="upload_privacy_status" name="upload_privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                                                     <option value="private" {{ old('upload_privacy_status') === 'private' ? 'selected' : '' }}>Pribadi</option>
-                                                    <option value="unlisted" {{ old('upload_privacy_status', 'unlisted') === 'unlisted' ? 'selected' : '' }}>Tidak publik</option>
-                                                    <option value="public" {{ old('upload_privacy_status') === 'public' ? 'selected' : '' }}>Publik</option>
+                                                    <option value="unlisted" {{ old('upload_privacy_status') === 'unlisted' ? 'selected' : '' }}>Tidak publik</option>
+                                                    <option value="public" {{ old('upload_privacy_status', 'public') === 'public' ? 'selected' : '' }}>Publik</option>
                                                 </select>
                                                 @error('upload_privacy_status')
                                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -856,9 +840,9 @@
                                             <div class="md:col-span-2">
                                                 <label for="video_privacy_status" class="block text-sm font-medium mb-1">Privasi Video</label>
                                                 <select id="video_privacy_status" name="privacy_status" class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                                                    <option value="private">Pribadi</option>
-                                                    <option value="unlisted" selected>Tidak publik</option>
-                                                    <option value="public">Publik</option>
+                                                    <option value="private" {{ old('privacy_status') === 'private' ? 'selected' : '' }}>Pribadi</option>
+                                                    <option value="unlisted" {{ old('privacy_status') === 'unlisted' ? 'selected' : '' }}>Tidak publik</option>
+                                                    <option value="public" {{ old('privacy_status', 'public') === 'public' ? 'selected' : '' }}>Publik</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -949,23 +933,25 @@
                             </div>
                         </div>
 
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <button type="button" class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 text-left" @click="showContact = !showContact">
-                                <span class="text-lg font-semibold text-gray-800 dark:text-gray-100">Kontak Kami</span>
-                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform duration-200" :class="{ 'rotate-180': showContact }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div x-show="showContact" x-cloak class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div x-show="activeSection === 'contact'" x-cloak class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="p-4">
                                 <form method="POST" action="{{ route('admin.web_profil.save') }}" class="space-y-4">
                                     @csrf
                                     <input type="hidden" name="section" value="contact">
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
+                                        <div class="md:col-span-2">
                                             <label for="contact_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alamat Sekolah</label>
-                                            <textarea id="contact_address" name="contact_address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Alamat lengkap sekolah">{{ old('contact_address', $profile->contact_address ?? '') }}</textarea>
+                                            <textarea id="contact_address" name="contact_address" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Alamat lengkap sekolah">{{ old('contact_address', $profile->contact_address ?? '') }}</textarea>
                                             @error('contact_address')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        <div>
+                                            <label for="contact_opening_hours" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jam Operasional / Buka Sekolah</label>
+                                            <input id="contact_opening_hours" name="contact_opening_hours" type="text" value="{{ old('contact_opening_hours', $profile->contact_opening_hours ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Senin - Jumat, 07.00 - 15.00">
+                                            @error('contact_opening_hours')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
                                         </div>
@@ -975,26 +961,8 @@
                                             @error('contact_email')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
-
-                                            <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">No. WhatsApp / Telepon Sekolah</label>
-                                            <input id="contact_phone" name="contact_phone" type="text" value="{{ old('contact_phone', $profile->contact_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
-                                            @error('contact_phone')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-
-                                            <label for="principal_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">No. Telepon Kepala Sekolah</label>
-                                            <input id="principal_phone" name="principal_phone" type="text" value="{{ old('principal_phone', $profile->principal_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
-                                            @error('principal_phone')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
                                         </div>
-                                        <div class="md:col-span-2">
-                                            <label for="contact_opening_hours" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jam Operasional / Buka Sekolah</label>
-                                            <input id="contact_opening_hours" name="contact_opening_hours" type="text" value="{{ old('contact_opening_hours', $profile->contact_opening_hours ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Senin - Jumat, 07.00 - 15.00">
-                                            @error('contact_opening_hours')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+
                                         <div>
                                             <label for="social_facebook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link Facebook</label>
                                             <input id="social_facebook_url" name="social_facebook_url" type="url" value="{{ old('social_facebook_url', $profile->social_facebook_url ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://facebook.com/akun-sekolah">
@@ -1003,12 +971,28 @@
                                             @enderror
                                         </div>
                                         <div>
+                                            <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">No. WhatsApp / Telepon Sekolah</label>
+                                            <input id="contact_phone" name="contact_phone" type="text" value="{{ old('contact_phone', $profile->contact_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
+                                            @error('contact_phone')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        <div>
                                             <label for="social_instagram_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Instagram (Username / Link)</label>
                                             <input id="social_instagram_url" name="social_instagram_url" type="text" value="{{ old('social_instagram_url', $profile->social_instagram_url ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="contoh: @sekolahhebat atau https://instagram.com/sekolahhebat">
                                             @error('social_instagram_url')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
                                         </div>
+                                        <div>
+                                            <label for="principal_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">No. Telepon Kepala Sekolah</label>
+                                            <input id="principal_phone" name="principal_phone" type="text" value="{{ old('principal_phone', $profile->principal_phone ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Format: 081234567890">
+                                            @error('principal_phone')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
                                         <div>
                                             <label for="social_youtube_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link YouTube</label>
                                             <input id="social_youtube_url" name="social_youtube_url" type="url" value="{{ old('social_youtube_url', $profile->social_youtube_url ?? '') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://youtube.com/@akun-sekolah">

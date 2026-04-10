@@ -53,7 +53,7 @@
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 items-start">
                     <section class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm overflow-hidden">
                         <div class="bg-[#1f6fe5] px-5 py-4">
-                            <h2 class="text-2xl font-semibold text-white">Profil Sekolah</h2>
+                            <h2 class="text-2xl font-semibold text-white">Tujuan</h2>
                         </div>
                         <div class="p-6 text-gray-800 dark:text-gray-200">
                             @if (!empty($schoolProfile?->school_profile))

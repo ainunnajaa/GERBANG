@@ -89,9 +89,16 @@ class WelcomeController extends Controller
 	public function video()
 	{
 		$profile = SchoolProfile::first();
-		$videos = $profile
-			? SchoolContent::where('school_profile_id', $profile->id)->where('platform', 'youtube')->orderByDesc('created_at')->get()
-			: collect();
+
+		$videoQuery = SchoolContent::where('platform', 'youtube')->orderByDesc('created_at');
+
+		if ($profile) {
+			$videoQuery->where('school_profile_id', $profile->id);
+		} else {
+			$videoQuery->whereRaw('1 = 0');
+		}
+
+		$videos = $videoQuery->paginate(15);
 
 		return view('publik.video.video', [
 			'schoolProfile' => $profile,

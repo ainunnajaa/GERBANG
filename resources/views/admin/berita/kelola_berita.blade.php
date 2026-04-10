@@ -22,8 +22,34 @@
 						</a>
 					</div>
 
+					<form method="GET" action="{{ route('admin.berita') }}" class="mb-5">
+						<div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+							<label for="q" class="sr-only">Cari berita</label>
+							<input
+								id="q"
+								name="q"
+								type="text"
+								value="{{ $currentSearch ?? '' }}"
+								placeholder="Cari judul atau isi berita..."
+								class="w-full sm:flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+							>
+							<div class="flex gap-2">
+								<button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+									Cari
+								</button>
+								@if(!empty($currentSearch))
+									<a href="{{ route('admin.berita') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+										Reset
+									</a>
+								@endif
+							</div>
+						</div>
+					</form>
+
 					@if($beritas->isEmpty())
-						<p class="text-sm text-gray-500 dark:text-gray-400">Belum ada berita yang dibuat.</p>
+						<p class="text-sm text-gray-500 dark:text-gray-400">
+							{{ !empty($currentSearch) ? 'Tidak ada berita yang cocok dengan kata kunci pencarian.' : 'Belum ada berita yang dibuat.' }}
+						</p>
 					@else
 						<div class="space-y-4">
 							@foreach($beritas as $berita)
@@ -51,6 +77,10 @@
 									</div>
 								</div>
 							@endforeach
+						</div>
+
+						<div class="mt-6">
+							{{ $beritas->links() }}
 						</div>
 					@endif
 				</div>

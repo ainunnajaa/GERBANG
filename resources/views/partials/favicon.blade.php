@@ -13,13 +13,28 @@
 <link rel="shortcut icon" href="{{ $faviconUrl }}">
 <link rel="apple-touch-icon" href="{{ route('pwa.apple-touch-icon', ['v' => $pwaVersion]) }}">
 <link rel="manifest" href="{{ asset('manifest.json') }}?v={{ $pwaVersion }}">
-<meta name="theme-color" content="#4CAF50">
+<meta name="theme-color" id="theme-color-meta" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="{{ $appName }}">
 
 <script>
+    (function () {
+        var themeColorMeta = document.getElementById('theme-color-meta');
+        if (!themeColorMeta) return;
+
+        function syncThemeColor() {
+            var isDark = document.documentElement.classList.contains('dark');
+            themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
+        }
+
+        syncThemeColor();
+
+        var observer = new MutationObserver(syncThemeColor);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    })();
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' }).catch(function () {
