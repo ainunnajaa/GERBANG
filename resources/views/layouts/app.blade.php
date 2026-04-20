@@ -21,12 +21,27 @@
             themeMode: 'system',
             isDark: false,
             lastSystemDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
+            isAdmin: @json((Auth::user()->role ?? null) === 'admin'),
             sidebarOpen: false,
             sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
             windowWidth: window.innerWidth,
+            notificationOpen: false,
+            notifications: [],
+            loadingNotifications: false,
+            notificationFetchError: '',
+            notificationIntervalId: null,
+            seenNotificationIds: [],
+            notificationStorageKey: 'admin_seen_izin_notification_ids',
             init() {
                 const saved = localStorage.getItem('theme');
                 this.setTheme(saved ?? 'system', false);
+
+                this.loadSeenNotifications();
+
+                if (this.isAdmin) {
+                    this.fetchNotifications();
+                    this.startNotificationPolling();
+                }
 
                 const media = window.matchMedia('(prefers-color-scheme: dark)');
                 media.addEventListener('change', (e) => {
@@ -43,6 +58,12 @@
 
                 window.addEventListener('resize', () => {
                     this.windowWidth = window.innerWidth;
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible' && this.isAdmin) {
+                        this.fetchNotifications();
+                    }
                 });
             },
             setTheme(mode, persist = true) {
@@ -68,6 +89,81 @@
             },
             toggleTheme() {
                 this.setTheme(this.isDark ? 'light' : 'dark');
+            },
+            loadSeenNotifications() {
+                try {
+                    const raw = localStorage.getItem(this.notificationStorageKey);
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    this.seenNotificationIds = Array.isArray(parsed)
+                        ? parsed.map((item) => Number(item)).filter((item) => Number.isFinite(item))
+                        : [];
+                } catch (e) {
+                    this.seenNotificationIds = [];
+                }
+            },
+            saveSeenNotifications() {
+                localStorage.setItem(this.notificationStorageKey, JSON.stringify(this.seenNotificationIds.slice(-200)));
+            },
+            isNotificationUnread(id) {
+                return !this.seenNotificationIds.includes(Number(id));
+            },
+            unreadNotificationsCount() {
+                return this.notifications.reduce((count, item) => count + (this.isNotificationUnread(item.id) ? 1 : 0), 0);
+            },
+            markNotificationAsRead(id) {
+                const notificationId = Number(id);
+                if (!Number.isFinite(notificationId) || this.seenNotificationIds.includes(notificationId)) {
+                    return;
+                }
+
+                this.seenNotificationIds.push(notificationId);
+                this.saveSeenNotifications();
+            },
+            markAllNotificationsAsRead() {
+                this.notifications.forEach((item) => this.markNotificationAsRead(item.id));
+            },
+            openNotification(item) {
+                this.markNotificationAsRead(item.id);
+                this.notificationOpen = false;
+                window.location.href = item.url;
+            },
+            async fetchNotifications() {
+                if (!this.isAdmin) {
+                    return;
+                }
+
+                this.loadingNotifications = true;
+                this.notificationFetchError = '';
+
+                try {
+                    const response = await fetch('{{ route('admin.notifications.izin') }}', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Gagal mengambil notifikasi.');
+                    }
+
+                    const payload = await response.json();
+                    this.notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+                } catch (error) {
+                    this.notificationFetchError = 'Notifikasi tidak dapat dimuat.';
+                } finally {
+                    this.loadingNotifications = false;
+                }
+            },
+            startNotificationPolling() {
+                if (!this.isAdmin || this.notificationIntervalId) {
+                    return;
+                }
+
+                this.notificationIntervalId = setInterval(() => {
+                    this.fetchNotifications();
+                }, 10000);
             }
         }"
     >
@@ -123,6 +219,82 @@
                     </div>
 
                     <div class="flex items-center gap-2">
+                        <div class="relative" x-show="isAdmin" x-cloak>
+                            <button
+                                type="button"
+                                @click="notificationOpen = !notificationOpen; if (notificationOpen) fetchNotifications();"
+                                class="relative inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white shadow-sm transition hover:bg-white/25 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                title="Notifikasi izin guru"
+                                aria-label="Notifikasi izin guru"
+                            >
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.08 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                </svg>
+
+                                <span
+                                    x-show="unreadNotificationsCount() > 0"
+                                    x-cloak
+                                    x-text="unreadNotificationsCount() > 9 ? '9+' : unreadNotificationsCount()"
+                                    class="absolute -right-1 -top-1 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
+                                ></span>
+                            </button>
+
+                            <div
+                                x-show="notificationOpen"
+                                x-transition
+                                @click.outside="notificationOpen = false"
+                                class="z-50 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                :class="windowWidth < 640
+                                    ? 'fixed left-2 right-2 top-[4.05rem]'
+                                    : 'absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-1.5rem)]'"
+                                :style="windowWidth < 640 ? 'height: 50vh;' : ''"
+                            >
+                                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifikasi Izin Guru</p>
+                                    <button
+                                        type="button"
+                                        class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                        @click="markAllNotificationsAsRead()"
+                                    >
+                                        Tandai semua dibaca
+                                    </button>
+                                </div>
+
+                                <div class="overflow-y-auto" :style="windowWidth < 640 ? 'max-height: calc(50vh - 3rem);' : 'max-height: 20rem;'">
+                                    <div x-show="loadingNotifications" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                        Memuat notifikasi...
+                                    </div>
+
+                                    <div x-show="!loadingNotifications && notificationFetchError" class="px-4 py-3 text-sm text-red-600 dark:text-red-400" x-text="notificationFetchError"></div>
+
+                                    <div x-show="!loadingNotifications && !notificationFetchError && notifications.length === 0" class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                        Belum ada notifikasi izin guru.
+                                    </div>
+
+                                    <template x-for="item in notifications" :key="item.id">
+                                        <button
+                                            type="button"
+                                            @click="openNotification(item)"
+                                            class="w-full border-b border-gray-100 px-4 py-3.5 text-left transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+                                        >
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="item.title"></p>
+                                                    <p class="mt-0.5 line-clamp-2 text-xs text-gray-600 dark:text-gray-300" x-text="item.description || 'Guru mengirim form izin.'"></p>
+                                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        <span x-text="item.tanggal_label"></span>
+                                                        <span class="mx-1">•</span>
+                                                        <span x-text="item.created_at_human"></span>
+                                                    </p>
+                                                </div>
+                                                <span x-show="isNotificationUnread(item.id)" x-cloak class="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                                            </div>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
                         <button
                             type="button"
                             @click="toggleTheme()"
@@ -264,7 +436,7 @@
                             <svg class="w-5 h-5 mb-0.5 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>Kehadiran</span>
+                            <span>Riwayat</span>
                         </a>
                         <a href="{{ route('guru.berita.index') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('guru.berita*') ? 'text-purple-600 dark:text-purple-400 border-t-2 border-purple-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
                             <svg class="w-5 h-5 mb-0.5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -294,12 +466,6 @@
                         </a>
                     @endif
 
-                    <a href="{{ route('profile.edit') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('profile*') ? 'text-red-600 dark:text-red-400 border-t-2 border-red-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
-                        <svg class="w-5 h-5 mb-0.5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
-                        </svg>
-                        <span>Profile</span>
-                    </a>
                 </nav>
             </div>
         </div>

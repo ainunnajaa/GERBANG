@@ -45,11 +45,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-{{-- 
-    PERBAIKAN BACKGROUND:
-    Hapus style hardcode `background-color: #FDFCE0;`
-    Ganti menggunakan class Tailwind: `bg-[#FDFCE0] dark:bg-gray-900`
---}}
 <body id="top" class="min-h-screen flex flex-col text-gray-900 dark:text-gray-100 font-sans bg-[#FDFCE0] dark:bg-gray-900">
     
     @php
@@ -81,7 +76,7 @@
                         @endif
                         
                         <h2 class="text-lg md:text-xl font-extrabold text-[#0C2C55] dark:text-white tracking-tight font-playful text-left leading-tight transition-colors duration-300">
-                            {!! nl2br(e($schoolProfile->school_name ?? "Portal\nAdmin")) !!}
+                            {!! nl2br(e($schoolProfile->school_name ?? "Portal\nSekolah")) !!}
                         </h2>
                     </div>
 
@@ -113,7 +108,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-xs text-gray-400">✉️</span>
                             </div>
-                            <input id="login" class="block w-full pl-9 pr-3 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-[#1E90FF] focus:ring-0 transition-colors font-medium text-sm" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" placeholder="nama@email.com" />
+                            <input id="login" class="block w-full pl-9 pr-3 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-[#1E90FF] focus:ring-0 transition-colors font-medium text-sm" type="text" name="login" :value="old('login')" required autocomplete="username" placeholder="nama@email.com" />
                         </div>
                         <x-input-error :messages="$errors->get('login')" class="mt-1.5 text-xs" />
                     </div>
@@ -166,17 +161,17 @@
                 <div class="relative z-10 w-full max-w-xs">
                     <div class="bg-white/20 backdrop-blur-md border-2 border-white/40 p-5 md:p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
                         <div class="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center mb-4 shadow-lg border-4 border-[#FFD700]">
-                            <span class="text-3xl drop-shadow-sm">🔐</span>
+                            <span class="text-3xl drop-shadow-sm">🏫</span>
                         </div>
                         
                         <h2 class="font-playful text-xl text-white mb-2 drop-shadow-md leading-tight">
-                            Portal Admin
+                            Portal Sekolah
                         </h2>
                         
                         <div class="w-10 h-0.5 bg-[#FFD700] mx-auto rounded-full mb-2.5"></div>
                         
                         <p class="text-white/95 text-[11px] md:text-xs font-semibold leading-relaxed drop-shadow-sm">
-                            Platform manajemen informasi dan profil sekolah terpadu. Kelola data kegiatan, galeri, dan profil sekolah dengan mudah dan aman.
+                            Platform sistem informasi terpadu. Akses manajemen data, presensi guru, kegiatan, dan profil sekolah dengan mudah dan aman.
                         </p>
                     </div>
                 </div>

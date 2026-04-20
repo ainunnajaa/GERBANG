@@ -32,7 +32,25 @@
 			<img src="{{ asset('storage/' . $berita->gambar_path) }}" alt="{{ $berita->judul }}" class="w-full h-72 md:h-80 xl:h-[30rem] object-cover rounded-lg mb-4">
 		@endif
 
-		<div class="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-a:text-sky-700 dark:prose-a:text-sky-300 prose-img:rounded-lg prose-p:leading-relaxed">
+		<style>
+			.isi-berita-content { color: #1f2937 !important; }
+			.dark .isi-berita-content { color: #e5e7eb !important; }
+			.isi-berita-content * { color: inherit !important; }
+			.isi-berita-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
+			.isi-berita-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
+			.isi-berita-content h1 { font-size: 2em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
+			.isi-berita-content h2 { font-size: 1.5em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
+			.isi-berita-content h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
+			.isi-berita-content p { margin-top: 0.25em; margin-bottom: 0.25em; }
+			.isi-berita-content a { color: #3b82f6 !important; text-decoration: underline !important; }
+			.dark .isi-berita-content a { color: #93c5fd !important; }
+			.isi-berita-content [style*="text-align: center"] { text-align: center; }
+			.isi-berita-content [style*="text-align: right"] { text-align: right; }
+			.isi-berita-content [style*="text-align: justify"] { text-align: justify; }
+			.isi-berita-content [style*="text-align: left"] { text-align: left; }
+		</style>
+
+		<div class="isi-berita-content prose prose-sm max-w-none text-gray-800 dark:text-gray-200 dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-a:text-sky-700 dark:prose-a:text-sky-300 prose-img:rounded-lg prose-p:leading-relaxed">
 			{!! $berita->isi !!}
 		</div>
 

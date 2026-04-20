@@ -32,6 +32,9 @@
                             @endif
 
                             <style>
+                                .isi-berita-content { color: #1f2937 !important; }
+                                .dark .isi-berita-content { color: #e5e7eb !important; }
+                                .isi-berita-content * { color: inherit !important; }
                                 .isi-berita-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content h1 { font-size: 2em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
@@ -39,6 +42,7 @@
                                 .isi-berita-content h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content p { margin-top: 0.25em; margin-bottom: 0.25em; }
                                 .isi-berita-content a { color: #3b82f6 !important; text-decoration: underline !important; }
+                                .dark .isi-berita-content a { color: #93c5fd !important; }
                                 /* Memastikan perataan teks (kiri, tengah, kanan, justify) terbaca */
                                 .isi-berita-content [style*="text-align: center"] { text-align: center; }
                                 .isi-berita-content [style*="text-align: right"] { text-align: right; }

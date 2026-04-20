@@ -84,7 +84,12 @@
                                 </div>
 
                                 <style>
-                                    #isi-editor { outline: none; }
+                                    #isi-editor {
+                                        outline: none;
+                                        color: #1f2937 !important;
+                                    }
+                                    .dark #isi-editor { color: #e5e7eb !important; }
+                                    #isi-editor * { color: inherit !important; }
                                     #isi-editor ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                     #isi-editor ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                     #isi-editor h1 { font-size: 2em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
@@ -92,6 +97,7 @@
                                     #isi-editor h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                     #isi-editor p { margin-top: 0.25em; margin-bottom: 0.25em; }
                                     #isi-editor a { color: #3b82f6 !important; text-decoration: underline !important; }
+                                    .dark #isi-editor a { color: #93c5fd !important; }
                                 </style>
 
                                 <div id="isi-editor" contenteditable="true" class="prose dark:prose-invert max-w-none w-full min-h-[250px] p-4 text-gray-800 dark:text-gray-200">{!! old('isi', $berita->isi) !!}</div>

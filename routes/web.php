@@ -13,6 +13,7 @@ use App\Http\Controllers\Presensi\PresensiController;
 use App\Http\Controllers\Presensi\RiwayatPresensiController;
 use App\Http\Controllers\PwaController;
 use App\Http\Controllers\App\BeritaAppController;
+use App\Http\Controllers\Admin\IzinNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
@@ -82,12 +83,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/riwayat-presensi/periode/{period}', [RiwayatPresensiController::class, 'adminRiwayatPeriode'])->name('admin.riwayat.period');
     Route::get('/admin/riwayat-presensi-semua', [RiwayatPresensiController::class, 'adminRiwayatSemua'])->name('admin.presensi.all');
     Route::get('/admin/riwayat-presensi-semua/export', [RiwayatPresensiController::class, 'adminExportPresensiSemua'])->name('admin.presensi.all.export');
+    Route::get('/admin/riwayat-presensi-semua/export-periode-excel', [RiwayatPresensiController::class, 'adminExportPresensiPeriodeExcel'])->name('admin.presensi.all.export-period-excel');
+    Route::get('/admin/riwayat-presensi-semua/export-periode-pdf', [RiwayatPresensiController::class, 'adminExportPresensiPeriodePdf'])->name('admin.presensi.all.export-period-pdf');
     Route::get('/admin/riwayat-presensi-bulanan', [RiwayatPresensiController::class, 'adminRiwayatBulanan'])->name('admin.presensi.bulanan');
     Route::post('/admin/riwayat-presensi/status', [RiwayatPresensiController::class, 'adminUpdateStatus'])->name('admin.presensi.status.update');
     Route::post('/admin/riwayat-presensi/status/bulk', [RiwayatPresensiController::class, 'adminBulkUpdateStatus'])->name('admin.presensi.status.bulk-update');
     Route::get('/admin/riwayat-presensi/guru/{guru}', [RiwayatPresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
     Route::get('/admin/riwayat-presensi/guru/{guru}/download', [RiwayatPresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [RiwayatPresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
+    Route::get('/admin/notifikasi/izin', [IzinNotificationController::class, 'index'])->name('admin.notifications.izin');
 
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
@@ -157,6 +161,8 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
     Route::get('/guru/kehadiran', [RiwayatPresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
     Route::get('/guru/kehadiran-bulanan', [RiwayatPresensiController::class, 'guruKehadiranBulanan'])->name('guru.kehadiran.bulanan');
     Route::get('/guru/kehadiran-bulanan/export', [RiwayatPresensiController::class, 'guruExportKehadiranBulanan'])->name('guru.kehadiran.bulanan.export');
+    Route::get('/guru/kehadiran-bulanan/export-periode-excel', [RiwayatPresensiController::class, 'guruExportKehadiranPeriodeExcel'])->name('guru.kehadiran.bulanan.export-period-excel');
+    Route::get('/guru/kehadiran-bulanan/export-periode-pdf', [RiwayatPresensiController::class, 'guruExportKehadiranPeriodePdf'])->name('guru.kehadiran.bulanan.export-period-pdf');
     Route::get('/guru/berita', [BeritaController::class, 'index'])->name('guru.berita.index');
     Route::get('/guru/berita/{berita}', [BeritaController::class, 'show'])->name('guru.berita.show');
     Route::get('/guru/daftar-guru', function () {

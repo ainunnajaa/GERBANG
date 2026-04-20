@@ -67,9 +67,25 @@ class PresensiController extends Controller
 
 		$data = $request->validate([
 			'keterangan' => ['required', 'string', 'max:1000'],
+			'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
 		]);
 
+		$existingIzin = PresensiIzin::where('user_id', $user->id)
+			->whereDate('tanggal', $today)
+			->first();
 
+		$lampiranPath = $existingIzin?->lampiran_path;
+		$lampiranNama = $existingIzin?->lampiran_nama;
+
+		if ($request->hasFile('lampiran')) {
+			if (!empty($lampiranPath)) {
+				Storage::disk('public')->delete($lampiranPath);
+			}
+
+			$uploadedFile = $request->file('lampiran');
+			$lampiranPath = $uploadedFile->store('izin-lampiran', 'public');
+			$lampiranNama = $uploadedFile->getClientOriginalName();
+		}
 
 		// Simpan/Update data izin
 		PresensiIzin::updateOrCreate(
@@ -79,6 +95,8 @@ class PresensiController extends Controller
 			],
 			[
 				'keterangan' => $data['keterangan'],
+				'lampiran_path' => $lampiranPath,
+				'lampiran_nama' => $lampiranNama,
 			]
 		);
 

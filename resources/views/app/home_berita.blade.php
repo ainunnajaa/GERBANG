@@ -3,6 +3,14 @@
 @section('title', 'Berita Sekolah - ' . ($schoolProfile->school_name ?? 'Sekolah'))
 
 @section('content')
+    <style>
+        .berita-preview-content { color: #374151 !important; }
+        .dark .berita-preview-content { color: #e5e7eb !important; }
+        .berita-preview-content * { color: inherit !important; }
+        .berita-preview-content a { color: #3b82f6 !important; text-decoration: underline !important; }
+        .dark .berita-preview-content a { color: #93c5fd !important; }
+    </style>
+
     @if($headline)
         @php
             $headlineDesktopPreview = $headline->isi;
@@ -29,7 +37,7 @@
                     <h2 class="text-[19px] md:text-2xl xl:text-3xl font-bold leading-snug text-gray-900 dark:text-gray-100">
                         {{ $headline->judul }}
                     </h2>
-                    <div class="hidden xl:block prose prose-sm max-w-none text-gray-700 dark:text-gray-200 dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:my-0 prose-ul:my-0 prose-ol:my-0 [&>*:last-child]:mb-0">
+                    <div class="berita-preview-content hidden xl:block prose prose-sm max-w-none text-gray-700 dark:text-gray-200 dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:my-0 prose-ul:my-0 prose-ol:my-0 [&>*:last-child]:mb-0">
                         {!! $headlineDesktopPreview !!}
                     </div>
                     <span class="hidden xl:inline-flex w-fit items-center gap-2 rounded-md bg-sky-700 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white dark:bg-sky-600">

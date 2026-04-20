@@ -98,7 +98,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-xs text-gray-400">👤</span>
                             </div>
-                            <input id="name" class="block w-full pl-9 pr-3 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-[#1E90FF] focus:ring-0 transition-colors font-medium text-sm" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Nama Anda" />
+                            <input id="name" class="block w-full pl-9 pr-3 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:border-[#1E90FF] focus:ring-0 transition-colors font-medium text-sm" type="text" name="name" :value="old('name')" required autocomplete="name" placeholder="Nama Anda" />
                         </div>
                         <x-input-error :messages="$errors->get('name')" class="mt-1 text-[11px]" />
                     </div>

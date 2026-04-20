@@ -41,12 +41,9 @@
 						<input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
 						<div>
 							<label class="block text-sm font-medium mb-1">Tanggal</label>
-							<input type="date" name="tanggal" value="{{ $selectedDate }}" min="{{ $dateMin }}" max="{{ $dateMax }}" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<input type="date" name="tanggal" value="{{ $selectedDate }}" min="{{ $dateMin }}" max="{{ $dateMax }}" onchange="this.form.submit()" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 						</div>
 						<div class="flex items-center gap-2">
-							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
-								Terapkan
-							</button>
 							<a href="{{ route('admin.presensi.all') }}" class="text-xs text-gray-600 dark:text-gray-300 underline">Reset</a>
 						</div>
 					</form>
@@ -79,6 +76,7 @@
 									<th class="px-4 py-2 text-left">Status</th>
 									<th class="px-4 py-2 text-left">Jam Izin</th>
 									<th class="px-4 py-2 text-left">Keterangan</th>
+									<th class="px-4 py-2 text-left">File</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -103,10 +101,19 @@
 											@endif
 										</td>
 										<td class="px-4 py-2">{{ $izin->keterangan ?? '-' }}</td>
+										<td class="px-4 py-2">
+											@if($izin && $izin->lampiran_path)
+												<a href="{{ asset('storage/' . $izin->lampiran_path) }}" download="{{ $izin->lampiran_nama ?? basename($izin->lampiran_path) }}" class="text-blue-600 hover:underline dark:text-blue-400">
+													Unduh File
+												</a>
+											@else
+												-
+											@endif
+										</td>
 									</tr>
 								@empty
 									<tr>
-										<td colspan="8" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+										<td colspan="9" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
 											Belum ada data presensi untuk filter ini.
 										</td>
 									</tr>

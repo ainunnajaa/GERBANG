@@ -27,12 +27,12 @@
                             <p class="text-sm text-gray-600 dark:text-gray-300">{{ $selectedPeriod->start_date->format('d M Y') }} - {{ $selectedPeriod->end_date->format('d M Y') }}</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('admin.riwayat') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-semibold text-gray-700 rounded hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                                Pilih Periode Lain
+                            <a href="{{ route('admin.riwayat') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                                &larr; Pilih Periode Lain
                             </a>
                             <a
                                 href="{{ route('admin.presensi.all', ['period_id' => $selectedPeriod->id]) }}"
-                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700"
+                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700"
                             >
                                 Lihat Riwayat Semua Guru
                             </a>
@@ -70,10 +70,10 @@
                                         </p>
                                     </div>
                                     <div class="px-5 pb-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800">
-                                        <a href="{{ route('admin.presensi.guru', ['guru' => $guru->id, 'period_id' => $selectedPeriod->id]) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded">
+                                        <a href="{{ route('admin.presensi.guru', ['guru' => $guru->id, 'period_id' => $selectedPeriod->id]) }}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded">
                                             Lihat Riwayat
                                         </a>
-                                        <a href="{{ route('admin.presensi.guru.download', ['guru' => $guru->id, 'period_id' => $selectedPeriod->id]) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded">
+                                        <a href="{{ route('admin.presensi.guru.download', ['guru' => $guru->id, 'period_id' => $selectedPeriod->id, 'download_all' => 1]) }}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded">
                                             Unduh Riwayat
                                         </a>
                                     </div>

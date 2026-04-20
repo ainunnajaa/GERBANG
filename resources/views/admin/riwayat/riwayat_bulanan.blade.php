@@ -6,6 +6,7 @@
 	</x-slot>
 
 	@php
+		$isAllMonths = $isAllMonths ?? false;
 		$bulanNames = [
 			1 => 'Januari',
 			2 => 'Februari',
@@ -21,7 +22,7 @@
 			12 => 'Desember',
 		];
 		$monthNumber = is_numeric($month ?? null) ? (int) $month : now()->month;
-		$monthLabel = $bulanNames[$monthNumber] ?? $monthNumber;
+		$monthLabel = $isAllMonths ? 'Semua Bulan Dalam Periode' : ($bulanNames[$monthNumber] ?? $monthNumber);
 		$bulkStatusOptions = ['H' => 'Hadir', 'T' => 'Terlambat', 'I' => 'Izin', 'A' => 'Alpha', '-' => 'Kosong'];
 		$showBulkEditor = $errors->has('user_ids') || $errors->has('tanggal_mulai') || $errors->has('tanggal_selesai') || old('status') !== null || old('apply_scope') !== null;
 	@endphp
@@ -65,16 +66,28 @@
 						<input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
 						<div>
 							<label class="block text-sm font-medium mb-1">Bulan Periode</label>
-							<select name="month_key" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<select name="month_key" onchange="this.form.submit()" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 								@foreach($monthOptions as $monthKey => $monthLabelOption)
 									<option value="{{ $monthKey }}" @selected($monthKey === $selectedMonthKey)>{{ $monthLabelOption }}</option>
 								@endforeach
+								<option value="all" @selected($isAllMonths)>Semua</option>
 							</select>
 						</div>
 						<div class="flex items-center gap-2">
-							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
-								Tampilkan
-							</button>
+							@unless($isAllMonths)
+								<a
+									href="{{ route('admin.presensi.all.export', ['period_id' => $selectedPeriod->id, 'tanggal_mulai' => $monthStartDate->toDateString(), 'tanggal_selesai' => $monthEndDate->toDateString()]) }}"
+									class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700"
+								>
+									Unduh Excel
+								</a>
+								<a
+									href="{{ route('admin.presensi.all.export', ['period_id' => $selectedPeriod->id, 'tanggal_mulai' => $monthStartDate->toDateString(), 'tanggal_selesai' => $monthEndDate->toDateString(), 'format' => 'pdf']) }}"
+									class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700"
+								>
+									Unduh PDF
+								</a>
+							@endunless
 						</div>
 					</form>
 
@@ -82,14 +95,69 @@
 						<span>
 							Periode: <strong>{{ $selectedPeriod?->name ?? 'Belum dipilih' }}</strong>
 							@if($selectedPeriod)
-								, Bulan ditampilkan: <strong>{{ $monthLabel }} {{ $year }}</strong>
+								, Bulan ditampilkan: <strong>{{ $isAllMonths ? $monthLabel : $monthLabel . ' ' . $year }}</strong>
 							@endif
 						</span>
 						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, A = Alpha, - = Belum ada data</span>
 					</div>
 
+					@if($isAllMonths)
+						<div class="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+							<a
+								href="{{ route('admin.presensi.all.export-period-excel', ['period_id' => $selectedPeriod->id]) }}"
+								class="inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded hover:bg-emerald-700"
+							>
+								Unduh Excel Satu Periode
+							</a>
+							<a
+								href="{{ route('admin.presensi.all.export-period-pdf', ['period_id' => $selectedPeriod->id]) }}"
+								class="inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded hover:bg-purple-700"
+							>
+								Unduh PDF Satu Periode
+							</a>
+						</div>
+					@endif
+
 					<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 text-sm">
-						<div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+						<div class="flex items-center justify-between gap-3">
+							<div>
+								<p class="font-semibold text-gray-900 dark:text-gray-100">Edit Status Kehadiran</p>
+								<p class="text-xs text-gray-500 dark:text-gray-400">Klik status pada tabel untuk mengubahnya. Perubahan akan berlaku di seluruh riwayat admin dan guru.</p>
+							</div>
+							<button
+								type="button"
+								id="close-status-editor"
+								onclick="closeStatusEditor()"
+								class="hidden inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-800"
+							>
+								Tutup
+							</button>
+						</div>
+
+						<form id="status-editor-form" method="POST" action="{{ route('admin.presensi.status.update') }}" class="hidden mt-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+							@csrf
+							<input type="hidden" name="user_id" id="status-editor-user-id">
+							<input type="hidden" name="tanggal" id="status-editor-date">
+							<div class="md:col-span-2">
+								<label class="block text-xs font-medium mb-1">Guru dan Tanggal</label>
+								<input type="text" id="status-editor-label" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900" readonly>
+							</div>
+							<div>
+								<label class="block text-xs font-medium mb-1">Status</label>
+								<select name="status" id="status-editor-status" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+									@foreach(['H', 'T', 'I', 'A', '-'] as $statusOption)
+										<option value="{{ $statusOption }}">{{ $statusOption }}</option>
+									@endforeach
+								</select>
+							</div>
+							<div>
+								<button type="submit" class="inline-flex w-full items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
+									Simpan Status
+								</button>
+							</div>
+						</form>
+
+						<div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
 							<div class="flex items-center justify-between gap-3">
 								<div>
 									<p class="font-semibold text-gray-900 dark:text-gray-100">Bulk Edit Status Kehadiran</p>
@@ -166,116 +234,122 @@
 								</div>
 							</form>
 						</div>
-
-						<div class="flex items-center justify-between gap-3">
-							<div>
-								<p class="font-semibold text-gray-900 dark:text-gray-100">Edit Status Kehadiran</p>
-								<p class="text-xs text-gray-500 dark:text-gray-400">Klik status pada tabel untuk mengubahnya. Perubahan akan berlaku di seluruh riwayat admin dan guru.</p>
-							</div>
-							<button
-								type="button"
-								id="close-status-editor"
-								onclick="closeStatusEditor()"
-								class="hidden inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-800"
-							>
-								Tutup
-							</button>
-						</div>
-
-						<form id="status-editor-form" method="POST" action="{{ route('admin.presensi.status.update') }}" class="hidden mt-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-							@csrf
-							<input type="hidden" name="user_id" id="status-editor-user-id">
-							<input type="hidden" name="tanggal" id="status-editor-date">
-							<div class="md:col-span-2">
-								<label class="block text-xs font-medium mb-1">Guru dan Tanggal</label>
-								<input type="text" id="status-editor-label" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900" readonly>
-							</div>
-							<div>
-								<label class="block text-xs font-medium mb-1">Status</label>
-								<select name="status" id="status-editor-status" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
-									@foreach(['H', 'T', 'I', 'A', '-'] as $statusOption)
-										<option value="{{ $statusOption }}">{{ $statusOption }}</option>
-									@endforeach
-								</select>
-							</div>
-							<div>
-								<button type="submit" class="inline-flex w-full items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
-									Simpan Status
-								</button>
-							</div>
-						</form>
 					</div>
 
-					<div class="flex items-center justify-between mt-2 text-xs">
-						<span></span>
-						@php
-							// Tanggal awal & akhir bulan untuk keperluan export CSV
-							$firstDay = \Carbon\Carbon::create($year, $month, 1)->max($selectedPeriod?->start_date ?? \Carbon\Carbon::create($year, $month, 1))->toDateString();
-							$lastDay = \Carbon\Carbon::create($year, $month, 1)->endOfMonth()->min($selectedPeriod?->end_date ?? \Carbon\Carbon::create($year, $month, 1)->endOfMonth())->toDateString();
-						@endphp
-						@if($selectedPeriod)
-							<a
-								href="{{ route('admin.presensi.all.export', ['period_id' => $selectedPeriod->id, 'tanggal_mulai' => $firstDay, 'tanggal_selesai' => $lastDay]) }}"
-								class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700"
-							>
-								Export Excel Semua Guru Bulan Ini
-							</a>
-						@endif
-					</div>
-
-					<div class="overflow-x-auto mt-4">
-						<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
-							<thead>
-								<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-									<th class="px-2 py-2 text-left whitespace-nowrap">Nama Guru</th>
-									<th class="px-2 py-2 text-left whitespace-nowrap">Kelas</th>
-									@foreach($days as $day)
-										@php
-											$isSunday = \Carbon\Carbon::create($year, $month, $day)->isSunday();
-										@endphp
-										<th class="px-1 py-1 text-center min-w-[28px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $day }}</th>
-									@endforeach
-								</tr>
-							</thead>
-							<tbody>
-								@forelse($gurus as $guru)
-									<tr class="border-b border-gray-100 dark:border-gray-700">
-										<td class="px-2 py-1 whitespace-nowrap">{{ $guru->name }}</td>
-										<td class="px-2 py-1 whitespace-nowrap">{{ $guru->kelas ?? '-' }}</td>
+					@if($isAllMonths)
+						@foreach(collect($dateColumns)->groupBy(fn ($date) => $date->format('Y-m')) as $monthKey => $monthDates)
+							<div class="mt-4">
+								<h4 class="mb-3 text-center text-base md:text-lg font-semibold text-gray-800 dark:text-gray-100">{{ $monthOptions[$monthKey] ?? $monthKey }}</h4>
+								<div class="overflow-x-auto">
+									<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
+										<thead>
+											<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+												<th class="px-2 py-2 text-left whitespace-nowrap">Nama Guru</th>
+												<th class="px-2 py-2 text-left whitespace-nowrap">Kelas</th>
+												@foreach($monthDates as $date)
+													@php
+														$isSunday = $date->isSunday();
+													@endphp
+													<th class="px-1 py-1 text-center min-w-[36px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $date->format('d') }}</th>
+												@endforeach
+											</tr>
+										</thead>
+										<tbody>
+											@forelse($gurus as $guru)
+												<tr class="border-b border-gray-100 dark:border-gray-700">
+													<td class="px-2 py-1 whitespace-nowrap">{{ $guru->name }}</td>
+													<td class="px-2 py-1 whitespace-nowrap">{{ $guru->kelas ?? '-' }}</td>
+													@foreach($monthDates as $date)
+														@php
+															$dateValue = $date->toDateString();
+															$status = $matrix[$guru->id][$dateValue] ?? '-';
+															$statusClasses = match ($status) {
+																'H' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+																'T' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+																'I' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+																'A' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+																default => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+															};
+														@endphp
+														<td class="px-1 py-1 text-center align-middle">
+															<button
+																type="button"
+																onclick="openStatusEditor('{{ $guru->id }}', @js($guru->name), '{{ $dateValue }}', '{{ $status }}')"
+																class="inline-flex min-w-[32px] items-center justify-center rounded px-2 py-1 text-xs font-semibold {{ $statusClasses }}"
+																title="Edit status {{ $guru->name }} tanggal {{ $dateValue }}"
+															>
+																{{ $status }}
+															</button>
+														</td>
+													@endforeach
+												</tr>
+											@empty
+												<tr>
+													<td colspan="{{ 2 + count($monthDates) }}" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+														Belum ada data guru untuk ditampilkan.
+													</td>
+												</tr>
+											@endforelse
+										</tbody>
+									</table>
+								</div>
+							</div>
+						@endforeach
+					@else
+						<div class="overflow-x-auto mt-4">
+							<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
+								<thead>
+									<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+										<th class="px-2 py-2 text-left whitespace-nowrap">Nama Guru</th>
+										<th class="px-2 py-2 text-left whitespace-nowrap">Kelas</th>
 										@foreach($days as $day)
 											@php
-												$status = $matrix[$guru->id][$day] ?? '-';
-												$dateValue = \Carbon\Carbon::create($year, $month, $day)->toDateString();
-												$statusClasses = match ($status) {
-													'H' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-													'T' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-													'I' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-													'A' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-													default => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-												};
+												$isSunday = \Carbon\Carbon::create($year, $month, $day)->isSunday();
 											@endphp
-											<td class="px-1 py-1 text-center align-middle">
-												<button
-													type="button"
-													onclick="openStatusEditor('{{ $guru->id }}', @js($guru->name), '{{ $dateValue }}', '{{ $status }}')"
-													class="inline-flex min-w-[32px] items-center justify-center rounded px-2 py-1 text-xs font-semibold {{ $statusClasses }}"
-													title="Edit status {{ $guru->name }} tanggal {{ $dateValue }}"
-												>
-													{{ $status }}
-												</button>
-											</td>
+											<th class="px-1 py-1 text-center min-w-[28px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $day }}</th>
 										@endforeach
 									</tr>
-								@empty
-									<tr>
-										<td colspan="{{ 2 + count($days) }}" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
-											Belum ada data guru untuk ditampilkan.
-										</td>
-									</tr>
-								@endforelse
-							</tbody>
-						</table>
-					</div>
+								</thead>
+								<tbody>
+									@forelse($gurus as $guru)
+										<tr class="border-b border-gray-100 dark:border-gray-700">
+											<td class="px-2 py-1 whitespace-nowrap">{{ $guru->name }}</td>
+											<td class="px-2 py-1 whitespace-nowrap">{{ $guru->kelas ?? '-' }}</td>
+											@foreach($days as $day)
+												@php
+													$dateValue = \Carbon\Carbon::create($year, $month, $day)->toDateString();
+													$status = $matrix[$guru->id][$dateValue] ?? '-';
+													$statusClasses = match ($status) {
+														'H' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+														'T' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+														'I' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+														'A' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+														default => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+													};
+												@endphp
+												<td class="px-1 py-1 text-center align-middle">
+													<button
+														type="button"
+														onclick="openStatusEditor('{{ $guru->id }}', @js($guru->name), '{{ $dateValue }}', '{{ $status }}')"
+														class="inline-flex min-w-[32px] items-center justify-center rounded px-2 py-1 text-xs font-semibold {{ $statusClasses }}"
+														title="Edit status {{ $guru->name }} tanggal {{ $dateValue }}"
+													>
+														{{ $status }}
+													</button>
+												</td>
+											@endforeach
+										</tr>
+									@empty
+										<tr>
+											<td colspan="{{ 2 + count($days) }}" class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+												Belum ada data guru untuk ditampilkan.
+											</td>
+										</tr>
+									@endforelse
+								</tbody>
+							</table>
+						</div>
+					@endif
 				</div>
 			</div>
 		</div>

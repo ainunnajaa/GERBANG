@@ -223,7 +223,26 @@
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Sesuaikan jadwal absensi, area cakupan GPS (Geofencing), dan parameter QR Code untuk guru.</p>
                             </div>
 
-                            <form method="POST" action="{{ route('admin.presensi.settings.update') }}" class="space-y-6 p-4 md:p-6">
+                            <div class="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400 mx-4 md:mx-6 mt-2 mb-0">
+                                <p class="mb-2 font-semibold text-gray-700 dark:text-gray-200">Jam presensi saat ini:</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>
+                                        Masuk: {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}
+                                        @if($settings->jam_masuk_toleransi)
+                                            (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})
+                                        @endif
+                                    </li>
+                                    <li>Pulang: {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</li>
+                                    @if($hasFriday && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat)
+                                        <li>Pulang Jumat: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_jumat)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_jumat)->format('H:i') }}</li>
+                                    @endif
+                                    @if($hasSaturday && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu)
+                                        <li>Pulang Sabtu: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu)->format('H:i') }}</li>
+                                    @endif
+                                </ul>
+                            </div>
+
+                            <form method="POST" action="{{ route('admin.presensi.settings.update') }}" class="space-y-6 px-4 pb-4 pt-2 md:px-6 md:pb-6 md:pt-2">
                             @csrf
                             <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/30">
                                 <div class="flex items-center gap-3 border-b border-gray-100 bg-gray-50/60 px-4 py-4 dark:border-gray-700/70 dark:bg-gray-800/60">
@@ -443,24 +462,6 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
-                                <p class="mb-2 font-semibold text-gray-700 dark:text-gray-200">Jam presensi saat ini:</p>
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>
-                                        Masuk: {{ \Carbon\Carbon::parse($settings->jam_masuk_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end)->format('H:i') }}
-                                        @if($settings->jam_masuk_toleransi)
-                                            (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi)->format('H:i') }})
-                                        @endif
-                                    </li>
-                                    <li>Pulang: {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</li>
-                                    @if($hasFriday && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat)
-                                        <li>Pulang Jumat: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_jumat)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_jumat)->format('H:i') }}</li>
-                                    @endif
-                                    @if($hasSaturday && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu)
-                                        <li>Pulang Sabtu: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu)->format('H:i') }}</li>
-                                    @endif
-                                </ul>
-                            </div>
                         </form>
                         </div>
                     </div>

@@ -166,6 +166,9 @@
                         border-bottom: 1px solid #f1f5f9;
                     }
                     .dark #adminCalendar .fc-col-header-cell { border-bottom-color: #334155; }
+                    .dark #adminCalendar .fc-col-header-cell {
+                        background-color: rgba(15, 23, 42, 0.55);
+                    }
 
                     #adminCalendar .fc-col-header-cell-cushion {
                         font-size: 0.75rem;
@@ -191,6 +194,17 @@
                     .dark #adminCalendar .fc-daygrid-day-number { color: #cbd5e1; }
                     #adminCalendar .fc-day-other .fc-daygrid-day-number { opacity: 0.3; }
 
+                    .dark #adminCalendar .fc-daygrid-day-frame {
+                        background-color: rgba(15, 23, 42, 0.4);
+                    }
+                    .dark #adminCalendar .fc-day-other .fc-daygrid-day-frame {
+                        background-color: rgba(15, 23, 42, 0.22);
+                    }
+                    .dark #adminCalendar .fc-day-other .fc-daygrid-day-number {
+                        color: #64748b;
+                        opacity: 1;
+                    }
+
                     #adminCalendar .fc-day-today {
                         background: linear-gradient(135deg, rgba(125, 211, 252, 0.72) 0%, rgba(186, 230, 253, 0.72) 100%) !important;
                     }
@@ -212,6 +226,9 @@
                         font-weight: 500 !important;
                         border: none !important;
                         margin: 1px 2px !important;
+                    }
+                    .dark #adminCalendar .fc-event {
+                        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
                     }
                     #adminCalendar .fc-daygrid-day-events { margin: 0 !important; }
 
