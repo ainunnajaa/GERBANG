@@ -15,6 +15,7 @@ class SchoolContent extends Model
         'url',
         'title',
         'description',
+        'privacy_status',
         'order',
     ];
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Berita Sekolah</title>
+    @include('partials.favicon')
     <script>
         (function() {
             try {
@@ -30,8 +31,17 @@
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        html.dark body[data-bg-overlay="1"] {
+            background-image: linear-gradient(rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0.78)), var(--bg-image) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+        }
+    </style>
 </head>
-<body id="top" class="min-h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<body id="top" class="min-h-full text-gray-900 dark:text-gray-100 @if (empty($schoolProfile?->background_overlay_path)) bg-gradient-to-b from-sky-50 to-white dark:from-gray-900 dark:to-gray-950 @endif" @if (!empty($schoolProfile?->background_overlay_path)) data-bg-overlay="1" style="--bg-image: url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), var(--bg-image); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
 	<main class="flex-1">
@@ -97,6 +107,10 @@
                                 </a>
                             @endforeach
                         </div>
+
+                        <div class="mt-8">
+                            {{ $beritas->links() }}
+                        </div>
                     @endif
                 </div>
 
@@ -132,52 +146,18 @@
 
     <script>
         (function(){
-            const themeButton = document.getElementById('welcome_theme_button');
-            const sunIcon = document.getElementById('welcome_theme_icon_sun');
-            const moonIcon = document.getElementById('welcome_theme_icon_moon');
-            function getInitialTheme() {
-                return localStorage.getItem('theme') || 'system';
-            }
-            function isDarkFromMode(mode) {
-                if (mode === 'light') return false;
-                if (mode === 'dark') return true;
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            function updateThemeIcons(isDark) {
-                if (sunIcon) {
-                    sunIcon.classList.toggle('hidden', isDark);
-                }
-                if (moonIcon) {
-                    moonIcon.classList.toggle('hidden', !isDark);
-                }
-            }
-            function applyTheme(mode, persist = true) {
-                if (persist) {
-                    if (mode === 'system') {
-                        localStorage.removeItem('theme');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
                     } else {
-                        localStorage.setItem('theme', mode);
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
                     }
-                }
-                const dark = isDarkFromMode(mode);
-                document.documentElement.classList.toggle('dark', dark);
-                updateThemeIcons(dark);
-            }
-            if (themeButton) {
-                applyTheme(getInitialTheme(), false);
-                themeButton.addEventListener('click', function(){
-                    const currentlyDark = document.documentElement.classList.contains('dark');
-                    applyTheme(currentlyDark ? 'light' : 'dark', true);
                 });
-                const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                if (media && media.addEventListener) {
-                    media.addEventListener('change', function(){
-                        const saved = getInitialTheme();
-                        if (saved === 'system') {
-                            applyTheme('system', false);
-                        }
-                    });
-                }
             }
 
             const profilButton = document.getElementById('profil_menu_button');

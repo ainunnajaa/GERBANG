@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Presensi;
 
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
 use App\Models\PresensiPeriod;
 use App\Models\PresensiStatusOverride;
+use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

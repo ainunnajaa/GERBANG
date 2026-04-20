@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visi dan Misi</title>
+    @include('partials.favicon')
 
     <script>
         (function() {
@@ -32,6 +33,14 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .rtf-content :where(ol) { list-style: decimal !important; margin-left: 1.25rem !important; padding-left: 1rem !important; }
+        .rtf-content :where(ul) { list-style: disc !important; margin-left: 1.25rem !important; padding-left: 1rem !important; }
+        .rtf-content :where(li) { margin: 0.2rem 0 !important; }
+        .rtf-content :where(p, span, li, h1, h2, h3, h4, h5, h6, div, blockquote) { color: inherit !important; }
+        html.dark .rtf-content [style*="color:"] { color: #e5e7eb !important; }
+    </style>
 </head>
 <body id="top" class="min-h-full text-gray-900 dark:text-gray-100" @if (!empty($schoolProfile?->background_overlay_path)) style="background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-size: cover; background-position: center; background-attachment: fixed;" @else style="background: linear-gradient(to bottom, rgba(240, 249, 255, 1), rgba(255, 255, 255, 1)); color-scheme: light;" data-theme="light" @endif>
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
@@ -39,27 +48,47 @@
     <main class="flex-1">
         <div class="max-w-6xl mx-auto px-4 md:px-8 lg:px-16 py-6">
             <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Visi dan Misi Sekolah</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 pb-4 border-b-4 border-yellow-400 inline-block">Profil Sekolah, Visi dan Misi</h1>
 
-                @if (empty($schoolProfile?->vision) && empty($schoolProfile?->mission))
-                    <p class="mt-4 text-sm text-gray-600 dark:text-gray-300">Visi dan misi sekolah belum tersedia.</p>
-                @else
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        @if (!empty($schoolProfile?->vision))
-                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-yellow-500 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
-                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Visi</h3>
-                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $schoolProfile->vision }}</p>
-                            </div>
-                        @endif
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 items-start">
+                    <section class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-[#1f6fe5] px-5 py-4">
+                            <h2 class="text-2xl font-semibold text-white">Tujuan</h2>
+                        </div>
+                        <div class="p-6 text-gray-800 dark:text-gray-200">
+                            @if (!empty($schoolProfile?->school_profile))
+                                <div class="rtf-content prose dark:prose-invert max-w-none text-[19px] leading-relaxed">{!! $schoolProfile->school_profile !!}</div>
+                            @else
+                                <p class="text-base">Profil sekolah belum tersedia.</p>
+                            @endif
+                        </div>
+                    </section>
 
-                        @if (!empty($schoolProfile?->mission))
-                            <div class="bg-white dark:bg-gray-800 rounded-md border-l-4 border-l-blue-400 border border-gray-300 dark:border-gray-600 p-4 shadow-md">
-                                <h3 class="font-semibold text-[#0C2C55] dark:text-gray-100 mb-2">Misi</h3>
-                                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $schoolProfile->mission }}</p>
+                    <section class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-[#1f8f58] px-5 py-4">
+                            <h2 class="text-2xl font-semibold text-white">Visi dan Misi</h2>
+                        </div>
+                        <div class="p-6 text-gray-800 dark:text-gray-200 space-y-6">
+                            <div>
+                                <h3 class="text-[44px] leading-none font-semibold mb-2">Visi:</h3>
+                                @if (!empty($schoolProfile?->vision))
+                                    <div class="rtf-content prose dark:prose-invert max-w-none text-[19px] leading-relaxed">{!! $schoolProfile->vision !!}</div>
+                                @else
+                                    <p class="text-base">Visi sekolah belum tersedia.</p>
+                                @endif
                             </div>
-                        @endif
-                    </div>
-                @endif
+
+                            <div>
+                                <h3 class="text-[44px] leading-none font-semibold mb-2">Misi:</h3>
+                                @if (!empty($schoolProfile?->mission))
+                                    <div class="rtf-content prose dark:prose-invert max-w-none text-[19px] leading-relaxed">{!! $schoolProfile->mission !!}</div>
+                                @else
+                                    <p class="text-base">Misi sekolah belum tersedia.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
     </main>
@@ -68,52 +97,18 @@
 
     <script>
         (function(){
-            const themeButton = document.getElementById('welcome_theme_button');
-            const sunIcon = document.getElementById('welcome_theme_icon_sun');
-            const moonIcon = document.getElementById('welcome_theme_icon_moon');
-            function getInitialTheme() {
-                return localStorage.getItem('theme') || 'system';
-            }
-            function isDarkFromMode(mode) {
-                if (mode === 'light') return false;
-                if (mode === 'dark') return true;
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            function updateThemeIcons(isDark) {
-                if (sunIcon) {
-                    sunIcon.classList.toggle('hidden', isDark);
-                }
-                if (moonIcon) {
-                    moonIcon.classList.toggle('hidden', !isDark);
-                }
-            }
-            function applyTheme(mode, persist = true) {
-                if (persist) {
-                    if (mode === 'system') {
-                        localStorage.removeItem('theme');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
                     } else {
-                        localStorage.setItem('theme', mode);
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
                     }
-                }
-                const dark = isDarkFromMode(mode);
-                document.documentElement.classList.toggle('dark', dark);
-                updateThemeIcons(dark);
-            }
-            if (themeButton) {
-                applyTheme(getInitialTheme(), false);
-                themeButton.addEventListener('click', function(){
-                    const currentlyDark = document.documentElement.classList.contains('dark');
-                    applyTheme(currentlyDark ? 'light' : 'dark', true);
                 });
-                const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                if (media && media.addEventListener) {
-                    media.addEventListener('change', function(){
-                        const saved = getInitialTheme();
-                        if (saved === 'system') {
-                            applyTheme('system', false);
-                        }
-                    });
-                }
             }
 
             const profilButton = document.getElementById('profil_menu_button');

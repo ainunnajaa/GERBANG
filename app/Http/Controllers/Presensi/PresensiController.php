@@ -1,14 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Presensi;
 
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
 use App\Models\PresensiPeriod;
 use App\Models\PresensiSetting;
+use App\Models\SchoolProfile;
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -64,9 +67,25 @@ class PresensiController extends Controller
 
 		$data = $request->validate([
 			'keterangan' => ['required', 'string', 'max:1000'],
+			'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
 		]);
 
+		$existingIzin = PresensiIzin::where('user_id', $user->id)
+			->whereDate('tanggal', $today)
+			->first();
 
+		$lampiranPath = $existingIzin?->lampiran_path;
+		$lampiranNama = $existingIzin?->lampiran_nama;
+
+		if ($request->hasFile('lampiran')) {
+			if (!empty($lampiranPath)) {
+				Storage::disk('public')->delete($lampiranPath);
+			}
+
+			$uploadedFile = $request->file('lampiran');
+			$lampiranPath = $uploadedFile->store('izin-lampiran', 'public');
+			$lampiranNama = $uploadedFile->getClientOriginalName();
+		}
 
 		// Simpan/Update data izin
 		PresensiIzin::updateOrCreate(
@@ -76,6 +95,8 @@ class PresensiController extends Controller
 			],
 			[
 				'keterangan' => $data['keterangan'],
+				'lampiran_path' => $lampiranPath,
+				'lampiran_nama' => $lampiranNama,
 			]
 		);
 
@@ -110,6 +131,7 @@ class PresensiController extends Controller
 	{
 		$settings = $this->getOrCreateSettings();
 		$activePeriod = $this->getActivePeriod();
+		$schoolProfile = SchoolProfile::first();
 
 		$qrCodeText = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
 
@@ -124,6 +146,8 @@ class PresensiController extends Controller
 
 		return view('admin.presensi.kelola_presensi', [
 			'qrCodeText' => $qrCodeText,
+			'qrTemplateConfig' => $this->resolveQrTemplateConfig($settings),
+			'schoolLogoUrl' => !empty($schoolProfile?->school_logo_path) ? asset('storage/' . $schoolProfile->school_logo_path) : null,
 			'presensis' => $presensis,
 			'today' => $today,
 			'settings' => $settings,
@@ -131,6 +155,53 @@ class PresensiController extends Controller
 			'activePeriod' => $activePeriod,
 			'activePeriodDayLabels' => $activePeriod?->activeDayLabels() ?? [],
 		]);
+	}
+
+	public function editQrTemplate()
+	{
+		$settings = $this->getOrCreateSettings();
+		$schoolProfile = SchoolProfile::first();
+		$qrCodeText = $settings->qr_text ?: env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
+
+		return view('admin.presensi.crud_template_qr', [
+			'settings' => $settings,
+			'qrCodeText' => $qrCodeText,
+			'qrTemplateConfig' => $this->resolveQrTemplateConfig($settings),
+			'schoolLogoUrl' => !empty($schoolProfile?->school_logo_path) ? asset('storage/' . $schoolProfile->school_logo_path) : null,
+		]);
+	}
+
+	public function updateQrTemplate(Request $request)
+	{
+		$data = $request->validate([
+			'qr_template_image' => ['nullable', 'image', 'max:5120'],
+			'remove_qr_template' => ['nullable', 'boolean'],
+			'qr_template_x' => ['required', 'numeric', 'between:0,100'],
+			'qr_template_y' => ['required', 'numeric', 'between:0,100'],
+			'qr_template_size' => ['required', 'numeric', 'between:5,90'],
+		]);
+
+		$settings = $this->getOrCreateSettings();
+
+		if (!empty($data['remove_qr_template']) && $settings->qr_template_path) {
+			Storage::disk('public')->delete($settings->qr_template_path);
+			$settings->qr_template_path = null;
+		}
+
+		if ($request->hasFile('qr_template_image')) {
+			if ($settings->qr_template_path) {
+				Storage::disk('public')->delete($settings->qr_template_path);
+			}
+
+			$settings->qr_template_path = $request->file('qr_template_image')->store('presensi-qr-templates', 'public');
+		}
+
+		$settings->qr_template_x = round((float) $data['qr_template_x'], 2);
+		$settings->qr_template_y = round((float) $data['qr_template_y'], 2);
+		$settings->qr_template_size = round((float) $data['qr_template_size'], 2);
+		$settings->save();
+
+		return redirect()->route('admin.presensi.template.edit')->with('success', 'Template QR berhasil diperbarui.');
 	}
 
 	public function updateSettings(Request $request)
@@ -145,6 +216,10 @@ class PresensiController extends Controller
 			'jam_masuk_toleransi' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_start' => ['required', 'date_format:H:i'],
 			'jam_pulang_end' => ['required', 'date_format:H:i'],
+			'jam_pulang_start_jumat' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_end_jumat' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_start_sabtu' => ['nullable', 'date_format:H:i'],
+			'jam_pulang_end_sabtu' => ['nullable', 'date_format:H:i'],
 			'qr_text' => ['nullable', 'string', 'max:255'],
 			'latitude' => ['nullable', 'numeric', 'between:-90,90'],
 			'longitude' => ['nullable', 'numeric', 'between:-180,180'],
@@ -159,6 +234,10 @@ class PresensiController extends Controller
 			: null;
 		$settings->jam_pulang_start = $data['jam_pulang_start'] . ':00';
 		$settings->jam_pulang_end = $data['jam_pulang_end'] . ':00';
+		$settings->jam_pulang_start_jumat = !empty($data['jam_pulang_start_jumat']) ? $data['jam_pulang_start_jumat'] . ':00' : null;
+		$settings->jam_pulang_end_jumat = !empty($data['jam_pulang_end_jumat']) ? $data['jam_pulang_end_jumat'] . ':00' : null;
+		$settings->jam_pulang_start_sabtu = !empty($data['jam_pulang_start_sabtu']) ? $data['jam_pulang_start_sabtu'] . ':00' : null;
+		$settings->jam_pulang_end_sabtu = !empty($data['jam_pulang_end_sabtu']) ? $data['jam_pulang_end_sabtu'] . ':00' : null;
 		$settings->qr_text = $data['qr_text'] ?? env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
 		$settings->latitude = $data['latitude'] ?? null;
 		$settings->longitude = $data['longitude'] ?? null;
@@ -218,8 +297,20 @@ class PresensiController extends Controller
 
 		$masukStart = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_start, 0, 5));
 		$masukEnd = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_end, 0, 5));
-		$pulangStart = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_start, 0, 5));
-		$pulangEnd = Carbon::createFromFormat('H:i', substr($settings->jam_pulang_end, 0, 5));
+		$pulangStartRaw = $settings->jam_pulang_start;
+		$pulangEndRaw = $settings->jam_pulang_end;
+		$dayKey = strtolower($now->englishDayOfWeek);
+		if ($dayKey === 'friday' && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat) {
+			$pulangStartRaw = $settings->jam_pulang_start_jumat;
+			$pulangEndRaw = $settings->jam_pulang_end_jumat;
+		}
+		if ($dayKey === 'saturday' && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu) {
+			$pulangStartRaw = $settings->jam_pulang_start_sabtu;
+			$pulangEndRaw = $settings->jam_pulang_end_sabtu;
+		}
+
+		$pulangStart = Carbon::createFromFormat('H:i', substr($pulangStartRaw, 0, 5));
+		$pulangEnd = Carbon::createFromFormat('H:i', substr($pulangEndRaw, 0, 5));
 
 		$current = Carbon::createFromFormat('H:i', $currentTime);
 
@@ -324,11 +415,30 @@ class PresensiController extends Controller
 			'jam_masuk_end' => '08:00:00',
 			'jam_pulang_start' => '13:00:00',
 			'jam_pulang_end' => '14:30:00',
+			'jam_pulang_start_jumat' => null,
+			'jam_pulang_end_jumat' => null,
+			'jam_pulang_start_sabtu' => null,
+			'jam_pulang_end_sabtu' => null,
 			'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
 			'latitude' => null,
 			'longitude' => null,
 			'radius_meter' => null,
+			'qr_template_path' => null,
+			'qr_template_x' => 50,
+			'qr_template_y' => 50,
+			'qr_template_size' => 28,
 		]);
+	}
+
+	private function resolveQrTemplateConfig(PresensiSetting $settings): array
+	{
+		return [
+			'path' => $settings->qr_template_path,
+			'url' => $settings->qr_template_path ? asset('storage/' . $settings->qr_template_path) : null,
+			'x' => (float) ($settings->qr_template_x ?? 50),
+			'y' => (float) ($settings->qr_template_y ?? 50),
+			'size' => (float) ($settings->qr_template_size ?? 28),
+		];
 	}
 
 	private function getActivePeriod(): ?PresensiPeriod

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $berita->judul }} - Berita Sekolah</title>
+    @include('partials.favicon')
     <script>
         (function() {
             try {
@@ -30,8 +31,17 @@
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        html.dark body[data-bg-overlay="1"] {
+            background-image: linear-gradient(rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0.78)), var(--bg-image) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+        }
+    </style>
 </head>
-<body id="top" class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<body id="top" class="min-h-screen flex flex-col text-gray-900 dark:text-gray-100 @if (empty($schoolProfile?->background_overlay_path)) bg-gradient-to-b from-sky-50 to-white dark:from-gray-900 dark:to-gray-950 @endif" @if (!empty($schoolProfile?->background_overlay_path)) data-bg-overlay="1" style="--bg-image: url('{{ asset('storage/' . $schoolProfile->background_overlay_path) }}'); background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), var(--bg-image); background-size: cover; background-position: center; background-attachment: fixed;" @endif>
     @include('publik.tampilan.footer_navbar', ['slotPosition' => 'header'])
 
     <main class="flex-1">
@@ -61,6 +71,9 @@
                     @endif
 
                     <style>
+                        .isi-berita-content { color: #1f2937 !important; }
+                        .dark .isi-berita-content { color: #e5e7eb !important; }
+                        .isi-berita-content * { color: inherit !important; }
                         .isi-berita-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                         .isi-berita-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                         .isi-berita-content h1 { font-size: 2em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
@@ -68,6 +81,7 @@
                         .isi-berita-content h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                         .isi-berita-content p { margin-top: 0.25em; margin-bottom: 0.25em; }
                         .isi-berita-content a { color: #3b82f6 !important; text-decoration: underline !important; }
+                        .dark .isi-berita-content a { color: #93c5fd !important; }
                         /* Memastikan style alignment (rata kiri/tengah/kanan) terbaca */
                         .isi-berita-content [style*="text-align: center"] { text-align: center; }
                         .isi-berita-content [style*="text-align: right"] { text-align: right; }
@@ -78,6 +92,30 @@
                     <div class="isi-berita-content prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed break-words overflow-hidden">
                         {!! $berita->isi !!}
                     </div>
+
+                    @if(!empty($berita->youtube_url))
+                        @php
+                            $youtubeEmbedUrl = null;
+                            if (preg_match('~(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/))([A-Za-z0-9_-]{11})~', (string) $berita->youtube_url, $matches)) {
+                                $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                            }
+                        @endphp
+                        @if($youtubeEmbedUrl)
+                            <div class="mt-8">
+                                <h3 class="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-100">Video YouTube</h3>
+                                <div class="w-full rounded-lg overflow-hidden bg-black aspect-video">
+                                    <iframe
+                                        class="w-full h-full"
+                                        src="{{ $youtubeEmbedUrl }}"
+                                        title="Video YouTube {{ $berita->judul }}"
+                                        loading="lazy"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
 
                     @if(!empty($berita->instagram_url))
                         <div class="mt-8">
@@ -141,52 +179,18 @@
 
     <script>
         (function(){
-            const themeButton = document.getElementById('welcome_theme_button');
-            const sunIcon = document.getElementById('welcome_theme_icon_sun');
-            const moonIcon = document.getElementById('welcome_theme_icon_moon');
-            function getInitialTheme() {
-                return localStorage.getItem('theme') || 'system';
-            }
-            function isDarkFromMode(mode) {
-                if (mode === 'light') return false;
-                if (mode === 'dark') return true;
-                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            function updateThemeIcons(isDark) {
-                if (sunIcon) {
-                    sunIcon.classList.toggle('hidden', isDark);
-                }
-                if (moonIcon) {
-                    moonIcon.classList.toggle('hidden', !isDark);
-                }
-            }
-            function applyTheme(mode, persist = true) {
-                if (persist) {
-                    if (mode === 'system') {
-                        localStorage.removeItem('theme');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
                     } else {
-                        localStorage.setItem('theme', mode);
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
                     }
-                }
-                const dark = isDarkFromMode(mode);
-                document.documentElement.classList.toggle('dark', dark);
-                updateThemeIcons(dark);
-            }
-            if (themeButton) {
-                applyTheme(getInitialTheme(), false);
-                themeButton.addEventListener('click', function(){
-                    const currentlyDark = document.documentElement.classList.contains('dark');
-                    applyTheme(currentlyDark ? 'light' : 'dark', true);
                 });
-                const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                if (media && media.addEventListener) {
-                    media.addEventListener('change', function(){
-                        const saved = getInitialTheme();
-                        if (saved === 'system') {
-                            applyTheme('system', false);
-                        }
-                    });
-                }
             }
 
             const profilButton = document.getElementById('profil_menu_button');

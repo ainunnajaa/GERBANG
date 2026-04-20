@@ -32,6 +32,9 @@
                             @endif
 
                             <style>
+                                .isi-berita-content { color: #1f2937 !important; }
+                                .dark .isi-berita-content { color: #e5e7eb !important; }
+                                .isi-berita-content * { color: inherit !important; }
                                 .isi-berita-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content h1 { font-size: 2em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
@@ -39,6 +42,7 @@
                                 .isi-berita-content h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                 .isi-berita-content p { margin-top: 0.25em; margin-bottom: 0.25em; }
                                 .isi-berita-content a { color: #3b82f6 !important; text-decoration: underline !important; }
+                                .dark .isi-berita-content a { color: #93c5fd !important; }
                                 /* Memastikan perataan teks (kiri, tengah, kanan, justify) terbaca */
                                 .isi-berita-content [style*="text-align: center"] { text-align: center; }
                                 .isi-berita-content [style*="text-align: right"] { text-align: right; }
@@ -49,6 +53,30 @@
                             <div class="isi-berita-content prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed break-words overflow-hidden">
                                 {!! $berita->isi !!}
                             </div>
+
+                            @if(!empty($berita->youtube_url))
+                                @php
+                                    $youtubeEmbedUrl = null;
+                                    if (preg_match('~(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/))([A-Za-z0-9_-]{11})~', (string) $berita->youtube_url, $matches)) {
+                                        $youtubeEmbedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                                    }
+                                @endphp
+                                @if($youtubeEmbedUrl)
+                                    <div class="mt-8">
+                                        <h3 class="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-100">Video YouTube</h3>
+                                        <div class="w-full rounded-lg overflow-hidden bg-black aspect-video">
+                                            <iframe
+                                                class="w-full h-full"
+                                                src="{{ $youtubeEmbedUrl }}"
+                                                title="Video YouTube {{ $berita->judul }}"
+                                                loading="lazy"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
 
                             @if(!empty($berita->instagram_url))
                                 <div class="mt-8">

@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --web-scale: 1;
+}
+
+html {
+    font-size: calc(97% * var(--web-scale));
+}
+
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

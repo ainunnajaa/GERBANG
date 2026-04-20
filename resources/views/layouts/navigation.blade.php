@@ -6,6 +6,21 @@
         'wali_murid' => 'Wali Murid',
         default => 'User'
     };
+
+    $adminPresensiActive = request()->routeIs(
+        'admin.presensi',
+        'admin.presensi.settings.*',
+        'admin.presensi.periods*'
+    );
+
+    $adminRiwayatActive = request()->routeIs(
+        'admin.riwayat*',
+        'admin.presensi.all*',
+        'admin.presensi.bulanan*',
+        'admin.presensi.guru*',
+        'admin.presensi.delete',
+        'admin.presensi.status.*'
+    );
 @endphp
 
 <div class="h-full w-full flex flex-col bg-white dark:bg-gray-800 rounded-2xl">
@@ -31,23 +46,23 @@
                     <svg class="w-5 h-5 {{ request()->routeIs('admin.users*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('admin.users*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kelola Pengguna</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Pengguna</span>
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.presensi') }}" class="flex items-center rounded-md transition group {{ request()->routeIs('admin.presensi*') ? 'bg-[#0000F4]/10 dark:bg-[#0000F4]/20 border-l-4 border-yellow-500' : 'bg-gray-200/30 dark:bg-gray-700/30 hover:bg-gray-200/50 dark:hover:bg-gray-700/50' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kelola Presensi' : ''">
-                    <svg class="w-5 h-5 {{ request()->routeIs('admin.presensi*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('admin.presensi') }}" class="flex items-center rounded-md transition {{ $adminPresensiActive ? 'bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 text-green-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kelola Presensi' : ''">
+                    <svg class="w-5 h-5 text-green-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2.25-10.5H6.75A2.25 2.25 0 004.5 8.25v9A2.25 2.25 0 006.75 19.5h8.379c.597 0 1.17-.237 1.591-.659l2.121-2.121A2.25 2.25 0 0019.5 15.129V8.25a2.25 2.25 0 00-2.25-2.25z" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('admin.presensi*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kelola Presensi</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Presensi</span>
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.riwayat') }}" class="flex items-center rounded-md transition group {{ request()->routeIs('admin.riwayat*') ? 'bg-[#0000F4]/10 dark:bg-[#0000F4]/20 border-l-4 border-yellow-500' : 'bg-gray-200/30 dark:bg-gray-700/30 hover:bg-gray-200/50 dark:hover:bg-gray-700/50' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Riwayat Presensi' : ''">
-                    <svg class="w-5 h-5 {{ request()->routeIs('admin.riwayat*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <a href="{{ route('admin.riwayat') }}" class="flex items-center rounded-md transition {{ $adminRiwayatActive ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Riwayat Presensi' : ''">
+                    <svg class="w-5 h-5 text-cyan-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('admin.riwayat*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Riwayat Presensi</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Riwayat</span>
                 </a>
             </li>
             <li>
@@ -55,7 +70,7 @@
                     <svg class="w-5 h-5 {{ request()->routeIs('admin.web_profil*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 4.5h15m-15 4.5h7.5" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('admin.web_profil*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kelola Web Profil</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Web</span>
                 </a>
             </li>
             <li>
@@ -64,7 +79,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-6.5a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 7.75v8.5A2.25 2.25 0 006.75 18.5h6.5" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75L18.75 21 22 16.5" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('admin.berita*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kelola Berita</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Berita</span>
                 </a>
             </li>
         @elseif($role === 'guru')
@@ -85,11 +100,11 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('guru.kehadiran.periods') }}" class="flex items-center rounded-md transition {{ request()->routeIs('guru.kehadiran*') ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Kehadiran' : ''">
+                <a href="{{ route('guru.kehadiran.periods') }}" class="flex items-center rounded-md transition {{ request()->routeIs('guru.kehadiran*') ? 'bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 text-cyan-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Riwayat' : ''">
                     <svg class="w-5 h-5 text-cyan-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('guru.kehadiran*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Kehadiran</span>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Riwayat</span>
                 </a>
             </li>
             <li>
@@ -99,6 +114,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75L18.75 21 22 16.5" />
                     </svg>
                     <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap {{ request()->routeIs('guru.berita*') ? 'text-[#0000F4] dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400' }}">Berita</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('guru.video') }}" class="flex items-center rounded-md transition {{ request()->routeIs('guru.video*') ? 'bg-rose-50 dark:bg-rose-900/30 border-l-4 border-rose-500 text-rose-800 dark:text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-800 dark:hover:text-white' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Video' : ''">
+                    <svg class="w-5 h-5 text-rose-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-2.36a.75.75 0 011.08.67v6.38a.75.75 0 01-1.08.67l-4.72-2.36m-8.25 3h6A2.25 2.25 0 0015.75 14.25v-4.5A2.25 2.25 0 0013.5 7.5h-6A2.25 2.25 0 005.25 9.75v4.5A2.25 2.25 0 007.5 16.5z" />
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Video</span>
                 </a>
             </li>
         @elseif($role === 'wali_murid')

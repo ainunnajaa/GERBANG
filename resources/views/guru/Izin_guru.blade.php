@@ -36,7 +36,7 @@
 						</div>
 					@endif
 
-					<form method="POST" action="{{ route('guru.izin') }}" class="space-y-3">
+					<form method="POST" action="{{ route('guru.izin') }}" enctype="multipart/form-data" class="space-y-3">
 						@csrf
 						<div>
 							<label for="keterangan" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan Izin</label>
@@ -48,6 +48,21 @@
 								placeholder="Contoh: Izin karena sakit, melampirkan surat dokter, dsb."
 							>{{ old('keterangan') }}</textarea>
 							@error('keterangan')
+								<p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+							@enderror
+						</div>
+
+						<div>
+							<label for="lampiran" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Lampiran (Gambar/PDF)</label>
+							<input
+								id="lampiran"
+								name="lampiran"
+								type="file"
+								accept=".pdf,image/*"
+								class="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+							>
+							<p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Opsional. Format: JPG, PNG, WEBP, atau PDF. Maksimal 5MB.</p>
+							@error('lampiran')
 								<p class="text-xs text-red-500 mt-1">{{ $message }}</p>
 							@enderror
 						</div>

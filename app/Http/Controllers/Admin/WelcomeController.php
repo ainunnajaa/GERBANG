@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\SchoolBackground;
 use App\Models\SchoolContent;
 use App\Models\SchoolProgram;
@@ -21,7 +22,12 @@ class WelcomeController extends Controller
 			? SchoolProgram::where('school_profile_id', $profile->id)->orderBy('order')->get()
 			: collect();
 		$contents = $profile
-			? SchoolContent::where('school_profile_id', $profile->id)->orderBy('order')->get()
+			? SchoolContent::where('school_profile_id', $profile->id)
+				->where(function ($query) {
+					$query->whereNull('platform')->orWhere('platform', '!=', 'youtube');
+				})
+				->orderBy('order')
+				->get()
 			: collect();
 		$backgrounds = $profile
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderBy('order')->get()
@@ -79,6 +85,27 @@ class WelcomeController extends Controller
 
 		return back()->with('success', 'Terima kasih, pesan Anda telah dikirim.');
 	}
+
+	public function video()
+	{
+		$profile = SchoolProfile::first();
+
+		$videoQuery = SchoolContent::where('platform', 'youtube')->orderByDesc('created_at');
+
+		if ($profile) {
+			$videoQuery->where('school_profile_id', $profile->id);
+		} else {
+			$videoQuery->whereRaw('1 = 0');
+		}
+
+		$videos = $videoQuery->paginate(15);
+
+		return view('publik.video.video', [
+			'schoolProfile' => $profile,
+			'videos' => $videos,
+		]);
+	}
+
 	public function guru()
     {
         // Ambil data user yang memiliki role 'guru'

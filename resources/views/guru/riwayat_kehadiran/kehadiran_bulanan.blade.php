@@ -6,7 +6,10 @@
 	</x-slot>
 
 	@php
-		$monthLabel = data_get($monthOptions, $selectedMonthKey, $month . '-' . $year);
+		$isAllMonths = $isAllMonths ?? false;
+		$monthLabel = $isAllMonths
+			? 'Semua Bulan Dalam Periode'
+			: data_get($monthOptions, $selectedMonthKey, $month . '-' . $year);
 	@endphp
 
 	<div class="py-1">
@@ -35,16 +38,28 @@
 						<input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
 						<div>
 							<label class="block text-sm font-medium mb-1">Bulan Periode</label>
-							<select name="month_key" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+							<select name="month_key" onchange="this.form.submit()" class="w-full border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
 								@foreach($monthOptions as $monthKey => $label)
 									<option value="{{ $monthKey }}" @selected($monthKey === $selectedMonthKey)>{{ $label }}</option>
 								@endforeach
+								<option value="all" @selected($isAllMonths)>Semua</option>
 							</select>
 						</div>
 						<div class="flex items-center gap-2">
-							<button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
-								Tampilkan
-							</button>
+							@unless($isAllMonths)
+								<a
+									href="{{ route('guru.kehadiran.bulanan.export', ['period_id' => $selectedPeriod->id, 'month_key' => $selectedMonthKey]) }}"
+									class="inline-flex items-center whitespace-nowrap px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700"
+								>
+									Unduh Excel
+								</a>
+								<a
+									href="{{ route('guru.kehadiran.bulanan.export', ['period_id' => $selectedPeriod->id, 'month_key' => $selectedMonthKey, 'format' => 'pdf']) }}"
+									class="inline-flex items-center whitespace-nowrap px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700"
+								>
+									Unduh PDF
+								</a>
+							@endunless
 						</div>
 					</form>
 
@@ -53,42 +68,81 @@
 						<span class="ml-4">Kode: H = Hadir, T = Terlambat, I = Izin, A = Alpha, - = Belum ada data</span>
 					</div>
 
-					<div class="flex items-center justify-between mt-2 text-xs">
-						<span></span>
-						<a
-							href="{{ route('guru.kehadiran.bulanan.export', ['period_id' => $selectedPeriod->id, 'month_key' => $selectedMonthKey]) }}"
-							class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700"
-						>
-							Export Excel Bulan Ini
-						</a>
-					</div>
+					@if($isAllMonths)
+						<div class="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2">
+							<a
+								href="{{ route('guru.kehadiran.bulanan.export-period-excel', ['period_id' => $selectedPeriod->id]) }}"
+								class="inline-flex w-full sm:w-auto justify-center items-center whitespace-nowrap px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded hover:bg-emerald-700"
+							>
+								Unduh Excel Satu Periode
+							</a>
+							<a
+								href="{{ route('guru.kehadiran.bulanan.export-period-pdf', ['period_id' => $selectedPeriod->id]) }}"
+								class="inline-flex w-full sm:w-auto justify-center items-center whitespace-nowrap px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded hover:bg-purple-700"
+							>
+								Unduh PDF Satu Periode
+							</a>
+						</div>
+					@endif
 
-					<div class="overflow-x-auto mt-4">
-						<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
-							<thead>
-								<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-									<th class="px-2 py-2 text-left whitespace-nowrap">Nama</th>
-									@foreach($days as $day)
-										@php
-											$isSunday = \Carbon\Carbon::create($year, $month, $day)->isSunday();
-										@endphp
-										<th class="px-1 py-1 text-center min-w-[28px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $day }}</th>
-									@endforeach
-								</tr>
-							</thead>
-							<tbody>
-								<tr class="border-b border-gray-100 dark:border-gray-700">
-									<td class="px-2 py-1 whitespace-nowrap">{{ $user->name }}</td>
-									@foreach($days as $day)
-										@php
-											$status = $matrix[$day] ?? '-';
-										@endphp
-										<td class="px-1 py-1 text-center align-middle">{{ $status }}</td>
-									@endforeach
-								</tr>
-							</tbody>
-						</table>
-					</div>
+					@if($isAllMonths)
+						@foreach(collect($dateColumns)->groupBy(fn ($date) => $date->format('Y-m')) as $monthKey => $monthDates)
+							<div class="mt-4">
+								<h4 class="mb-3 text-center text-base md:text-lg font-semibold text-gray-800 dark:text-gray-100">{{ $monthOptions[$monthKey] ?? $monthKey }}</h4>
+								<div class="overflow-x-auto">
+									<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
+										<thead>
+											<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+												<th class="px-2 py-2 text-left whitespace-nowrap">Nama</th>
+												@foreach($monthDates as $date)
+													@php
+														$isSunday = $date->isSunday();
+													@endphp
+													<th class="px-1 py-1 text-center min-w-[36px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $date->format('d') }}</th>
+												@endforeach
+											</tr>
+										</thead>
+										<tbody>
+											<tr class="border-b border-gray-100 dark:border-gray-700">
+												<td class="px-2 py-1 whitespace-nowrap">{{ $user->name }}</td>
+												@foreach($monthDates as $date)
+													<td class="px-1 py-1 text-center align-middle">{{ $matrix[$date->toDateString()] ?? '-' }}</td>
+												@endforeach
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						@endforeach
+					@else
+						<div class="overflow-x-auto mt-4">
+							<table class="min-w-full text-xs border border-gray-200 dark:border-gray-700">
+								<thead>
+									<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+										<th class="px-2 py-2 text-left whitespace-nowrap">Nama</th>
+										@foreach($days as $day)
+											@php
+												$isSunday = \Carbon\Carbon::create($year, $month, $day)->isSunday();
+											@endphp
+											<th class="px-1 py-1 text-center min-w-[28px] {{ $isSunday ? 'text-red-600 dark:text-red-400' : '' }}">{{ $day }}</th>
+										@endforeach
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="border-b border-gray-100 dark:border-gray-700">
+										<td class="px-2 py-1 whitespace-nowrap">{{ $user->name }}</td>
+										@foreach($days as $day)
+											@php
+												$dateValue = \Carbon\Carbon::create($year, $month, $day)->toDateString();
+												$status = $matrix[$dateValue] ?? '-';
+											@endphp
+											<td class="px-1 py-1 text-center align-middle">{{ $status }}</td>
+										@endforeach
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					@endif
 				</div>
 			</div>
 		</div>

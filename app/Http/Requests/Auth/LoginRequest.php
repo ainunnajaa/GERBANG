@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +53,15 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'login' => trans('auth.failed'),
+            ]);
+        }
+
+        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'login' => 'Email belum diverifikasi. Kami sudah mengirim ulang tautan verifikasi ke email Anda. Silakan verifikasi terlebih dahulu sebelum login.',
             ]);
         }
 

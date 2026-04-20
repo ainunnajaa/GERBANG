@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Berita;
 
+use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\SchoolProfile;
 use Illuminate\Http\Request;
@@ -10,22 +11,26 @@ class BeritaPublikController extends Controller
 {
 	public function index(Request $request)
 	{
-		$search = $request->input('q');
+		$search = trim((string) $request->input('q', ''));
 
 		$query = Berita::query();
 
-		if ($search) {
-			$query->where('judul', 'like', '%' . $search . '%');
+		if (!empty($search)) {
+			$query->where(function ($builder) use ($search) {
+				$builder->where('judul', 'like', '%' . $search . '%')
+					->orWhere('isi', 'like', '%' . $search . '%');
+			});
 		}
 
 		$beritas = $query
 			->orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->get();
+			->paginate(15)
+			->withQueryString();
 
 		$recentBeritas = Berita::orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->limit(5)
+			->limit(7)
 			->get();
 
 		$schoolProfile = SchoolProfile::first();
@@ -44,7 +49,7 @@ class BeritaPublikController extends Controller
 
 		$recentBeritas = Berita::orderByDesc('tanggal_berita')
 			->orderByDesc('created_at')
-			->limit(5)
+			->limit(7)
 			->get();
 
 		return view('publik.berita.baca_berita', [

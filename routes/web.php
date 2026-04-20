@@ -1,21 +1,39 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\WebProfilController;
-use App\Http\Controllers\KelolaBeritaController;
-use App\Http\Controllers\BeritaPublikController;
-use App\Http\Controllers\BeritaController;
-use App\Http\Controllers\KelolaPenggunaController;
-use App\Http\Controllers\PresensiPeriodController;
-use App\Http\Controllers\WelcomeController;
-use App\Http\Controllers\PresensiController;
-use App\Http\Controllers\RiwayatPresensiController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\Admin\WebProfilController;
+use App\Http\Controllers\Berita\KelolaBeritaController;
+use App\Http\Controllers\Berita\BeritaPublikController;
+use App\Http\Controllers\Berita\BeritaController;
+use App\Http\Controllers\Admin\KelolaPenggunaController;
+use App\Http\Controllers\Presensi\PresensiPeriodController;
+use App\Http\Controllers\Admin\WelcomeController;
+use App\Http\Controllers\Presensi\PresensiController;
+use App\Http\Controllers\Presensi\RiwayatPresensiController;
+use App\Http\Controllers\PwaController;
+use App\Http\Controllers\App\BeritaAppController;
+use App\Http\Controllers\Admin\IzinNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
+Route::get('/manifest.json', [PwaController::class, 'manifest'])->name('pwa.manifest.json');
+Route::get('/sw.js', [PwaController::class, 'serviceWorker'])->name('pwa.sw');
+Route::get('/.well-known/assetlinks.json', [PwaController::class, 'assetLinks'])->name('pwa.assetlinks');
+Route::get('/pwa/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/pwa/icon/{size}.png', [PwaController::class, 'icon'])
+    ->whereNumber('size')
+    ->name('pwa.icon');
+Route::get('/apple-touch-icon.png', [PwaController::class, 'appleTouchIcon'])->name('pwa.apple-touch-icon');
 Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.visi_misi');
 Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
+Route::get('/video', [WelcomeController::class, 'video'])->name('publik.video');
+Route::get('/news', [BeritaAppController::class, 'home'])->name('app.berita.home');
+Route::get('/news/berita', [BeritaAppController::class, 'news'])->name('app.berita.news');
+Route::get('/news/berita/{berita}', [BeritaAppController::class, 'showNews'])->name('app.berita.news.show');
+Route::get('/news/video', [BeritaAppController::class, 'video'])->name('app.berita.video');
+Route::get('/news/instagram', [BeritaAppController::class, 'instagram'])->name('app.berita.instagram');
+Route::get('/news/{berita}', [BeritaAppController::class, 'show'])->name('app.berita.show');
 Route::post('/contact', [WelcomeController::class, 'contact'])->name('contact.send');
 
 // Route untuk Halaman Daftar Guru (BARU DITAMBAHKAN)
@@ -51,6 +69,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/kelola-presensi', [PresensiController::class, 'adminIndex'])->name('admin.presensi');
     Route::post('/admin/kelola-presensi/jam', [PresensiController::class, 'updateSettings'])->name('admin.presensi.settings.update');
+    Route::get('/admin/kelola-presensi/template-qr/edit', [PresensiController::class, 'editQrTemplate'])->name('admin.presensi.template.edit');
+    Route::patch('/admin/kelola-presensi/template-qr', [PresensiController::class, 'updateQrTemplate'])->name('admin.presensi.template.update');
     Route::get('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'index'])->name('admin.presensi.periods.index');
     Route::get('/admin/kelola-presensi/periode/create', [PresensiPeriodController::class, 'create'])->name('admin.presensi.periods.create');
     Route::post('/admin/kelola-presensi/periode', [PresensiPeriodController::class, 'store'])->name('admin.presensi.periods.store');
@@ -63,12 +83,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/riwayat-presensi/periode/{period}', [RiwayatPresensiController::class, 'adminRiwayatPeriode'])->name('admin.riwayat.period');
     Route::get('/admin/riwayat-presensi-semua', [RiwayatPresensiController::class, 'adminRiwayatSemua'])->name('admin.presensi.all');
     Route::get('/admin/riwayat-presensi-semua/export', [RiwayatPresensiController::class, 'adminExportPresensiSemua'])->name('admin.presensi.all.export');
+    Route::get('/admin/riwayat-presensi-semua/export-periode-excel', [RiwayatPresensiController::class, 'adminExportPresensiPeriodeExcel'])->name('admin.presensi.all.export-period-excel');
+    Route::get('/admin/riwayat-presensi-semua/export-periode-pdf', [RiwayatPresensiController::class, 'adminExportPresensiPeriodePdf'])->name('admin.presensi.all.export-period-pdf');
     Route::get('/admin/riwayat-presensi-bulanan', [RiwayatPresensiController::class, 'adminRiwayatBulanan'])->name('admin.presensi.bulanan');
     Route::post('/admin/riwayat-presensi/status', [RiwayatPresensiController::class, 'adminUpdateStatus'])->name('admin.presensi.status.update');
     Route::post('/admin/riwayat-presensi/status/bulk', [RiwayatPresensiController::class, 'adminBulkUpdateStatus'])->name('admin.presensi.status.bulk-update');
     Route::get('/admin/riwayat-presensi/guru/{guru}', [RiwayatPresensiController::class, 'adminPresensiGuru'])->name('admin.presensi.guru');
     Route::get('/admin/riwayat-presensi/guru/{guru}/download', [RiwayatPresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [RiwayatPresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
+    Route::get('/admin/notifikasi/izin', [IzinNotificationController::class, 'index'])->name('admin.notifications.izin');
 
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
@@ -84,6 +107,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/konten', [WebProfilController::class, 'storeContent'])->name('admin.contents.store');
     Route::patch('/admin/konten/{content}', [WebProfilController::class, 'updateContent'])->name('admin.contents.update');
     Route::delete('/admin/konten/{content}', [WebProfilController::class, 'deleteContent'])->name('admin.contents.delete');
+
+    // Video YouTube CRUD
+    Route::get('/admin/youtube/connect', [WebProfilController::class, 'connectYouTube'])->name('admin.youtube.connect');
+    Route::delete('/admin/youtube/disconnect', [WebProfilController::class, 'disconnectYouTube'])->name('admin.youtube.disconnect');
+    Route::get('/youtube/callback', [WebProfilController::class, 'handleYouTubeCallback'])->name('admin.youtube.callback');
+    Route::post('/admin/youtube/init-upload', [WebProfilController::class, 'initDirectUpload'])->name('admin.youtube.init_upload');
+    Route::post('/admin/youtube/save-upload', [WebProfilController::class, 'saveDirectUpload'])->name('admin.youtube.save_upload');
+    Route::post('/admin/video/upload', [WebProfilController::class, 'uploadVideoToYouTube'])->name('admin.videos.upload');
+    Route::post('/admin/video', [WebProfilController::class, 'storeVideo'])->name('admin.videos.store');
+    Route::patch('/admin/video/{video}', [WebProfilController::class, 'updateVideo'])->name('admin.videos.update');
+    Route::delete('/admin/video/{video}', [WebProfilController::class, 'deleteVideo'])->name('admin.videos.delete');
 
     // Backgrounds CRUD
     Route::post('/admin/background', [WebProfilController::class, 'storeBackground'])->name('admin.backgrounds.store');
@@ -104,12 +138,31 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:guru'])->group(function () {
     Route::get('/guru/presensi', [PresensiController::class, 'guruIndex'])->name('guru.presensi');
     Route::post('/guru/presensi/scan', [PresensiController::class, 'scan'])->name('guru.presensi.scan');
+    Route::get('/guru/video', function () {
+        $profile = \App\Models\SchoolProfile::first();
+        $videoQuery = \App\Models\SchoolContent::where('platform', 'youtube')
+            ->orderByDesc('created_at');
+
+        if ($profile) {
+            $videoQuery->where('school_profile_id', $profile->id);
+        } else {
+            $videoQuery->whereRaw('1 = 0');
+        }
+
+        $videos = $videoQuery->paginate(15);
+
+        return view('guru.video_guru', [
+            'videos' => $videos,
+        ]);
+    })->name('guru.video');
     Route::get('/guru/izin', fn() => view('guru.Izin_guru'))->name('guru.izin.form');
     Route::post('/guru/izin', [PresensiController::class, 'guruIzin'])->name('guru.izin');
     Route::get('/guru/kehadiran/periode', [RiwayatPresensiController::class, 'guruKehadiranPeriods'])->name('guru.kehadiran.periods');
     Route::get('/guru/kehadiran', [RiwayatPresensiController::class, 'guruKehadiran'])->name('guru.kehadiran');
     Route::get('/guru/kehadiran-bulanan', [RiwayatPresensiController::class, 'guruKehadiranBulanan'])->name('guru.kehadiran.bulanan');
     Route::get('/guru/kehadiran-bulanan/export', [RiwayatPresensiController::class, 'guruExportKehadiranBulanan'])->name('guru.kehadiran.bulanan.export');
+    Route::get('/guru/kehadiran-bulanan/export-periode-excel', [RiwayatPresensiController::class, 'guruExportKehadiranPeriodeExcel'])->name('guru.kehadiran.bulanan.export-period-excel');
+    Route::get('/guru/kehadiran-bulanan/export-periode-pdf', [RiwayatPresensiController::class, 'guruExportKehadiranPeriodePdf'])->name('guru.kehadiran.bulanan.export-period-pdf');
     Route::get('/guru/berita', [BeritaController::class, 'index'])->name('guru.berita.index');
     Route::get('/guru/berita/{berita}', [BeritaController::class, 'show'])->name('guru.berita.show');
     Route::get('/guru/daftar-guru', function () {

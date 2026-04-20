@@ -1,18 +1,37 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Berita;
 
+use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class KelolaBeritaController extends Controller
 {
-	public function index()
+	public function index(Request $request)
 	{
-		$beritas = Berita::orderByDesc('tanggal_berita')->orderByDesc('created_at')->get();
+		$search = trim((string) $request->input('q', ''));
 
-		return view('admin.berita.kelola_berita', compact('beritas'));
+		$query = Berita::query();
+
+		if (!empty($search)) {
+			$query->where(function ($builder) use ($search) {
+				$builder->where('judul', 'like', '%' . $search . '%')
+					->orWhere('isi', 'like', '%' . $search . '%');
+			});
+		}
+
+		$beritas = $query
+			->orderByDesc('tanggal_berita')
+			->orderByDesc('created_at')
+			->paginate(10)
+			->withQueryString();
+
+		return view('admin.berita.kelola_berita', [
+			'beritas' => $beritas,
+			'currentSearch' => $search,
+		]);
 	}
 
 	public function create()
@@ -26,6 +45,7 @@ class KelolaBeritaController extends Controller
 			'tanggal_berita' => ['required', 'date'],
 			'judul' => ['required', 'string', 'max:255'],
 			'isi' => ['required', 'string'],
+			'youtube_url' => ['nullable', 'url'],
 			'instagram_url' => ['nullable', 'url'],
 			'gambar' => ['nullable', 'image', 'max:2048'],
 		]);
@@ -40,6 +60,7 @@ class KelolaBeritaController extends Controller
 			'judul' => $validated['judul'],
 			'isi' => $validated['isi'],
 			'gambar_path' => $gambarPath,
+			'youtube_url' => $validated['youtube_url'] ?? null,
 			'instagram_url' => $validated['instagram_url'] ?? null,
 		]);
 
@@ -70,6 +91,7 @@ class KelolaBeritaController extends Controller
 			'tanggal_berita' => ['required', 'date'],
 			'judul' => ['required', 'string', 'max:255'],
 			'isi' => ['required', 'string'],
+			'youtube_url' => ['nullable', 'url'],
 			'instagram_url' => ['nullable', 'url'],
 			'gambar' => ['nullable', 'image', 'max:2048'],
 		]);
@@ -87,6 +109,7 @@ class KelolaBeritaController extends Controller
 			'judul' => $validated['judul'],
 			'isi' => $validated['isi'],
 			'gambar_path' => $gambarPath,
+			'youtube_url' => $validated['youtube_url'] ?? null,
 			'instagram_url' => $validated['instagram_url'] ?? null,
 		]);
 

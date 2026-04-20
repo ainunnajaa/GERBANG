@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Berita;
 
+use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\SchoolProfile;
 use Illuminate\Http\Request;
@@ -10,12 +11,15 @@ class BeritaController extends Controller
 {
 	public function index(Request $request)
 	{
-		$search = $request->input('q');
+		$search = trim((string) $request->input('q', ''));
 
 		$query = Berita::query();
 
-		if ($search) {
-			$query->where('judul', 'like', '%' . $search . '%');
+		if (!empty($search)) {
+			$query->where(function ($builder) use ($search) {
+				$builder->where('judul', 'like', '%' . $search . '%')
+					->orWhere('isi', 'like', '%' . $search . '%');
+			});
 		}
 
 		$beritas = $query

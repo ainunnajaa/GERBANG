@@ -41,6 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'youtube' => [
+        'client_id' => env('YOUTUBE_CLIENT_ID'),
+        'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
+        'redirect' => env('YOUTUBE_REDIRECT_URI', '/youtube/callback'),
+    ],
+
     'api_co_id' => [
         'key' => env('API_CO_ID_KEY'),
     ],

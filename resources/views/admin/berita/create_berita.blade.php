@@ -87,7 +87,10 @@
                                 <style>
                                     #isi-editor {
                                         outline: none;
+                                        color: #1f2937 !important;
                                     }
+                                    .dark #isi-editor { color: #e5e7eb !important; }
+                                    #isi-editor * { color: inherit !important; }
                                     #isi-editor ul {
                                         list-style-type: disc !important;
                                         padding-left: 1.5rem !important;
@@ -105,6 +108,7 @@
                                     #isi-editor h3 { font-size: 1.17em !important; font-weight: 700 !important; margin-top: 0.5em; margin-bottom: 0.5em; }
                                     #isi-editor p { margin-top: 0.25em; margin-bottom: 0.25em; }
                                     #isi-editor a { color: #3b82f6 !important; text-decoration: underline !important; }
+                                    .dark #isi-editor a { color: #93c5fd !important; }
                                 </style>
 
                                 <div id="isi-editor" contenteditable="true" class="prose dark:prose-invert max-w-none w-full min-h-[250px] p-4 text-gray-800 dark:text-gray-200">{!! old('isi') !!}</div>
@@ -113,6 +117,15 @@
                             <textarea id="isi" name="isi" class="hidden">{!! old('isi') !!}</textarea>
 
                             @error('isi')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="youtube_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link YouTube (opsional)</label>
+                            <input id="youtube_url" name="youtube_url" type="url" value="{{ old('youtube_url') }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://www.youtube.com/watch?v=...">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Isi dengan link video YouTube untuk menampilkan player di halaman baca berita.</p>
+                            @error('youtube_url')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>

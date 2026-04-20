@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\Presensi;
 use App\Models\PresensiIzin;
 use App\Models\PresensiPeriod;
@@ -26,6 +27,9 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $role = $request->user()->role ?? 'wali_murid';
+        $today = Carbon::today();
+
+        $adminAttendance = $this->getAdminTodayAttendanceSummary();
 
         return match ($role) {
             'admin' => view('dashboard.admin', [
@@ -35,10 +39,75 @@ class DashboardController extends Controller
                 'jumlahPeriode' => PresensiPeriod::count(),
                 'activePeriod' => PresensiPeriod::query()->active()->orderByDesc('start_date')->first(),
                 'periodTypeOptions' => PresensiPeriod::TYPE_OPTIONS,
+                'todayAttendanceSummary' => $adminAttendance,
+                'hariLibur' => array_merge(
+                    $this->getHariLiburNasional($today->year),
+                    $this->getHariLiburNasional($today->year + 1)
+                ),
             ]),
             'guru' => $this->guruDashboard($request),
             default => view('dashboard.wali_murid'),
         };
+    }
+
+    protected function getAdminTodayAttendanceSummary(): array
+    {
+        $today = Carbon::today();
+        $activePeriod = PresensiPeriod::query()->active()->orderByDesc('start_date')->first();
+        $guruIds = User::where('role', 'guru')->pluck('id');
+
+        $summary = [
+            'H' => 0,
+            'T' => 0,
+            'I' => 0,
+            'A' => 0,
+            'total' => $guruIds->count(),
+            'isOperationalDay' => false,
+        ];
+
+        if (! $activePeriod || ! $activePeriod->isOperationalOn($today) || $summary['total'] === 0) {
+            return $summary;
+        }
+
+        $summary['isOperationalDay'] = true;
+
+        $presensiByUser = Presensi::whereDate('tanggal', $today->toDateString())
+            ->whereIn('user_id', $guruIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $izinByUser = PresensiIzin::whereDate('tanggal', $today->toDateString())
+            ->whereIn('user_id', $guruIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $overrideByUser = PresensiStatusOverride::whereDate('tanggal', $today->toDateString())
+            ->whereIn('user_id', $guruIds)
+            ->get()
+            ->keyBy('user_id');
+
+        foreach ($guruIds as $guruId) {
+            $overrideStatus = $overrideByUser->get($guruId)?->status;
+            if ($overrideStatus !== null && in_array($overrideStatus, ['H', 'T', 'I', 'A'], true)) {
+                $summary[$overrideStatus]++;
+                continue;
+            }
+
+            $presensi = $presensiByUser->get($guruId);
+            if ($presensi && in_array($presensi->status, ['H', 'T', 'I', 'A'], true)) {
+                $summary[$presensi->status]++;
+                continue;
+            }
+
+            if ($izinByUser->has($guruId)) {
+                $summary['I']++;
+                continue;
+            }
+
+            $summary['A']++;
+        }
+
+        return $summary;
     }
 
     protected function guruDashboard(Request $request)
@@ -119,7 +188,7 @@ class DashboardController extends Controller
                 }
 
                 if ($selectedMonthKey) {
-                    $monthDate = Carbon::createFromFormat('Y-m', $selectedMonthKey)->startOfMonth();
+                    $monthDate = Carbon::createFromFormat('!Y-m', $selectedMonthKey)->startOfMonth();
                     $monthStart = $monthDate->copy()->startOfMonth()->lt($periodStart) ? $periodStart->copy() : $monthDate->copy()->startOfMonth();
                     $monthEnd = $monthDate->copy()->endOfMonth()->gt($periodEnd) ? $periodEnd->copy() : $monthDate->copy()->endOfMonth();
                     $totalWeeks = 1;
@@ -317,19 +386,34 @@ class DashboardController extends Controller
      */
     protected function getHariLiburNasional(int $year): array
     {
-        $cacheKey = "hari_libur_nasional_{$year}";
+        $globalCacheKey = 'hari_libur_nasional_global';
+        $globalHolidays = Cache::get($globalCacheKey);
 
-        // Cek cache dulu
-        $cached = Cache::get($cacheKey);
-        if (is_array($cached)) {
-            return $cached;
+        // Single API fetch for all holiday consumers, cached for 2 months.
+        if (! is_array($globalHolidays)) {
+            $globalHolidays = $this->fetchHariLiburNasionalGlobal();
+            Cache::put($globalCacheKey, $globalHolidays, now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
         }
+
+        return collect($globalHolidays)
+            ->filter(function ($holiday) use ($year) {
+                $start = (string) ($holiday['start'] ?? '');
+
+                return str_starts_with($start, (string) $year . '-');
+            })
+            ->values()
+            ->toArray();
+    }
+
+    protected function fetchHariLiburNasionalGlobal(): array
+    {
+        $globalCacheKey = 'hari_libur_nasional_global';
 
         $apiKey = config('services.api_co_id.key');
 
         if (empty($apiKey)) {
             Log::warning('API_CO_ID_KEY belum diatur di .env');
-            Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+            Cache::put($globalCacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
             return [];
         }
@@ -338,13 +422,11 @@ class DashboardController extends Controller
 			/** @var Response $response */
             $response = Http::withHeaders([
                 'x-api-co-id' => $apiKey,
-            ])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/', [
-                'year' => $year,
-            ]);
+            ])->timeout(10)->get('https://use.api.co.id/holidays/indonesia/');
 
             if (! $response->successful()) {
                 Log::error('API Holiday gagal: HTTP ' . $response->status());
-                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+                Cache::put($globalCacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
                 return [];
             }
@@ -353,9 +435,9 @@ class DashboardController extends Controller
 
             // Jika respon API sukses tapi datanya kosong (seperti kasus 2027)
             if (! ($json['is_success'] ?? false) || empty($json['data'])) {
-                Log::warning('API Holiday response tidak berhasil atau data kosong untuk tahun ' . $year);
-                
-                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+                Log::warning('API Holiday response tidak berhasil atau data kosong.');
+
+                Cache::put($globalCacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
                 return [];
             }
 
@@ -381,17 +463,11 @@ class DashboardController extends Controller
                 ->values()
                 ->toArray();
 
-            if (count($holidays) > 0) {
-                Cache::put($cacheKey, $holidays, now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
-            } else {
-                Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
-            }
-
             return $holidays;
 
         } catch (\Exception $e) {
             Log::error('API Holiday error: ' . $e->getMessage());
-            Cache::put($cacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
+            Cache::put($globalCacheKey, [], now()->addMonthsNoOverflow(self::HOLIDAY_CACHE_MONTHS));
 
             return [];
         }

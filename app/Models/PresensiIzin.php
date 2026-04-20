@@ -13,6 +13,8 @@ class PresensiIzin extends Model
         'user_id',
         'tanggal',
         'keterangan',
+        'lampiran_path',
+        'lampiran_nama',
     ];
 
     protected $casts = [

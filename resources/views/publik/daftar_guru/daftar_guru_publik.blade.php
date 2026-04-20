@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Daftar Guru - {{ config('app.name', 'Laravel') }}</title>
+        @include('partials.favicon')
 
         <script>
             (function() {
@@ -48,7 +49,7 @@
             {{-- HEADER HALAMAN COLORFUL --}}
             <div class="flex flex-col md:flex-row justify-between items-center mb-12 bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300">
                 <div class="text-center md:text-left mb-6 md:mb-0">
-                    <h1 class="font-playful text-4xl md:text-5xl text-white drop-shadow-md mb-2">👨‍🏫 Daftar Guru 👩‍🏫</h1>
+                    <h1 class="font-playful text-4xl md:text-5xl text-white drop-shadow-md mb-2">Daftar Guru</h1>
                     <p class="text-white font-bold text-lg bg-black/20 inline-block px-4 py-1 rounded-full backdrop-blur-sm">Pengajar & Pembimbing Kami</p>
                 </div>
                 

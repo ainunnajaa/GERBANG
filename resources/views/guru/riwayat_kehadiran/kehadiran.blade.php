@@ -33,7 +33,7 @@
                         <input type="hidden" name="period_id" value="{{ $selectedPeriod->id }}">
                         <div>
                             <label class="block text-sm font-medium mb-1">Bulan Periode</label>
-                            <select name="month_key" class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
+                            <select name="month_key" onchange="this.form.submit()" class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-900">
                                 @foreach($monthOptions as $monthKey => $label)
                                     <option value="{{ $monthKey }}" @selected($monthKey === $selectedMonthKey)>{{ $label }}</option>
                                 @endforeach
@@ -41,15 +41,12 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Minggu ke</label>
-                            <select name="minggu" class="border rounded px-3 pr-6 py-2 text-sm bg-white dark:bg-gray-900 min-w-[4.5rem]">
+                            <select name="minggu" onchange="this.form.submit()" class="border rounded px-3 pr-6 py-2 text-sm bg-white dark:bg-gray-900 min-w-[4.5rem]">
                                 @for($w = 1; $w <= ($maxWeek ?? 5); $w++)
                                     <option value="{{ $w }}" @selected($w == ($week ?? 1))>{{ $w }}</option>
                                 @endfor
                             </select>
                         </div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700">
-                            Terapkan
-                        </button>
                         <a href="{{ route('guru.kehadiran', ['period_id' => $selectedPeriod->id]) }}" class="text-xs text-gray-600 dark:text-gray-300 underline">Reset</a>
                     </form>
 
@@ -75,6 +72,7 @@
                                         <th class="px-4 py-2 text-left">Status</th>
                                         <th class="px-4 py-2 text-left">Jam Izin</th>
                                         <th class="px-4 py-2 text-left">Keterangan</th>
+                                        <th class="px-4 py-2 text-left">File</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -97,6 +95,15 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2">{{ $izin->keterangan ?? '-' }}</td>
+                                            <td class="px-4 py-2">
+                                                @if($izin && $izin->lampiran_path)
+                                                    <a href="{{ asset('storage/' . $izin->lampiran_path) }}" download="{{ $izin->lampiran_nama ?? basename($izin->lampiran_path) }}" class="text-blue-600 hover:underline dark:text-blue-400">
+                                                        Unduh File
+                                                    </a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
