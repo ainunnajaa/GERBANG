@@ -14,19 +14,51 @@
             <nav class="flex items-center gap-2">
                 {{-- Mobile: dropdown hamburger --}}
                 <div class="relative md:hidden">
-                    <button id="profil_menu_button" type="button" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#FF8C00] text-white shadow-[0_3px_0_#C96E00] hover:translate-y-[2px] hover:shadow-[0_1px_0_#C96E00] focus:outline-none transition-all">
+                    <button
+                        id="profil_mobile_menu_button"
+                        type="button"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#FF8C00] text-white shadow-[0_3px_0_#C96E00] hover:translate-y-[2px] hover:shadow-[0_1px_0_#C96E00] focus:outline-none transition-all"
+                        aria-controls="profil_mobile_menu"
+                        aria-expanded="false"
+                        aria-label="Buka menu navigasi"
+                    >
                         <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
-                    <div id="profil_menu" class="absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white dark:bg-gray-800 border-4 border-[#FFD700] dark:border-gray-600 z-20 hidden overflow-hidden">
-                        <a href="{{ url('/') }}" class="block px-4 py-3 text-sm font-bold text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700">Profile</a>
-                        <a href="{{ url('/#program-unggulan') }}" class="block px-4 py-3 text-sm font-bold text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-gray-700">Program Unggulan</a>
-                        <a href="{{ route('publik.visi_misi') }}" class="block px-4 py-3 text-sm font-bold text-orange-500 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700">Visi dan Misi</a>
-                        <a href="{{ url('/#guru') }}" class="block px-4 py-3 text-sm font-bold text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-gray-700">Guru</a>
-                        <a href="{{ url('/#konten-sosmed') }}" class="block px-4 py-3 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700">Konten</a>
-                        <a href="{{ route('publik.kontak') }}" class="block px-4 py-3 text-sm font-bold text-yellow-500 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-gray-700">Kontak</a>
-                        <a href="{{ route('publik.berita.index') }}" class="block px-4 py-3 text-sm font-bold text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700">Berita</a>
+                    <div id="profil_mobile_menu" class="fixed inset-0 z-[70] hidden md:hidden">
+                        <button
+                            id="profil_mobile_menu_backdrop"
+                            type="button"
+                            class="absolute inset-0 bg-black/45"
+                            aria-label="Tutup menu"
+                        ></button>
+
+                        <div class="relative h-full w-full bg-[#FFF8DC] dark:bg-gray-900 border-t-4 border-[#FFD700] dark:border-gray-700 px-5 py-6 overflow-y-auto">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-base font-extrabold tracking-wide text-[#0C2C55] dark:text-gray-100 uppercase">Navigasi</h3>
+                                <button
+                                    id="profil_mobile_menu_close"
+                                    type="button"
+                                    class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#DC143C] text-white shadow-[0_3px_0_#8B0000] hover:translate-y-[2px] hover:shadow-[0_1px_0_#8B0000] transition-all"
+                                    aria-label="Tutup menu navigasi"
+                                >
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <nav class="flex flex-col gap-3">
+                                <a href="{{ url('/') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#1E90FF] shadow-[0_3px_0_#104E8B]">Profile</a>
+                                <a href="{{ url('/#program-unggulan') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#32CD32] shadow-[0_3px_0_#228B22]">Program Unggulan</a>
+                                <a href="{{ route('publik.visi_misi') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#FF8C00] shadow-[0_3px_0_#CD6600]">Visi dan Misi</a>
+                                <a href="{{ url('/#guru') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#8A2BE2] shadow-[0_3px_0_#551A8B]">Guru</a>
+                                <a href="{{ url('/#konten-sosmed') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#DC143C] shadow-[0_3px_0_#8B0000]">Konten</a>
+                                <a href="{{ route('publik.kontak') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-gray-900 bg-[#FFD700] shadow-[0_3px_0_#CDAD00]">Kontak</a>
+                                <a href="{{ route('publik.berita.index') }}" class="block px-4 py-3 rounded-xl text-base font-bold text-white bg-[#00CED1] shadow-[0_3px_0_#008B8B]">Berita</a>
+                            </nav>
+                        </div>
                     </div>
                 </div>
 
@@ -114,4 +146,52 @@
             </div>
         </footer>
     @endif
+@endif
+
+@if ($position === 'header' || $position === 'both')
+    <script>
+        (function () {
+            const profilButton = document.getElementById('profil_mobile_menu_button');
+            const profilMenu = document.getElementById('profil_mobile_menu');
+            const profilMenuClose = document.getElementById('profil_mobile_menu_close');
+            const profilMenuBackdrop = document.getElementById('profil_mobile_menu_backdrop');
+
+            if (!profilButton || !profilMenu) {
+                return;
+            }
+
+            function openProfilMenu() {
+                profilMenu.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+                profilButton.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeProfilMenu() {
+                profilMenu.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                profilButton.setAttribute('aria-expanded', 'false');
+            }
+
+            profilButton.addEventListener('click', function () {
+                const isHidden = profilMenu.classList.contains('hidden');
+                if (isHidden) {
+                    openProfilMenu();
+                } else {
+                    closeProfilMenu();
+                }
+            });
+
+            if (profilMenuClose) {
+                profilMenuClose.addEventListener('click', closeProfilMenu);
+            }
+
+            if (profilMenuBackdrop) {
+                profilMenuBackdrop.addEventListener('click', closeProfilMenu);
+            }
+
+            profilMenu.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeProfilMenu);
+            });
+        })();
+    </script>
 @endif
