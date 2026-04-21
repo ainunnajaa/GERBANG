@@ -115,6 +115,11 @@ class DashboardController extends Controller
         $user = $request->user();
         $today = Carbon::today();
         $activePeriod = PresensiPeriod::query()->active()->orderByDesc('start_date')->first();
+        $todayPresensi = Presensi::where('user_id', $user->id)
+            ->whereDate('tanggal', $today->toDateString())
+            ->first();
+        $todayAbsenMasukLabel = $todayPresensi?->jam_masuk ? 'Sudah absen' : '-';
+        $todayAbsenPulangLabel = $todayPresensi?->jam_pulang ? 'Sudah absen' : '-';
 
         $settings = PresensiSetting::first();
         if (! $settings) {
@@ -270,6 +275,8 @@ class DashboardController extends Controller
 
         return view('dashboard.guru', [
             'activePeriod' => $activePeriod,
+            'todayAbsenMasukLabel' => $todayAbsenMasukLabel,
+            'todayAbsenPulangLabel' => $todayAbsenPulangLabel,
             'jumlahHadir' => $jumlahHadir,
             'jumlahIzin' => $jumlahIzin,
             'jumlahTerlambat' => $jumlahTerlambat,

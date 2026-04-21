@@ -21,8 +21,13 @@
     <div class="px-4 sm:px-6 lg:px-8 space-y-4 relative z-[1] pb-10">
         @if($activePeriod)
             <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                Dashboard ini dihitung berdasarkan periode presensi aktif: <span class="font-semibold">{{ $activePeriod->name }}</span>
-                ({{ $activePeriod->start_date->format('d M Y') }} - {{ $activePeriod->end_date->format('d M Y') }}).
+                <div class="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-1">
+                    <span class="font-semibold text-gray-800 dark:text-gray-100">Status absensi hari ini</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-x-6 gap-y-1">
+                        <span class="text-blue-600 dark:text-blue-400 font-medium">Masuk: {{ $todayAbsenMasukLabel }}</span>
+                        <span class="text-blue-600 dark:text-blue-400 font-medium">Pulang: {{ $todayAbsenPulangLabel }}</span>
+                    </div>
+                </div>
             </div>
         @else
             <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
