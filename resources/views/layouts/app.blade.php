@@ -26,12 +26,16 @@
             sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
             windowWidth: window.innerWidth,
             notificationOpen: false,
+            notificationOpenedByUser: false,
+            notificationResizeLock: false,
+            notificationResizeTimer: null,
             notifications: [],
             loadingNotifications: false,
             notificationFetchError: '',
             notificationIntervalId: null,
             seenNotificationIds: [],
-            notificationStorageKey: 'admin_seen_izin_notification_ids',
+            notificationStorageKeyBase: 'admin_seen_izin_notification_ids',
+            notificationUserId: @json(Auth::id()),
             init() {
                 const saved = localStorage.getItem('theme');
                 this.setTheme(saved ?? 'system', false);
@@ -57,8 +61,16 @@
                 });
 
                 window.addEventListener('resize', () => {
-                    this.windowWidth = window.innerWidth;
+                    this.handleWindowResize();
                 });
+
+                window.addEventListener('orientationchange', () => {
+                    this.handleWindowResize();
+                });
+
+                window.addEventListener('scroll', () => {
+                    this.handleWindowScroll();
+                }, { passive: true });
 
                 document.addEventListener('visibilitychange', () => {
                     if (document.visibilityState === 'visible' && this.isAdmin) {
@@ -90,9 +102,60 @@
             toggleTheme() {
                 this.setTheme(this.isDark ? 'light' : 'dark');
             },
+            notificationStorageKey() {
+                return `${this.notificationStorageKeyBase}_${this.notificationUserId ?? 'guest'}`;
+            },
+            closeNotificationPanel() {
+                this.notificationOpen = false;
+                this.notificationOpenedByUser = false;
+            },
+            handleWindowResize() {
+                const previousWidth = this.windowWidth;
+                const currentWidth = window.innerWidth;
+
+                this.windowWidth = currentWidth;
+
+                // Prevent accidental open while browser is relayouting UI controls.
+                this.notificationResizeLock = true;
+                this.closeNotificationPanel();
+                if (this.notificationResizeTimer) {
+                    clearTimeout(this.notificationResizeTimer);
+                }
+                this.notificationResizeTimer = setTimeout(() => {
+                    this.notificationResizeLock = false;
+                }, 260);
+
+                // Keep popup state stable when crossing responsive breakpoints.
+                const crossedMobileBreakpoint = (previousWidth < 640) !== (currentWidth < 640);
+                const crossedTabletBreakpoint = (previousWidth < 768) !== (currentWidth < 768);
+                if (crossedMobileBreakpoint || crossedTabletBreakpoint) {
+                    this.closeNotificationPanel();
+                }
+            },
+            handleWindowScroll() {
+                if (this.notificationOpen) {
+                    this.closeNotificationPanel();
+                }
+            },
+            toggleNotificationPanel(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                if (this.notificationResizeLock) {
+                    return;
+                }
+
+                this.notificationOpen = !this.notificationOpen;
+                this.notificationOpenedByUser = this.notificationOpen;
+                if (this.notificationOpen) {
+                    this.fetchNotifications();
+                }
+            },
             loadSeenNotifications() {
                 try {
-                    const raw = localStorage.getItem(this.notificationStorageKey);
+                    const raw = localStorage.getItem(this.notificationStorageKey());
                     const parsed = raw ? JSON.parse(raw) : [];
                     this.seenNotificationIds = Array.isArray(parsed)
                         ? parsed.map((item) => Number(item)).filter((item) => Number.isFinite(item))
@@ -102,7 +165,7 @@
                 }
             },
             saveSeenNotifications() {
-                localStorage.setItem(this.notificationStorageKey, JSON.stringify(this.seenNotificationIds.slice(-200)));
+                localStorage.setItem(this.notificationStorageKey(), JSON.stringify(this.seenNotificationIds.slice(-300)));
             },
             isNotificationUnread(id) {
                 return !this.seenNotificationIds.includes(Number(id));
@@ -124,7 +187,7 @@
             },
             openNotification(item) {
                 this.markNotificationAsRead(item.id);
-                this.notificationOpen = false;
+                this.closeNotificationPanel();
                 window.location.href = item.url;
             },
             async fetchNotifications() {
@@ -150,6 +213,9 @@
 
                     const payload = await response.json();
                     this.notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+                    const validIds = new Set(this.notifications.map((item) => Number(item.id)).filter((item) => Number.isFinite(item)));
+                    this.seenNotificationIds = this.seenNotificationIds.filter((id) => validIds.has(id));
+                    this.saveSeenNotifications();
                 } catch (error) {
                     this.notificationFetchError = 'Notifikasi tidak dapat dimuat.';
                 } finally {
@@ -222,7 +288,7 @@
                         <div class="relative" x-show="isAdmin" x-cloak>
                             <button
                                 type="button"
-                                @click="notificationOpen = !notificationOpen; if (notificationOpen) fetchNotifications();"
+                                @click="toggleNotificationPanel($event)"
                                 class="relative inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white shadow-sm transition hover:bg-white/25 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
                                 title="Notifikasi izin guru"
                                 aria-label="Notifikasi izin guru"
@@ -239,35 +305,37 @@
                                 ></span>
                             </button>
 
-                            <div
-                                x-show="notificationOpen"
-                                x-transition
-                                @click.outside="notificationOpen = false"
-                                class="z-50 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
-                                :class="windowWidth < 640
-                                    ? 'fixed left-2 right-2 top-[4.05rem]'
-                                    : 'absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-1.5rem)]'"
-                                :style="windowWidth < 640 ? 'height: 50vh;' : ''"
-                            >
-                                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifikasi Izin Guru</p>
-                                    <button
-                                        type="button"
-                                        class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                        @click="markAllNotificationsAsRead()"
-                                    >
-                                        Tandai semua dibaca
-                                    </button>
+                            <template x-if="notificationOpen && notificationOpenedByUser">
+                                <div
+                                    x-cloak
+                                    x-transition
+                                    @click.outside="closeNotificationPanel()"
+                                    class="z-50 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl"
+                                    :class="windowWidth < 640
+                                        ? 'fixed left-2 right-2 top-[4.05rem]'
+                                        : 'absolute right-0 mt-2 w-80 md:w-96 max-w-[calc(100vw-1.5rem)]'"
+                                >
+                                <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-4 py-3 backdrop-blur-sm">
+                                    <p class="text-sm font-bold text-gray-800">Notifikasi Izin</p>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            class="text-xs font-semibold text-sky-600 transition-colors hover:text-sky-800"
+                                            @click="markAllNotificationsAsRead(); closeNotificationPanel();"
+                                        >
+                                            Tandai semua dibaca
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="overflow-y-auto" :style="windowWidth < 640 ? 'max-height: calc(50vh - 3rem);' : 'max-height: 20rem;'">
-                                    <div x-show="loadingNotifications" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                <div class="max-h-[22rem] overflow-y-auto overscroll-contain">
+                                    <div x-show="loadingNotifications" class="px-4 py-3 text-sm text-gray-500">
                                         Memuat notifikasi...
                                     </div>
 
-                                    <div x-show="!loadingNotifications && notificationFetchError" class="px-4 py-3 text-sm text-red-600 dark:text-red-400" x-text="notificationFetchError"></div>
+                                    <div x-show="!loadingNotifications && notificationFetchError" class="px-4 py-3 text-sm text-red-600" x-text="notificationFetchError"></div>
 
-                                    <div x-show="!loadingNotifications && !notificationFetchError && notifications.length === 0" class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                    <div x-show="!loadingNotifications && !notificationFetchError && notifications.length === 0" class="px-4 py-6 text-sm text-gray-500">
                                         Belum ada notifikasi izin guru.
                                     </div>
 
@@ -275,24 +343,52 @@
                                         <button
                                             type="button"
                                             @click="openNotification(item)"
-                                            class="w-full border-b border-gray-100 px-4 py-3.5 text-left transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+                                            class="group flex w-full items-start gap-3 border-b border-gray-50 px-4 py-3 text-left transition-colors"
+                                            :class="isNotificationUnread(item.id) ? 'bg-sky-50/50 hover:bg-sky-100/50' : 'bg-white hover:bg-gray-50'"
                                         >
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div class="min-w-0">
-                                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="item.title"></p>
-                                                    <p class="mt-0.5 line-clamp-2 text-xs text-gray-600 dark:text-gray-300" x-text="item.description || 'Guru mengirim form izin.'"></p>
-                                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                                        <span x-text="item.tanggal_label"></span>
-                                                        <span class="mx-1">•</span>
-                                                        <span x-text="item.created_at_human"></span>
-                                                    </p>
+                                            <div class="mt-0.5 shrink-0">
+                                                <template x-if="item.guru_photo_url">
+                                                    <img
+                                                        :src="item.guru_photo_url"
+                                                        :alt="`Foto ${item.guru_name || 'Guru'}`"
+                                                        class="h-9 w-9 rounded-full border border-gray-200 object-cover"
+                                                    >
+                                                </template>
+                                                <template x-if="!item.guru_photo_url">
+                                                    <div
+                                                        class="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-bold"
+                                                        :class="isNotificationUnread(item.id)
+                                                            ? 'border-sky-200 bg-sky-100 text-sky-600'
+                                                            : 'border-gray-200 bg-gray-100 text-gray-500 group-hover:bg-gray-200'"
+                                                        x-text="(item.guru_name || 'G').split(' ').filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('')"
+                                                    ></div>
+                                                </template>
+                                            </div>
+
+                                            <div class="min-w-0 flex-1">
+                                                <div class="mb-0.5 flex items-start justify-between">
+                                                    <p class="truncate pr-2 text-sm text-gray-900" :class="isNotificationUnread(item.id) ? 'font-bold' : 'font-semibold text-gray-700'" x-text="item.guru_name || 'Guru'"></p>
+                                                    <div x-show="isNotificationUnread(item.id)" x-cloak class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-sm"></div>
                                                 </div>
-                                                <span x-show="isNotificationUnread(item.id)" x-cloak class="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-red-500"></span>
+
+                                                <p class="line-clamp-2 text-xs leading-relaxed" :class="isNotificationUnread(item.id) ? 'text-gray-600' : 'text-gray-500'" x-text="item.description || 'Guru mengirim form izin.'"></p>
+
+                                                <p class="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-gray-400">
+                                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span x-text="item.created_at_human"></span>
+                                                </p>
                                             </div>
                                         </button>
                                     </template>
                                 </div>
-                            </div>
+
+                                <a href="{{ route('admin.notifications.history') }}" class="block w-full border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-center text-xs font-bold text-gray-500 transition-colors hover:bg-gray-100 hover:text-sky-600" @click="closeNotificationPanel()">
+                                    Lihat Semua Riwayat
+                                </a>
+                                </div>
+                            </template>
                         </div>
 
                         <button

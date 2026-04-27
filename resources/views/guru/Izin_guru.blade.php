@@ -14,14 +14,26 @@
 						Gunakan form ini jika Anda tidak dapat hadir hari ini. Izin akan tercatat untuk tanggal hari ini.
 					</p>
 
-					@if(session('success'))
+					@if(session('success') || session('error') || $errors->any())
 						<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 						<script>
 							document.addEventListener('DOMContentLoaded', function() {
+								const popupType = @json(
+									session('success') ? 'success' : 'error'
+								);
+								const popupTitle = @json(
+									session('success') ? 'Berhasil' : 'Gagal'
+								);
+								const popupText = @json(
+									session('success')
+										?? session('error')
+										?? ($errors->first() ?: 'Terjadi kesalahan saat mengirim izin. Silakan periksa kembali data form Anda.')
+								);
+
 								Swal.fire({
-									icon: 'success',
-									title: 'Berhasil',
-									text: @json(session('success')),
+									icon: popupType,
+									title: popupTitle,
+									text: popupText,
 									background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
 									color: document.documentElement.classList.contains('dark') ? '#fff' : '#1f2937',
 									confirmButtonColor: '#2563eb',

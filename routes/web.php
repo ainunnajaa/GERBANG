@@ -92,6 +92,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/riwayat-presensi/guru/{guru}/download', [RiwayatPresensiController::class, 'adminDownloadPresensiGuru'])->name('admin.presensi.guru.download');
     Route::delete('/admin/presensi/{presensi}', [RiwayatPresensiController::class, 'adminDeletePresensi'])->name('admin.presensi.delete');
     Route::get('/admin/notifikasi/izin', [IzinNotificationController::class, 'index'])->name('admin.notifications.izin');
+    Route::get('/admin/notifikasi/izin/riwayat', [IzinNotificationController::class, 'history'])->name('admin.notifications.history');
 
     Route::get('/admin/kelola-web-profil', [WebProfilController::class, 'index'])->name('admin.web_profil');
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');

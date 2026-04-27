@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="absolute top-0 left-0 right-0 h-[22rem] z-0 dark:bg-blue-900" style="background-color: #0000F4;"></div>
+    <div class="absolute top-0 left-0 right-0 h-[23rem] z-0 dark:bg-blue-900" style="background-color: #0000F4;"></div>
     <div class="relative z-[1]">
         <div class="px-4 sm:px-6 lg:px-8 pt-4 pb-8">
             <div class="flex items-center gap-3 mb-3">
@@ -9,24 +9,64 @@
                 <h2 class="text-2xl font-bold text-white">Dashboard Guru</h2>
             </div>
             <p class="text-white/80 text-sm mb-3">Selamat datang, {{ auth()->user()->name }}</p>
-            <a href="{{ route('guru.presensi') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition shadow-sm backdrop-blur-sm border border-white/20">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                Presensi
-            </a>
         </div>
     </div>
 
     <div class="px-4 sm:px-6 lg:px-8 space-y-4 relative z-[1] pb-10">
         @if($activePeriod)
-            <div class="rounded-2xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                <div class="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-1">
-                    <span class="font-semibold text-gray-800 dark:text-gray-100">Status absensi hari ini</span>
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-x-6 gap-y-1">
-                        <span class="text-blue-600 dark:text-blue-400 font-medium">Masuk: {{ $todayAbsenMasukLabel }}</span>
-                        <span class="text-blue-600 dark:text-blue-400 font-medium">Pulang: {{ $todayAbsenPulangLabel }}</span>
+            @php
+                $jamMasukFilled = ($todayAbsenMasukLabel ?? '-') !== '-';
+                $jamPulangFilled = ($todayAbsenPulangLabel ?? '-') !== '-';
+            @endphp
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-6 border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">Status Hari Ini</h2>
+                    <span class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-700 text-[10px] font-bold px-3 py-1 rounded-full">
+                        {{ \Carbon\Carbon::today()->translatedFormat('d M Y') }}
+                    </span>
+                </div>
+
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+                    <div class="flex items-center justify-between gap-4 flex-1">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $jamMasukFilled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400' }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    @if($jamMasukFilled)
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    @endif
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-[11px] text-gray-400 font-medium uppercase">Jam Masuk</p>
+                                <p class="text-lg font-extrabold {{ $jamMasukFilled ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400' }}">{{ $jamMasukFilled ? $todayAbsenMasukLabel : '--:--' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+
+                        <div class="flex items-center gap-3 min-w-0 flex-1 justify-end lg:justify-start">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $jamPulangFilled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400' }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    @if($jamPulangFilled)
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    @endif
+                                </svg>
+                            </div>
+                            <div class="min-w-0 text-right lg:text-left">
+                                <p class="text-[11px] text-gray-400 font-medium uppercase">Jam Pulang</p>
+                                <p class="text-lg font-extrabold {{ $jamPulangFilled ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400' }}">{{ $jamPulangFilled ? $todayAbsenPulangLabel : '--:--' }}</p>
+                            </div>
+                        </div>
                     </div>
+
+                    <a href="{{ route('guru.presensi') }}" class="w-full lg:w-auto lg:shrink-0 inline-flex justify-center items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Presensi
+                    </a>
                 </div>
             </div>
         @else
@@ -100,15 +140,12 @@
                         </div>
                         <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-2 text-sm">
                             <div>
-                                <select id="month_key" name="month_key" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500">
+                                <select id="month_key" name="month_key" onchange="this.form.submit()" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500">
                                     @foreach($bulanOptions as $monthKey => $label)
                                         <option value="{{ $monthKey }}" @selected(($selectedMonthKey ?? now()->format('Y-m')) === $monthKey)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm">
-                                Terapkan
-                            </button>
                         </form>
                     </div>
                     <div id="attendanceChartArea" class="w-full flex-1 min-h-0 relative">
@@ -118,6 +155,9 @@
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                     <script>
                         const weeklyLabels = @json($weeklyLabels ?? []);
+                        const compactWeeklyLabels = weeklyLabels.map((label) =>
+                            String(label || '').replace(/Minggu\s+/i, 'M')
+                        );
                         const weeklyValues = @json($weeklyValues ?? []);
                         if (weeklyLabels.length > 0) {
                             
@@ -149,7 +189,7 @@
                                 const attendanceChart = new Chart(ctx, {
                                     type: 'bar',
                                     data: { 
-                                        labels: weeklyLabels, 
+                                        labels: compactWeeklyLabels, 
                                         datasets: [{ 
                                             label: 'Jumlah Hadir/Terlambat', 
                                             data: weeklyValues, 

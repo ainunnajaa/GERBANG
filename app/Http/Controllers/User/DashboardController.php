@@ -118,8 +118,12 @@ class DashboardController extends Controller
         $todayPresensi = Presensi::where('user_id', $user->id)
             ->whereDate('tanggal', $today->toDateString())
             ->first();
-        $todayAbsenMasukLabel = $todayPresensi?->jam_masuk ? 'Sudah absen' : '-';
-        $todayAbsenPulangLabel = $todayPresensi?->jam_pulang ? 'Sudah absen' : '-';
+        $todayAbsenMasukLabel = $todayPresensi?->jam_masuk
+            ? Carbon::parse($todayPresensi->jam_masuk)->format('H:i')
+            : '-';
+        $todayAbsenPulangLabel = $todayPresensi?->jam_pulang
+            ? Carbon::parse($todayPresensi->jam_pulang)->format('H:i')
+            : '-';
 
         $settings = PresensiSetting::first();
         if (! $settings) {
