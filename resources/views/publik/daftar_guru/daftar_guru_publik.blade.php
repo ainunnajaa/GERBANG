@@ -114,13 +114,13 @@
                                         {{ $guru->name }}
                                     </h3>
                                     
-                                    {{-- Lencana Kelas/Jabatan --}}
+                                    {{-- Lencana Jabatan/Jabatan --}}
                                     <div class="inline-block px-4 py-1.5 rounded-full border {{ $color['badgeBorder'] }} {{ $color['badgeBg'] }}">
                                         <p class="text-xs font-extrabold {{ $color['badgeText'] }} tracking-wide">
                                             @if (!empty($guru->kelas))
-                                                Guru Kelas {{ $guru->kelas }}
+                                                {{ $guru->kelas }}
                                             @else
-                                                Guru Umum
+                                                Umum
                                             @endif
                                         </p>
                                     </div>

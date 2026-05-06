@@ -63,7 +63,7 @@
                                 <option value="">-- Pilih Role --</option>
                                 <option value="admin" {{ old('role')==='admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="guru" {{ old('role')==='guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="wali_murid" {{ old('role')==='wali_murid' ? 'selected' : '' }}>Wali Murid</option>
+                                <option value="murid" {{ old('role')==='murid' ? 'selected' : '' }}>Murid</option>
                             </select>
                             @error('role')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -79,8 +79,8 @@
                         </div>
 
                         <div id="kelas_group" class="{{ old('role') === 'guru' ? '' : 'hidden' }}">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kelas (hanya untuk Guru)</label>
-                            <input type="text" name="kelas" value="{{ old('kelas') }}" class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" placeholder="Contoh: A1, A2, B1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jabatan (hanya untuk Guru)</label>
+                            <input type="text" name="kelas" value="{{ old('kelas') }}" class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" placeholder="Contoh: Koordinator, Operator, Kepala Lab">
                             @error('kelas')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
@@ -118,7 +118,7 @@
             const kelasGroup = document.getElementById('kelas_group');
             const employeeGroup = document.getElementById('employee_group');
 
-            function toggleKelas() {
+            function toggleJabatan() {
                 if (!roleSelect) return;
 
                 if (kelasGroup) {
@@ -139,8 +139,8 @@
             }
 
             if (roleSelect) {
-                roleSelect.addEventListener('change', toggleKelas);
-                toggleKelas();
+                roleSelect.addEventListener('change', toggleJabatan);
+                toggleJabatan();
             }
         })();
     </script>

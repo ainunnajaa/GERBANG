@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wali Murid Dashboard</title>
+    <title>Murid Dashboard</title>
     @include('partials.favicon')
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
     <nav class="bg-white shadow">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 class="font-semibold text-blue-800">Wali Murid</h1>
+            <h1 class="font-semibold text-blue-800">Murid</h1>
             <ul class="flex gap-6 text-sm text-gray-700">
                 <li><a href="{{ route('dashboard') }}" class="hover:text-blue-800">Dashboard</a></li>
                 <li><a href="{{ route('wali.daftar') }}" class="hover:text-blue-800">Daftar</a></li>
@@ -31,7 +31,7 @@
     </nav>
     <main class="container mx-auto px-4 py-1">
         <h2 class="text-2xl font-semibold mb-4">Selamat datang, {{ auth()->user()->name }}</h2>
-        <p class="text-gray-600">Ini adalah dashboard Wali Murid.</p>
+        <p class="text-gray-600">Ini adalah dashboard Murid.</p>
     </main>
 </body>
 </html>

@@ -60,7 +60,7 @@
 <body>
     <h1>Riwayat Presensi Guru</h1>
     <p class="meta">Nama Guru: {{ $guru->name }}</p>
-    <p class="meta">Kelas: {{ $guru->kelas ?? '-' }}</p>
+    <p class="meta">Jabatan: {{ $guru->kelas ?? '-' }}</p>
     <p class="meta">Periode: {{ $selectedPeriod->name }} ({{ $selectedPeriod->start_date->format('d M Y') }} - {{ $selectedPeriod->end_date->format('d M Y') }})</p>
 
     @forelse($sections as $section)

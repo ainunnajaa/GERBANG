@@ -124,7 +124,7 @@
                 <thead>
                     <tr>
                         <th class="col-name">Nama Guru</th>
-                        <th class="col-class">Kelas</th>
+                        <th class="col-class">Jabatan</th>
                         @foreach($section['days'] as $day)
                             @php
                                 $isSunday = \Carbon\Carbon::create($section['year'], $section['month'], $day)->isSunday();

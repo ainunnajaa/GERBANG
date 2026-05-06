@@ -10,7 +10,7 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * Usage: role:admin or role:guru or role:wali_murid
+    * Usage: role:admin or role:guru or role:murid
      */
     public function handle(Request $request, Closure $next, string $role): mixed
     {

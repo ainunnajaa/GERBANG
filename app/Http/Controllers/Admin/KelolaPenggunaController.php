@@ -15,7 +15,7 @@ class KelolaPenggunaController extends Controller
 	{
 		$role = $request->query('role');
 		$query = User::query()->orderBy('name');
-		if (in_array($role, ['admin', 'guru', 'wali_murid'], true)) {
+		if (in_array($role, ['admin', 'guru', 'murid'], true)) {
 			$query->where('role', $role);
 		}
 		$users = $query->paginate(10)->withQueryString();
@@ -41,7 +41,7 @@ class KelolaPenggunaController extends Controller
 			'tanggal_lahir' => ['nullable', 'date'],
 			'employee_number' => ['nullable', 'string', 'max:100'],
 			'kelas' => ['nullable', 'string', 'max:255'],
-			'role' => ['required', 'in:admin,guru,wali_murid'],
+			'role' => ['required', 'in:admin,guru,murid'],
 			'phone' => ['nullable', 'string', 'max:50'],
 			'address' => ['nullable', 'string', 'max:2000'],
 		]);
@@ -90,7 +90,7 @@ class KelolaPenggunaController extends Controller
 			'tanggal_lahir' => ['nullable', 'date'],
 			'employee_number' => ['nullable', 'string', 'max:100'],
 			'kelas' => ['nullable', 'string', 'max:255'],
-			'role' => ['required', 'in:admin,guru,wali_murid'],
+			'role' => ['required', 'in:admin,guru,murid'],
 			'phone' => ['nullable', 'string', 'max:50'],
 			'address' => ['nullable', 'string', 'max:2000'],
 		]);

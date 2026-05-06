@@ -175,8 +175,8 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
     })->name('guru.daftar-guru');
 });
 
-// Wali Murid routes
-Route::middleware(['auth', 'role:wali_murid'])->group(function () {
-    Route::get('/wali/daftar', fn() => view('wali_murid.daftar'))->name('wali.daftar');
-    Route::get('/wali/aktivitas', fn() => view('wali_murid.aktivitas'))->name('wali.aktivitas');
+// Murid routes
+Route::middleware(['auth', 'role:murid'])->group(function () {
+    Route::get('/wali/daftar', fn() => view('murid.daftar'))->name('wali.daftar');
+    Route::get('/wali/aktivitas', fn() => view('murid.aktivitas'))->name('wali.aktivitas');
 });

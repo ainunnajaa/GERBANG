@@ -381,7 +381,7 @@
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{{ $guru->name }}</p>
                                         @if($guru->kelas)
-                                            <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 uppercase">Kls {{ $guru->kelas }}</span>
+                                            <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 uppercase">Jabatan {{ $guru->kelas }}</span>
                                         @endif
                                     </div>
                                 </div>

@@ -32,9 +32,9 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-emerald-100 dark:border-emerald-500/40 hover:border-emerald-300 hover:shadow-md transition p-5">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Jumlah Wali Murid</p>
-                    <p class="mt-2 text-3xl font-bold text-emerald-600">{{ $jumlahWaliMurid ?? 0 }}</p>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Total akun wali murid yang terdaftar</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Jumlah Murid</p>
+                    <p class="mt-2 text-3xl font-bold text-emerald-600">{{ $jumlahMurid ?? 0 }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Total murid berdasarkan input admin</p>
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-indigo-100 dark:border-indigo-500/40 hover:border-indigo-300 hover:shadow-md transition p-5">

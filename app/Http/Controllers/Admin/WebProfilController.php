@@ -227,6 +227,7 @@ class WebProfilController extends Controller
 			'school_profile' => ['nullable', 'string'],
 			'vision' => ['nullable', 'string'],
 			'mission' => ['nullable', 'string'],
+			'student_count' => ['nullable', 'integer', 'min:0'],
 		]);
 
 		$profile = SchoolProfile::firstOrNew(['id' => 1]);
@@ -246,6 +247,7 @@ class WebProfilController extends Controller
 		$profile->school_profile = $validated['school_profile'] ?? null;
 		$profile->vision = $validated['vision'] ?? null;
 		$profile->mission = $validated['mission'] ?? null;
+		$profile->student_count = $validated['student_count'] ?? null;
 		$profile->updated_by = Auth::id();
 		$profile->save();
 

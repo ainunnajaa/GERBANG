@@ -345,7 +345,7 @@
                 </div>
                 @endif
 
-                {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & KELAS --}}
+                {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & JABATAN --}}
                 @if (!empty($gurus) && $gurus->count())
                     <div id="guru" class="mb-14 pt-4 scroll-reveal" data-reveal>
                         <div class="flex flex-col md:flex-row items-center justify-between bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300 mb-8">
@@ -390,12 +390,12 @@
                                                         @endif
                                                     </div>
                                                     <h4 class="font-bold text-gray-800 dark:text-gray-100 text-base leading-tight">{{ $guru->name }}</h4>
-                                                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p>
+                                                    {{-- <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p> --}}
                                                 </div>
                                                 
                                                 <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
                                                     @if (!empty($guru->kelas))
-                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">Kelas {{ $guru->kelas }}</span>
+                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">{{ $guru->kelas }}</span>
                                                     @else
                                                         <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">Umum</span>
                                                     @endif

@@ -61,7 +61,7 @@
                                             </h3>
                                         </div>
                                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                                            <span class="font-medium">Kelas:</span>
+                                            <span class="font-medium">Jabatan:</span>
                                             {{ $guru->kelas ?? '-' }}
                                         </p>
                                         <p class="text-sm text-gray-600 dark:text-gray-300 truncate">

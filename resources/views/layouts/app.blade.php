@@ -547,7 +547,7 @@
                             </svg>
                             <span>Video</span>
                         </a>
-                    @elseif($role === 'wali_murid')
+                    @elseif($role === 'murid')
                         <a href="{{ route('wali.daftar') }}" class="flex flex-col items-center justify-center py-2 text-[11px] font-medium leading-tight {{ request()->routeIs('wali.daftar*') ? 'text-orange-600 dark:text-orange-400 border-t-2 border-orange-500' : 'text-gray-600 dark:text-gray-300 border-t-2 border-transparent' }}">
                             <svg class="w-5 h-5 mb-0.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5M3.75 9.75h16.5M9 15h11.25M9 19.5h11.25M4.5 15h.008v.008H4.5V15zm0 4.5h.008v.008H4.5V19.5z" />

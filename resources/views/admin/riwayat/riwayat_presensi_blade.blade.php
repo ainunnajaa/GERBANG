@@ -70,7 +70,7 @@
 								<tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
 									<th class="px-4 py-2 text-left">Tanggal</th>
 									<th class="px-4 py-2 text-left">Nama Guru</th>
-									<th class="px-4 py-2 text-left">Kelas</th>
+									<th class="px-4 py-2 text-left">Jabatan</th>
 									<th class="px-4 py-2 text-left">Jam Masuk</th>
 									<th class="px-4 py-2 text-left">Jam Pulang</th>
 									<th class="px-4 py-2 text-left">Status</th>

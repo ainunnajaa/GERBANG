@@ -265,7 +265,7 @@ class RiwayatPresensiController extends Controller
 		$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
 
 		$rows = [];
-		$header = ['Nama Guru', 'Kelas'];
+		$header = ['Nama Guru', 'Jabatan'];
 		foreach ($days as $day) {
 			$header[] = $day;
 		}
@@ -352,7 +352,7 @@ class RiwayatPresensiController extends Controller
 			$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
 
 			$rows = [];
-			$header = ['Nama', 'Kelas'];
+			$header = ['Nama', 'Jabatan'];
 			foreach ($days as $day) {
 				$header[] = (string) $day;
 			}
@@ -1061,7 +1061,7 @@ class RiwayatPresensiController extends Controller
 		$fileBaseName = 'rekap_presensi_bulanan_' . $year . '_' . str_pad((string) $month, 2, '0', STR_PAD_LEFT);
 
 		$rows = [];
-		$header = ['Nama Guru', 'Kelas'];
+		$header = ['Nama Guru', 'Jabatan'];
 		foreach ($days as $day) {
 			$header[] = $day;
 		}
@@ -1231,7 +1231,7 @@ class RiwayatPresensiController extends Controller
 			$manualStatuses = $this->getManualStatusOverrides($gurus->pluck('id')->all(), $dateKeys);
 
 			$rows = [];
-			$header = ['Nama Guru', 'Kelas'];
+			$header = ['Nama Guru', 'Jabatan'];
 			foreach ($days as $day) {
 				$header[] = (string) $day;
 			}

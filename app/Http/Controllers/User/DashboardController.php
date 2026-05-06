@@ -10,6 +10,7 @@ use App\Models\PresensiSetting;
 use App\Models\PresensiStatusOverride;
 use App\Models\User;
 use App\Models\Berita;
+use App\Models\SchoolProfile;
 use Carbon\Carbon;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $role = $request->user()->role ?? 'wali_murid';
+        $role = $request->user()->role ?? 'murid';
         $today = Carbon::today();
 
         $adminAttendance = $this->getAdminTodayAttendanceSummary();
@@ -34,7 +35,7 @@ class DashboardController extends Controller
         return match ($role) {
             'admin' => view('dashboard.admin', [
                 'jumlahGuru' => User::where('role', 'guru')->count(),
-                'jumlahWaliMurid' => User::where('role', 'wali_murid')->count(),
+                'jumlahMurid' => (int) (SchoolProfile::query()->value('student_count') ?? 0),
                 'jumlahBerita' => Berita::count(),
                 'jumlahPeriode' => PresensiPeriod::count(),
                 'activePeriod' => PresensiPeriod::query()->active()->orderByDesc('start_date')->first(),
@@ -46,7 +47,7 @@ class DashboardController extends Controller
                 ),
             ]),
             'guru' => $this->guruDashboard($request),
-            default => view('dashboard.wali_murid'),
+            default => view('dashboard.murid'),
         };
     }
 
