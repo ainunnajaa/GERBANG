@@ -4,7 +4,6 @@
         $initialLongitude = old('longitude', $settings->longitude);
         $initialRadius = old('radius_meter', $settings->radius_meter);
         $activeDays = $activePeriod->active_days ?? [];
-        $hasFriday = in_array('friday', $activeDays, true);
         $hasSaturday = in_array('saturday', $activeDays, true);
 
         $jamErrorFields = [
@@ -13,8 +12,9 @@
             'jam_masuk_toleransi',
             'jam_pulang_start',
             'jam_pulang_end',
-            'jam_pulang_start_jumat',
-            'jam_pulang_end_jumat',
+            'jam_masuk_start_sabtu',
+            'jam_masuk_end_sabtu',
+            'jam_masuk_toleransi_sabtu',
             'jam_pulang_start_sabtu',
             'jam_pulang_end_sabtu',
             'qr_text',
@@ -233,8 +233,13 @@
                                         @endif
                                     </li>
                                     <li>Pulang: {{ \Carbon\Carbon::parse($settings->jam_pulang_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end)->format('H:i') }}</li>
-                                    @if($hasFriday && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat)
-                                        <li>Pulang Jumat: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_jumat)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_jumat)->format('H:i') }}</li>
+                                    @if($hasSaturday && $settings->jam_masuk_start_sabtu && $settings->jam_masuk_end_sabtu)
+                                        <li>
+                                            Masuk Sabtu: {{ \Carbon\Carbon::parse($settings->jam_masuk_start_sabtu)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_masuk_end_sabtu)->format('H:i') }}
+                                            @if($settings->jam_masuk_toleransi_sabtu)
+                                                (Toleransi sampai {{ \Carbon\Carbon::parse($settings->jam_masuk_toleransi_sabtu)->format('H:i') }})
+                                            @endif
+                                        </li>
                                     @endif
                                     @if($hasSaturday && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu)
                                         <li>Pulang Sabtu: {{ \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu)->format('H:i') }} - {{ \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu)->format('H:i') }}</li>
@@ -249,12 +254,11 @@
                                     <div class="rounded-lg bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0"></path></svg>
                                     </div>
-                                    <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">Jadwal Reguler (Senin - Kamis)</h4>
+                                    <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">Jadwal Reguler (Senin - Jumat)</h4>
                                 </div>
 
                                 <div class="space-y-6 p-4 md:p-6">
                                     <div>
-                                        <h5 class="mb-4 border-b pb-2 text-sm font-bold uppercase tracking-wider text-gray-400 dark:border-gray-700 dark:text-gray-500">Sesi Masuk</h5>
                                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                                             <div>
                                                 <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Masuk Mulai</label>
@@ -282,7 +286,6 @@
                                     </div>
 
                                     <div>
-                                        <h5 class="mb-4 border-b pb-2 text-sm font-bold uppercase tracking-wider text-gray-400 dark:border-gray-700 dark:text-gray-500">Sesi Pulang</h5>
                                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                             <div>
                                                 <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Mulai</label>
@@ -303,33 +306,6 @@
                                 </div>
                             </div>
 
-                            @if($hasFriday)
-                                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/30">
-                                    <div class="flex items-center gap-3 border-b border-gray-100 bg-emerald-50/60 px-4 py-4 dark:border-gray-700/70 dark:bg-emerald-900/20">
-                                        <div class="rounded-lg bg-emerald-100 p-2 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2"></path></svg>
-                                        </div>
-                                        <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">Jadwal Khusus (Jumat)</h4>
-                                    </div>
-                                    <div class="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-6">
-                                        <div>
-                                            <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Mulai (Jumat)</label>
-                                            <input type="time" name="jam_pulang_start_jumat" value="{{ old('jam_pulang_start_jumat', optional($settings->jam_pulang_start_jumat ? \Carbon\Carbon::parse($settings->jam_pulang_start_jumat) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                                            @error('jam_pulang_start_jumat')
-                                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Selesai (Jumat)</label>
-                                            <input type="time" name="jam_pulang_end_jumat" value="{{ old('jam_pulang_end_jumat', optional($settings->jam_pulang_end_jumat ? \Carbon\Carbon::parse($settings->jam_pulang_end_jumat) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                                            @error('jam_pulang_end_jumat')
-                                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
                             @if($hasSaturday)
                                 <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/30">
                                     <div class="flex items-center gap-3 border-b border-gray-100 bg-amber-50/60 px-4 py-4 dark:border-gray-700/70 dark:bg-amber-900/20">
@@ -338,20 +314,46 @@
                                         </div>
                                         <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">Jadwal Khusus (Sabtu)</h4>
                                     </div>
-                                    <div class="grid grid-cols-1 gap-6 p-4 md:grid-cols-2 md:p-6">
-                                        <div>
-                                            <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Mulai (Sabtu)</label>
-                                            <input type="time" name="jam_pulang_start_sabtu" value="{{ old('jam_pulang_start_sabtu', optional($settings->jam_pulang_start_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                                            @error('jam_pulang_start_sabtu')
-                                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                            @enderror
+                                    <div class="space-y-6 p-4 md:p-6">
+                                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Masuk Mulai (Sabtu)</label>
+                                                <input type="time" name="jam_masuk_start_sabtu" value="{{ old('jam_masuk_start_sabtu', optional($settings->jam_masuk_start_sabtu ? \Carbon\Carbon::parse($settings->jam_masuk_start_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                                @error('jam_masuk_start_sabtu')
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Masuk Selesai (Sabtu)</label>
+                                                <input type="time" name="jam_masuk_end_sabtu" value="{{ old('jam_masuk_end_sabtu', optional($settings->jam_masuk_end_sabtu ? \Carbon\Carbon::parse($settings->jam_masuk_end_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                                @error('jam_masuk_end_sabtu')
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Toleransi Terlambat (Sabtu)</label>
+                                                <input type="time" name="jam_masuk_toleransi_sabtu" value="{{ old('jam_masuk_toleransi_sabtu', optional($settings->jam_masuk_toleransi_sabtu ? \Carbon\Carbon::parse($settings->jam_masuk_toleransi_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-red-200 bg-red-50 p-2.5 text-sm text-red-900 transition-colors focus:border-red-500 focus:ring-red-500 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+                                                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Lewat dari jam ini, status menjadi Terlambat.</p>
+                                                @error('jam_masuk_toleransi_sabtu')
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Selesai (Sabtu)</label>
-                                            <input type="time" name="jam_pulang_end_sabtu" value="{{ old('jam_pulang_end_sabtu', optional($settings->jam_pulang_end_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                                            @error('jam_pulang_end_sabtu')
-                                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                            @enderror
+                                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Mulai (Sabtu)</label>
+                                                <input type="time" name="jam_pulang_start_sabtu" value="{{ old('jam_pulang_start_sabtu', optional($settings->jam_pulang_start_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_start_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                                @error('jam_pulang_start_sabtu')
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-200">Jam Pulang Selesai (Sabtu)</label>
+                                                <input type="time" name="jam_pulang_end_sabtu" value="{{ old('jam_pulang_end_sabtu', optional($settings->jam_pulang_end_sabtu ? \Carbon\Carbon::parse($settings->jam_pulang_end_sabtu) : null)->format('H:i')) }}" class="block w-full rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 transition-colors focus:border-amber-500 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                                @error('jam_pulang_end_sabtu')
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

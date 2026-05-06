@@ -317,13 +317,18 @@ class PresensiController extends Controller
         $pulangStartRaw = $settings->jam_pulang_start;
         $pulangEndRaw = $settings->jam_pulang_end;
         $dayKey = strtolower($now->englishDayOfWeek);
-        if ($dayKey === 'friday' && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat) {
-            $pulangStartRaw = $settings->jam_pulang_start_jumat;
-            $pulangEndRaw = $settings->jam_pulang_end_jumat;
-        }
         if ($dayKey === 'saturday' && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu) {
             $pulangStartRaw = $settings->jam_pulang_start_sabtu;
             $pulangEndRaw = $settings->jam_pulang_end_sabtu;
+        }
+        if ($dayKey === 'saturday' && $settings->jam_masuk_start_sabtu && $settings->jam_masuk_end_sabtu) {
+            $masukStart = Carbon::createFromFormat('H:i', substr((string) $settings->jam_masuk_start_sabtu, 0, 5));
+            $masukEnd = Carbon::createFromFormat('H:i', substr((string) $settings->jam_masuk_end_sabtu, 0, 5));
+            $masukAcceptEnd = $settings->jam_masuk_toleransi_sabtu
+                ? Carbon::createFromFormat('H:i', substr((string) $settings->jam_masuk_toleransi_sabtu, 0, 5))
+                : ($settings->jam_masuk_toleransi
+                    ? Carbon::createFromFormat('H:i', substr((string) $settings->jam_masuk_toleransi, 0, 5))
+                    : $masukEnd);
         }
 
         $pulangStart = Carbon::createFromFormat('H:i', substr((string) $pulangStartRaw, 0, 5));
@@ -493,8 +498,9 @@ class PresensiController extends Controller
             'jam_masuk_end' => '08:00:00',
             'jam_pulang_start' => '13:00:00',
             'jam_pulang_end' => '14:30:00',
-            'jam_pulang_start_jumat' => null,
-            'jam_pulang_end_jumat' => null,
+            'jam_masuk_start_sabtu' => null,
+            'jam_masuk_end_sabtu' => null,
+            'jam_masuk_toleransi_sabtu' => null,
             'jam_pulang_start_sabtu' => null,
             'jam_pulang_end_sabtu' => null,
             'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),
