@@ -79,7 +79,7 @@
                         </div>
 
                         <div id="kelas_group" class="{{ old('role') === 'guru' ? '' : 'hidden' }}">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jabatan (hanya untuk Guru)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Jabatan</label>
                             <input type="text" name="kelas" value="{{ old('kelas') }}" class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" placeholder="Contoh: Koordinator, Operator, Kepala Lab">
                             @error('kelas')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>

@@ -9,6 +9,8 @@ use App\Http\Controllers\Berita\BeritaController;
 use App\Http\Controllers\Admin\KelolaPenggunaController;
 use App\Http\Controllers\Presensi\PresensiPeriodController;
 use App\Http\Controllers\Admin\WelcomeController;
+use App\Http\Controllers\Admin\TemaController;
+use App\Http\Controllers\Admin\DownloadController as AdminDownloadController;
 use App\Http\Controllers\Presensi\PresensiController;
 use App\Http\Controllers\Presensi\RiwayatPresensiController;
 use App\Http\Controllers\PwaController;
@@ -28,6 +30,7 @@ Route::get('/apple-touch-icon.png', [PwaController::class, 'appleTouchIcon'])->n
 Route::get('/visi-misi', [WelcomeController::class, 'visiMisi'])->name('publik.visi_misi');
 Route::get('/kontak', [WelcomeController::class, 'kontak'])->name('publik.kontak');
 Route::get('/video', [WelcomeController::class, 'video'])->name('publik.video');
+Route::get('/download', [AdminDownloadController::class, 'index'])->name('publik.download');
 Route::get('/news', [BeritaAppController::class, 'home'])->name('app.berita.home');
 Route::get('/news/berita', [BeritaAppController::class, 'news'])->name('app.berita.news');
 Route::get('/news/berita/{berita}', [BeritaAppController::class, 'showNews'])->name('app.berita.news.show');
@@ -98,6 +101,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/kelola-web-profil', [WebProfilController::class, 'save'])->name('admin.web_profil.save');
     Route::delete('/admin/kelola-web-profil/principal-photo', [WebProfilController::class, 'deletePrincipalPhoto'])->name('admin.web_profil.principal_photo.delete');
     Route::delete('/admin/kelola-web-profil/school-logo', [WebProfilController::class, 'deleteSchoolLogo'])->name('admin.web_profil.school_logo.delete');
+    Route::post('/admin/tema', [TemaController::class, 'update'])->name('admin.tema.update');
+    Route::post('/admin/download', [AdminDownloadController::class, 'update'])->name('admin.download.update');
 
     // Program Unggulan CRUD
     Route::post('/admin/program-unggulan', [WebProfilController::class, 'storeProgram'])->name('admin.programs.store');
