@@ -32,6 +32,19 @@ class RiwayatPresensiController extends Controller
 	protected array $holidayDateCache = [];
 	protected $presensiPeriods = null;
 
+	private function boostPdfRuntime(): void
+	{
+		if (function_exists('ini_set')) {
+			ini_set('memory_limit', '1024M');
+			ini_set('max_execution_time', '300');
+			ini_set('max_input_time', '300');
+		}
+
+		if (function_exists('set_time_limit')) {
+			set_time_limit(300);
+		}
+	}
+
 	public function guruKehadiranPeriods()
 	{
 		$periods = $this->getPresensiPeriods();
@@ -386,6 +399,7 @@ class RiwayatPresensiController extends Controller
 
 	public function guruExportKehadiranPeriodePdf(Request $request)
 	{
+		$this->boostPdfRuntime();
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
 		$selectedPeriod = $this->getSelectedGuruPeriod($request);
@@ -1111,6 +1125,7 @@ class RiwayatPresensiController extends Controller
 
 	public function adminExportPresensiPeriodePdf(Request $request)
 	{
+		$this->boostPdfRuntime();
 		$settings = $this->ensureSettings();
 		$selectedPeriod = $this->getSelectedAdminPeriod($request);
 
