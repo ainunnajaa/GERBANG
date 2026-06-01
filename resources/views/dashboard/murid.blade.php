@@ -1,37 +1,53 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murid Dashboard</title>
-    @include('partials.favicon')
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <nav class="bg-white shadow">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 class="font-semibold text-blue-800">Murid</h1>
-            <ul class="flex gap-6 text-sm text-gray-700">
-                <li><a href="{{ route('dashboard') }}" class="hover:text-blue-800">Dashboard</a></li>
-                <li><a href="{{ route('wali.daftar') }}" class="hover:text-blue-800">Daftar</a></li>
-                <li><a href="{{ route('wali.aktivitas') }}" class="hover:text-blue-800">Aktivitas</a></li>
-            </ul>
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <div class="font-medium text-sm text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            Dashboard Murid
+        </h2>
+    </x-slot>
+
+    <div class="py-1">
+        <div class="px-2 sm:px-3 lg:px-4 space-y-6">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Selamat datang</p>
+                    <h3 class="mt-1 text-2xl font-semibold">Halo, {{ auth()->user()->name }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        Pantau aktivitas dan daftar presensi melalui menu di samping.
+                    </p>
                 </div>
-                <a href="{{ route('profile.edit') }}" class="text-sm text-gray-700 hover:text-blue-800">Profile</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-sm text-red-600 hover:text-red-700">Log Out</button>
-                </form>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h4 class="text-lg font-semibold">Daftar Presensi</h4>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            Lihat daftar kehadiran terbaru dan status presensi.
+                        </p>
+                        <a href="{{ route('wali.daftar') }}" class="mt-4 inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+                            Buka daftar
+                            <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.69l-3.22-3.22a.75.75 0 111.06-1.06l4.5 4.5a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 11-1.06-1.06l3.22-3.22H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h4 class="text-lg font-semibold">Aktivitas</h4>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            Pantau riwayat aktivitas dan catatan terbaru.
+                        </p>
+                        <a href="{{ route('wali.aktivitas') }}" class="mt-4 inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+                            Lihat aktivitas
+                            <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.69l-3.22-3.22a.75.75 0 111.06-1.06l4.5 4.5a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 11-1.06-1.06l3.22-3.22H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
-    <main class="container mx-auto px-4 py-1">
-        <h2 class="text-2xl font-semibold mb-4">Selamat datang, {{ auth()->user()->name }}</h2>
-        <p class="text-gray-600">Ini adalah dashboard Murid.</p>
-    </main>
-</body>
-</html>
+    </div>
+</x-app-layout>
