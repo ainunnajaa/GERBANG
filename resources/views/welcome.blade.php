@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
+   <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        {{-- SEO TAGS UNTUK GOOGLE --}}
+        {{-- SEO TAGS DASAR UNTUK GOOGLE --}}
         <title>TK Pembina ABA 54 Semarang - {{ config('app.name', 'GERBANG') }}</title>
         <meta name="description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
         <meta name="keywords" content="TK Pembina ABA 54 Semarang, TK ABA 54, Taman Kanak-Kanak Semarang, TK Aisyiyah Bustanul Athfal 54, Pendidikan Anak Usia Dini">
         <meta name="author" content="TK Pembina ABA 54 Semarang">
+
+        {{-- META TAGS OPEN GRAPH (UNTUK THUMBNAIL GOOGLE, WHATSAPP, FACEBOOK) --}}
+        <meta property="og:title" content="TK Pembina ABA 54 Semarang - {{ config('app.name', 'GERBANG') }}">
+        <meta property="og:description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:type" content="website">
+
+        {{-- LOGIKA THUMBNAIL DINAMIS --}}
+        @if (!empty($schoolProfile->principal_photo_path))
+            {{-- 1. Prioritas Utama: Foto Kepala Sekolah dari Database --}}
+            <meta property="og:image" content="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}">
+            <meta name="image" content="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}">
+        @elseif (!empty($schoolProfile->logo_path))
+            {{-- 2. Cadangan 1: Logo Sekolah dari Database --}}
+            <meta property="og:image" content="{{ asset('storage/' . $schoolProfile->logo_path) }}">
+            <meta name="image" content="{{ asset('storage/' . $schoolProfile->logo_path) }}">
+        @else
+            {{-- 3. Cadangan Terakhir: Logo statis di folder public/logo.png --}}
+            <meta property="og:image" content="{{ asset('logo.png') }}">
+            <meta name="image" content="{{ asset('logo.png') }}">
+        @endif
 
         @include('partials.favicon')
 
