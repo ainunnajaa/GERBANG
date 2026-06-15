@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-  <head>
+<head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
@@ -18,10 +18,11 @@
         <meta property="og:site_name" content="TK Pembina ABA 54 Semarang">
 
         {{-- STRUCTURED DATA (JSON-LD) UNTUK DEKLARASI NAMA SITUS DI GOOGLE --}}
+        {{-- (Sudah diperbaiki menggunakan @@ agar tidak terjadi Error 500 di Blade) --}}
         <script type="application/ld+json">
         {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
+          "@@context": "https://schema.org",
+          "@@type": "WebSite",
           "name": "TK Pembina ABA 54 Semarang",
           "alternateName": "TK ABA 54 Semarang",
           "url": "{{ url('/') }}"
@@ -45,6 +46,7 @@
 
         @include('partials.favicon')
 
+        {{-- SCRIPT PENGECEKAN TEMA (DARK/LIGHT MODE) --}}
         <script>
             (function() {
                 try {
