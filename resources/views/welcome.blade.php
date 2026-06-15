@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-   <head>
+  <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
@@ -15,6 +15,18 @@
         <meta property="og:description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
         <meta property="og:url" content="{{ url()->current() }}">
         <meta property="og:type" content="website">
+        <meta property="og:site_name" content="TK Pembina ABA 54 Semarang">
+
+        {{-- STRUCTURED DATA (JSON-LD) UNTUK DEKLARASI NAMA SITUS DI GOOGLE --}}
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "TK Pembina ABA 54 Semarang",
+          "alternateName": "TK ABA 54 Semarang",
+          "url": "{{ url('/') }}"
+        }
+        </script>
 
         {{-- LOGIKA THUMBNAIL DINAMIS --}}
         @if (!empty($schoolProfile->principal_photo_path))
