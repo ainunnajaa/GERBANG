@@ -20,6 +20,7 @@ class SchoolProfile extends Model
         'principal_greeting',
         'vision',
         'mission',
+        'student_count',
         'contact_address',
         'contact_email',
         'contact_phone',

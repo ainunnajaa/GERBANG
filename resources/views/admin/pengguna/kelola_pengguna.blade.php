@@ -10,7 +10,7 @@
             return match($role) {
                 'admin' => 'Admin',
                 'guru' => 'Guru',
-                'wali_murid' => 'Wali Murid',
+                'murid' => 'Murid',
                 default => ucfirst($role)
             };
         };
@@ -18,7 +18,7 @@
             return match($role) {
                 'admin' => 'bg-rose-500',
                 'guru' => 'bg-blue-500',
-                'wali_murid' => 'bg-emerald-500',
+                'murid' => 'bg-emerald-500',
                 default => 'bg-gray-500'
             };
         };
@@ -48,7 +48,7 @@
                                 <option value="" {{ empty($currentRole) ? 'selected' : '' }}>Semua</option>
                                 <option value="admin" {{ ($currentRole ?? '') === 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="guru" {{ ($currentRole ?? '') === 'guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="wali_murid" {{ ($currentRole ?? '') === 'wali_murid' ? 'selected' : '' }}>Wali Murid</option>
+                                <option value="murid" {{ ($currentRole ?? '') === 'murid' ? 'selected' : '' }}>Murid</option>
                             </select>
                         </form>
                         <a href="{{ route('admin.users.create') }}" class="inline-block bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition duration-200 text-sm">Tambah User</a>

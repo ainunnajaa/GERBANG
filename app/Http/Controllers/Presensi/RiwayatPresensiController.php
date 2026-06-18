@@ -32,6 +32,19 @@ class RiwayatPresensiController extends Controller
 	protected array $holidayDateCache = [];
 	protected $presensiPeriods = null;
 
+	private function boostPdfRuntime(): void
+	{
+		if (function_exists('ini_set')) {
+			ini_set('memory_limit', '1024M');
+			ini_set('max_execution_time', '300');
+			ini_set('max_input_time', '300');
+		}
+
+		if (function_exists('set_time_limit')) {
+			set_time_limit(300);
+		}
+	}
+
 	public function guruKehadiranPeriods()
 	{
 		$periods = $this->getPresensiPeriods();
@@ -265,7 +278,7 @@ class RiwayatPresensiController extends Controller
 		$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
 
 		$rows = [];
-		$header = ['Nama Guru', 'Kelas'];
+		$header = ['Nama Guru', 'Jabatan'];
 		foreach ($days as $day) {
 			$header[] = $day;
 		}
@@ -352,7 +365,7 @@ class RiwayatPresensiController extends Controller
 			$manualStatuses = $this->getManualStatusOverrides([$user->id], $dateKeys);
 
 			$rows = [];
-			$header = ['Nama', 'Kelas'];
+			$header = ['Nama', 'Jabatan'];
 			foreach ($days as $day) {
 				$header[] = (string) $day;
 			}
@@ -386,6 +399,7 @@ class RiwayatPresensiController extends Controller
 
 	public function guruExportKehadiranPeriodePdf(Request $request)
 	{
+		$this->boostPdfRuntime();
 		$settings = $this->ensureSettings();
 		$user = Auth::user();
 		$selectedPeriod = $this->getSelectedGuruPeriod($request);
@@ -1061,7 +1075,7 @@ class RiwayatPresensiController extends Controller
 		$fileBaseName = 'rekap_presensi_bulanan_' . $year . '_' . str_pad((string) $month, 2, '0', STR_PAD_LEFT);
 
 		$rows = [];
-		$header = ['Nama Guru', 'Kelas'];
+		$header = ['Nama Guru', 'Jabatan'];
 		foreach ($days as $day) {
 			$header[] = $day;
 		}
@@ -1111,6 +1125,7 @@ class RiwayatPresensiController extends Controller
 
 	public function adminExportPresensiPeriodePdf(Request $request)
 	{
+		$this->boostPdfRuntime();
 		$settings = $this->ensureSettings();
 		$selectedPeriod = $this->getSelectedAdminPeriod($request);
 
@@ -1231,7 +1246,7 @@ class RiwayatPresensiController extends Controller
 			$manualStatuses = $this->getManualStatusOverrides($gurus->pluck('id')->all(), $dateKeys);
 
 			$rows = [];
-			$header = ['Nama Guru', 'Kelas'];
+			$header = ['Nama Guru', 'Jabatan'];
 			foreach ($days as $day) {
 				$header[] = (string) $day;
 			}

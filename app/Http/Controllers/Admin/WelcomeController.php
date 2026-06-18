@@ -7,6 +7,7 @@ use App\Models\SchoolBackground;
 use App\Models\SchoolContent;
 use App\Models\SchoolProgram;
 use App\Models\SchoolProfile;
+use App\Models\Tema;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -32,6 +33,7 @@ class WelcomeController extends Controller
 		$backgrounds = $profile
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderBy('order')->get()
 			: collect();
+		$tema = Tema::first();
 
 		return view('welcome', [
 			'schoolProfile' => $profile,
@@ -40,6 +42,7 @@ class WelcomeController extends Controller
 			'programs' => $programs,
 			'contents' => $contents,
 			'backgrounds' => $backgrounds,
+			'tema' => $tema,
 		]);
 	}
 

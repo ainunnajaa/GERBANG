@@ -216,8 +216,9 @@ class PresensiController extends Controller
 			'jam_masuk_toleransi' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_start' => ['required', 'date_format:H:i'],
 			'jam_pulang_end' => ['required', 'date_format:H:i'],
-			'jam_pulang_start_jumat' => ['nullable', 'date_format:H:i'],
-			'jam_pulang_end_jumat' => ['nullable', 'date_format:H:i'],
+			'jam_masuk_start_sabtu' => ['nullable', 'date_format:H:i'],
+			'jam_masuk_end_sabtu' => ['nullable', 'date_format:H:i'],
+			'jam_masuk_toleransi_sabtu' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_start_sabtu' => ['nullable', 'date_format:H:i'],
 			'jam_pulang_end_sabtu' => ['nullable', 'date_format:H:i'],
 			'qr_text' => ['nullable', 'string', 'max:255'],
@@ -234,8 +235,9 @@ class PresensiController extends Controller
 			: null;
 		$settings->jam_pulang_start = $data['jam_pulang_start'] . ':00';
 		$settings->jam_pulang_end = $data['jam_pulang_end'] . ':00';
-		$settings->jam_pulang_start_jumat = !empty($data['jam_pulang_start_jumat']) ? $data['jam_pulang_start_jumat'] . ':00' : null;
-		$settings->jam_pulang_end_jumat = !empty($data['jam_pulang_end_jumat']) ? $data['jam_pulang_end_jumat'] . ':00' : null;
+		$settings->jam_masuk_start_sabtu = !empty($data['jam_masuk_start_sabtu']) ? $data['jam_masuk_start_sabtu'] . ':00' : null;
+		$settings->jam_masuk_end_sabtu = !empty($data['jam_masuk_end_sabtu']) ? $data['jam_masuk_end_sabtu'] . ':00' : null;
+		$settings->jam_masuk_toleransi_sabtu = !empty($data['jam_masuk_toleransi_sabtu']) ? $data['jam_masuk_toleransi_sabtu'] . ':00' : null;
 		$settings->jam_pulang_start_sabtu = !empty($data['jam_pulang_start_sabtu']) ? $data['jam_pulang_start_sabtu'] . ':00' : null;
 		$settings->jam_pulang_end_sabtu = !empty($data['jam_pulang_end_sabtu']) ? $data['jam_pulang_end_sabtu'] . ':00' : null;
 		$settings->qr_text = $data['qr_text'] ?? env('PRESENSI_QR_CODE', 'TKABA-PRESENSI');
@@ -300,13 +302,17 @@ class PresensiController extends Controller
 		$pulangStartRaw = $settings->jam_pulang_start;
 		$pulangEndRaw = $settings->jam_pulang_end;
 		$dayKey = strtolower($now->englishDayOfWeek);
-		if ($dayKey === 'friday' && $settings->jam_pulang_start_jumat && $settings->jam_pulang_end_jumat) {
-			$pulangStartRaw = $settings->jam_pulang_start_jumat;
-			$pulangEndRaw = $settings->jam_pulang_end_jumat;
-		}
 		if ($dayKey === 'saturday' && $settings->jam_pulang_start_sabtu && $settings->jam_pulang_end_sabtu) {
 			$pulangStartRaw = $settings->jam_pulang_start_sabtu;
 			$pulangEndRaw = $settings->jam_pulang_end_sabtu;
+		}
+
+		if ($dayKey === 'saturday' && $settings->jam_masuk_start_sabtu && $settings->jam_masuk_end_sabtu) {
+			$masukStart = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_start_sabtu, 0, 5));
+			$masukEnd = Carbon::createFromFormat('H:i', substr($settings->jam_masuk_end_sabtu, 0, 5));
+			$masukAcceptEnd = $settings->jam_masuk_toleransi_sabtu
+				? Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi_sabtu, 0, 5))
+				: $masukEnd;
 		}
 
 		$pulangStart = Carbon::createFromFormat('H:i', substr($pulangStartRaw, 0, 5));
@@ -318,17 +324,19 @@ class PresensiController extends Controller
 		// - Normal: antara jam_masuk_start s.d jam_masuk_end (status "hadir").
 		// - Terlambat tapi masih diterima: > jam_masuk_end s.d jam_masuk_toleransi (status "terlambat").
 		// - Di luar itu: ditolak.
-		$masukAcceptEnd = $settings->jam_masuk_toleransi
-			? Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi, 0, 5))
-			: $masukEnd;
+		if (!isset($masukAcceptEnd)) {
+			$masukAcceptEnd = $settings->jam_masuk_toleransi
+				? Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi, 0, 5))
+				: $masukEnd;
+		}
 
 		$isMasuk = $current->between($masukStart, $masukAcceptEnd);
 		$isPulang = $current->between($pulangStart, $pulangEnd);
 
 		if (! $isMasuk && ! $isPulang) {
 			$jamMasukText = $masukStart->format('H:i') . '-' . $masukEnd->format('H:i');
-			if ($settings->jam_masuk_toleransi) {
-				$jamMasukText .= ' (toleransi sampai ' . Carbon::createFromFormat('H:i', substr($settings->jam_masuk_toleransi, 0, 5))->format('H:i') . ')';
+			if ($masukAcceptEnd->gt($masukEnd)) {
+				$jamMasukText .= ' (toleransi sampai ' . $masukAcceptEnd->format('H:i') . ')';
 			}
 
 			return back()->with('error', 'Bukan jam presensi. Jam masuk: ' . $jamMasukText . ', jam pulang: ' . $pulangStart->format('H:i') . '-' . $pulangEnd->format('H:i'));
@@ -415,8 +423,9 @@ class PresensiController extends Controller
 			'jam_masuk_end' => '08:00:00',
 			'jam_pulang_start' => '13:00:00',
 			'jam_pulang_end' => '14:30:00',
-			'jam_pulang_start_jumat' => null,
-			'jam_pulang_end_jumat' => null,
+			'jam_masuk_start_sabtu' => null,
+			'jam_masuk_end_sabtu' => null,
+			'jam_masuk_toleransi_sabtu' => null,
 			'jam_pulang_start_sabtu' => null,
 			'jam_pulang_end_sabtu' => null,
 			'qr_text' => env('PRESENSI_QR_CODE', 'TKABA-PRESENSI'),

@@ -24,7 +24,7 @@
 					<div class="mb-4 flex items-center justify-between">
 						<div>
 							<h3 class="text-lg font-semibold">{{ $guru->name }}</h3>
-							<p class="text-sm text-gray-500 dark:text-gray-400">Kelas: {{ $guru->kelas ?? '-' }}</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400">Jabatan: {{ $guru->kelas ?? '-' }}</p>
 						</div>
 						<a href="{{ route('admin.riwayat.period', $selectedPeriod) }}" class="text-sm text-blue-600 hover:underline">&larr; Kembali ke Riwayat Presensi</a>
 					</div>

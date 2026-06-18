@@ -49,35 +49,37 @@
 
 	<div class="max-w-md md:max-w-3xl xl:max-w-6xl 2xl:max-w-7xl mx-auto bg-white dark:bg-gray-800 min-h-screen overflow-x-hidden md:overflow-visible relative transition-colors duration-300">
 		<div id="top-navbar" class="fixed top-0 left-0 right-0 md:sticky md:top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
-		<header class="flex items-center justify-between px-4 md:px-6 xl:px-8 py-3 transition-colors duration-300">
-			<div class="flex items-center gap-2">
-				<div class="h-9 w-9 rounded-full bg-white dark:bg-gray-700 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
-					@if(!empty($schoolProfile?->school_logo_path))
-						<img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo {{ $schoolName }}" class="h-full w-full object-contain">
-					@else
-						<span class="text-xs font-extrabold text-sky-700">{{ mb_substr($schoolName, 0, 1) }}</span>
-					@endif
-				</div>
-				<h1 class="font-extrabold text-[15px] tracking-tight uppercase text-gray-900 dark:text-gray-100">Berita Sekolah</h1>
+			<div id="top-header-wrap" class="overflow-hidden max-h-24 opacity-100 transition-all duration-300">
+				<header class="flex items-center justify-between px-4 md:px-6 xl:px-8 py-3 transition-colors duration-300">
+					<div class="flex items-center gap-2">
+						<div class="h-9 w-9 rounded-full bg-white dark:bg-gray-700 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
+							@if(!empty($schoolProfile?->school_logo_path))
+								<img src="{{ asset('storage/' . $schoolProfile->school_logo_path) }}" alt="Logo {{ $schoolName }}" class="h-full w-full object-contain">
+							@else
+								<span class="text-xs font-extrabold text-sky-700">{{ mb_substr($schoolName, 0, 1) }}</span>
+							@endif
+						</div>
+						<h1 class="font-extrabold text-[15px] tracking-tight uppercase text-gray-900 dark:text-gray-100">Berita Sekolah</h1>
+					</div>
+					<div class="flex items-center gap-3 text-gray-700 dark:text-gray-200 text-lg xl:text-xl">
+						<a id="news-search-trigger" href="{{ route('app.berita.news', ['focus' => 'search']) }}" aria-label="Pencarian" title="Cari berita">
+							<i class="fa-solid fa-magnifying-glass"></i>
+						</a>
+						<a href="{{ route('app.berita.video') }}" aria-label="Video">
+							<i class="fa-solid fa-tv"></i>
+						</a>
+						<button id="theme-toggle-btn" type="button" aria-label="Toggle tema" class="relative inline-flex h-7 w-12 items-center rounded-full bg-gray-200 dark:bg-gray-700 transition-colors">
+							<span id="theme-toggle-knob" class="inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white dark:bg-gray-900 text-amber-500 shadow transition-transform duration-200 translate-x-1 dark:translate-x-6">
+								<i class="fa-solid fa-sun text-[10px] dark:hidden"></i>
+								<i class="fa-solid fa-moon text-[10px] hidden dark:inline"></i>
+							</span>
+						</button>
+						<button id="menu-toggle-btn" type="button" aria-label="Menu Utama" aria-controls="mobile-menu-overlay" aria-expanded="false">
+							<i class="fa-solid fa-bars"></i>
+						</button>
+					</div>
+				</header>
 			</div>
-			<div class="flex items-center gap-3 text-gray-700 dark:text-gray-200 text-lg xl:text-xl">
-				<a id="news-search-trigger" href="{{ route('app.berita.news', ['focus' => 'search']) }}" aria-label="Pencarian" title="Cari berita">
-					<i class="fa-solid fa-magnifying-glass"></i>
-				</a>
-				<a href="{{ route('app.berita.video') }}" aria-label="Video">
-					<i class="fa-solid fa-tv"></i>
-				</a>
-				<button id="theme-toggle-btn" type="button" aria-label="Toggle tema" class="relative inline-flex h-7 w-12 items-center rounded-full bg-gray-200 dark:bg-gray-700 transition-colors">
-					<span id="theme-toggle-knob" class="inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white dark:bg-gray-900 text-amber-500 shadow transition-transform duration-200 translate-x-1 dark:translate-x-6">
-						<i class="fa-solid fa-sun text-[10px] dark:hidden"></i>
-						<i class="fa-solid fa-moon text-[10px] hidden dark:inline"></i>
-					</span>
-				</button>
-				<button id="menu-toggle-btn" type="button" aria-label="Menu Utama" aria-controls="mobile-menu-overlay" aria-expanded="false">
-					<i class="fa-solid fa-bars"></i>
-				</button>
-			</div>
-		</header>
 
 		<div id="mobile-menu-overlay" class="fixed inset-0 z-[70] hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title">
 			<div id="mobile-menu-backdrop" class="absolute inset-0 bg-black/45"></div>
@@ -325,6 +327,36 @@
 	</div>
 
 	<script>
+		(function () {
+			var headerWrap = document.getElementById('top-header-wrap');
+			if (!headerWrap) return;
+
+			var lastY = window.scrollY || 0;
+			var ticking = false;
+			var hideThreshold = 24;
+
+			function updateHeaderVisibility() {
+				var currentY = window.scrollY || 0;
+				var isScrollingDown = currentY > lastY;
+				var shouldHide = isScrollingDown && currentY > hideThreshold;
+
+				headerWrap.classList.toggle('max-h-0', shouldHide);
+				headerWrap.classList.toggle('opacity-0', shouldHide);
+				headerWrap.classList.toggle('max-h-24', !shouldHide);
+				headerWrap.classList.toggle('opacity-100', !shouldHide);
+
+				lastY = currentY;
+				ticking = false;
+			}
+
+			window.addEventListener('scroll', function () {
+				if (ticking) return;
+
+				window.requestAnimationFrame(updateHeaderVisibility);
+				ticking = true;
+			}, { passive: true });
+		})();
+
 		(function () {
 			var btn = document.getElementById('theme-toggle-btn');
 			if (!btn) return;

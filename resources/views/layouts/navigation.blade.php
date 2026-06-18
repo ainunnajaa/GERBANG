@@ -3,7 +3,7 @@
     $roleLabel = match($role) {
         'admin' => 'Admin',
         'guru' => 'Guru',
-        'wali_murid' => 'Wali Murid',
+        'murid' => 'Murid',
         default => 'User'
     };
 
@@ -124,7 +124,7 @@
                     <span x-show="!sidebarCollapsed" x-transition.opacity class="whitespace-nowrap">Video</span>
                 </a>
             </li>
-        @elseif($role === 'wali_murid')
+        @elseif($role === 'murid')
             <li>
                 <a href="{{ route('wali.daftar') }}" class="flex items-center rounded-md transition group {{ request()->routeIs('wali.daftar*') ? 'bg-[#0000F4]/10 dark:bg-[#0000F4]/20 border-l-4 border-yellow-500' : 'bg-gray-200/30 dark:bg-gray-700/30 hover:bg-gray-200/50 dark:hover:bg-gray-700/50' }}" :class="sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-4 py-2'" :title="sidebarCollapsed ? 'Daftar' : ''">
                     <svg class="w-5 h-5 {{ request()->routeIs('wali.daftar*') ? 'text-[#0000F4]' : 'text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400' }} shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

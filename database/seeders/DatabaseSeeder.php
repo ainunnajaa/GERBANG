@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         User::updateOrCreate(
             ['email' => 'wali@example.com'],
-            ['name' => 'Wali Murid User', 'role' => 'wali_murid', 'password' => bcrypt('password'), 'email_verified_at' => now()]
+            ['name' => 'Murid User', 'role' => 'murid', 'password' => bcrypt('password'), 'email_verified_at' => now()]
         );
 
         // Ensure requested user gets admin role

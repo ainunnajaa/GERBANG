@@ -29,7 +29,7 @@
 		</div>
 
 		<div class="mb-1">
-			<x-input-label for="kelas" value="Kelas (hanya untuk Guru)" />
+			<x-input-label for="kelas" value="Jabatan" />
 			<x-text-input
 				id="kelas"
 				name="kelas"
@@ -38,7 +38,7 @@
 				:value="old('kelas', $user->kelas)"
 				autocomplete="off"
 			/>
-			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Contoh: A1, A2, B1</p>
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Contoh: Koordinator, Operator, Kepala Lab</p>
 			<x-input-error class="mt-2" :messages="$errors->get('kelas')" />
 		</div>
 	@endif

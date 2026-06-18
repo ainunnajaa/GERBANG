@@ -1,17 +1,52 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
+<head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        {{-- SEO TAGS UNTUK GOOGLE --}}
+        {{-- SEO TAGS DASAR UNTUK GOOGLE --}}
         <title>TK Pembina ABA 54 Semarang - {{ config('app.name', 'GERBANG') }}</title>
         <meta name="description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
         <meta name="keywords" content="TK Pembina ABA 54 Semarang, TK ABA 54, Taman Kanak-Kanak Semarang, TK Aisyiyah Bustanul Athfal 54, Pendidikan Anak Usia Dini">
         <meta name="author" content="TK Pembina ABA 54 Semarang">
 
+        {{-- META TAGS OPEN GRAPH (UNTUK THUMBNAIL GOOGLE, WHATSAPP, FACEBOOK) --}}
+        <meta property="og:title" content="TK Pembina ABA 54 Semarang - {{ config('app.name', 'GERBANG') }}">
+        <meta property="og:description" content="Selamat datang di website resmi TK Pembina ABA 54 Semarang. Temukan informasi profil sekolah, program unggulan, galeri kegiatan, dan portal presensi guru.">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="TK Pembina ABA 54 Semarang">
+
+        {{-- STRUCTURED DATA (JSON-LD) UNTUK DEKLARASI NAMA SITUS DI GOOGLE --}}
+        {{-- (Sudah diperbaiki menggunakan @@ agar tidak terjadi Error 500 di Blade) --}}
+        <script type="application/ld+json">
+        {
+          "@@context": "https://schema.org",
+          "@@type": "WebSite",
+          "name": "TK Pembina ABA 54 Semarang",
+          "alternateName": "TK ABA 54 Semarang",
+          "url": "{{ url('/') }}"
+        }
+        </script>
+
+        {{-- LOGIKA THUMBNAIL DINAMIS --}}
+        @if (!empty($schoolProfile->principal_photo_path))
+            {{-- 1. Prioritas Utama: Foto Kepala Sekolah dari Database --}}
+            <meta property="og:image" content="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}">
+            <meta name="image" content="{{ asset('storage/' . $schoolProfile->principal_photo_path) }}">
+        @elseif (!empty($schoolProfile->logo_path))
+            {{-- 2. Cadangan 1: Logo Sekolah dari Database --}}
+            <meta property="og:image" content="{{ asset('storage/' . $schoolProfile->logo_path) }}">
+            <meta name="image" content="{{ asset('storage/' . $schoolProfile->logo_path) }}">
+        @else
+            {{-- 3. Cadangan Terakhir: Logo statis di folder public/logo.png --}}
+            <meta property="og:image" content="{{ asset('logo.png') }}">
+            <meta name="image" content="{{ asset('logo.png') }}">
+        @endif
+
         @include('partials.favicon')
 
+        {{-- SCRIPT PENGECEKAN TEMA (DARK/LIGHT MODE) --}}
         <script>
             (function() {
                 try {
@@ -26,10 +61,28 @@
         <style>
             /* FONT PLAYFUL UNAK TK */
             @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+            :root {
+                --theme-primary: {{ $tema->primary_color ?? '#1E90FF' }};
+                --theme-secondary: {{ $tema->secondary_color ?? '#FFD700' }};
+                --theme-accent: {{ $tema->accent_color ?? '#32CD32' }};
+                --theme-bg: {{ $tema->background_color ?? '#FDFCE0' }};
+                --theme-welcome-card-bg: {{ $tema->welcome_card_bg_color ?? '#FFFFFF' }};
+                --theme-welcome-card-border: {{ $tema->welcome_card_border_color ?? '#FF4500' }};
+                --theme-welcome-label-bg: {{ $tema->welcome_label_bg_color ?? '#FFD700' }};
+                --theme-welcome-title: {{ $tema->welcome_title_color ?? '#DC143C' }};
+                --theme-hero-overlay: {{ $tema->hero_overlay_color ?? '#87CEEB' }};
+                --theme-slider-bg: {{ $tema->slider_bg_color ?? '#E5E7EB' }};
+                --theme-bg-surface: var(--theme-bg);
+            }
+
+            html.dark {
+                --theme-bg-surface: #111827;
+            }
             
             body {
                 font-family: 'Nunito', sans-serif;
-                background-color: #FDFCE0; 
+                background-color: var(--theme-bg);
                 margin: 0;
                 padding: 0;
                 transition: background-color 0.3s ease;
@@ -44,12 +97,12 @@
                 position: relative; width: 100%; min-height: 400px;
                 background-color: #ffffff; overflow: hidden; display: flex; align-items: center;
                 padding: 60px 20px; border-radius: 1.5rem; 
-                border: 6px solid #1E90FF; box-shadow: 0 10px 0 #104E8B; 
+                border: 6px solid var(--theme-primary); box-shadow: 0 10px 0 var(--theme-primary); 
                 transition: all 0.3s ease;
             }
             .bg-shape {
                 position: absolute; top: 0; right: 0; bottom: 0; width: 100%;
-                background-color: #1E90FF; z-index: 1;
+                background-color: var(--theme-primary); z-index: 1;
                 clip-path: polygon(30% 0, 100% 0, 100% 100%, 15% 100%);
                 transition: all 0.3s ease;
             }
@@ -61,7 +114,7 @@
             .image-box { position: relative; width: 100%; max-width: 320px; }
             .image-box img {
                 width: 100%; height: 380px; object-fit: cover;
-                border: 8px solid #FFD700; border-radius: 20px;
+                border: 8px solid var(--theme-secondary); border-radius: 20px;
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); background-color: white;
             }
             .name-tag {
@@ -74,7 +127,7 @@
             .name-tag p { font-size: 13px; font-weight: 700; margin: 0; }
             .text-column { flex: 1 1 500px; color: #ffffff; }
             .text-column h2 { font-family: 'Fredoka One', cursive; font-size: 32px; margin-bottom: 8px; text-shadow: 2px 2px 0px rgba(0,0,0,0.2); }
-            .yellow-line { height: 6px; width: 150px; background-color: #FFD700; margin-bottom: 25px; border-radius: 10px;}
+            .yellow-line { height: 6px; width: 150px; background-color: var(--theme-secondary); margin-bottom: 25px; border-radius: 10px;}
             .text-column .intro-text { font-size: 18px; font-weight: 800; margin-bottom: 15px; line-height: 1.4; color: #FFF; }
             .text-column .main-text { font-size: 15px; line-height: 1.8; color: #E6F2FF; font-weight: 600; }
 
@@ -155,7 +208,7 @@
             <main class="flex-1">
                 
                 {{-- AREA BIRU LANGIT DENGAN DEKORASI AWAN & BALON --}}
-                <div class="w-full bg-[#87CEEB] dark:bg-[#0f172a] pt-8 pb-16 md:pb-28 relative px-4 transition-colors duration-300 overflow-hidden">
+                <div class="w-full dark:bg-[#0f172a] pt-8 pb-16 md:pb-28 relative px-4 transition-colors duration-300 overflow-hidden" style="background-color: var(--theme-hero-overlay);">
                     
                     {{-- DEKORASI AWAN (SVG) DI LATAR BELAKANG --}}
                     <div class="pointer-events-none absolute inset-0 z-0 opacity-70 dark:opacity-20">
@@ -206,7 +259,7 @@
 
                         @if (!empty($backgrounds) && $backgrounds->count())
                             {{-- HERO SECTION (BENTUK CARD / TV WALL) --}}
-                            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] border-[10px] md:border-[16px] border-white dark:border-gray-800 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-visible group bg-gray-200 dark:bg-gray-900 transition-colors duration-300 relative z-10">
+                            <div class="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] border-[10px] md:border-[16px] border-white dark:border-gray-800 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)] overflow-visible group transition-colors duration-300 relative z-10" style="background-color: var(--theme-slider-bg);">
                                 
                                 {{-- Area Gambar Slider --}}
                                 <div class="w-full h-full relative overflow-hidden rounded-xl">
@@ -247,18 +300,18 @@
                 </div>
                 
                 {{-- AREA BAWAH UNTUK KONTEN --}}
-                <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12 relative z-20 bg-[#FDFCE0] dark:bg-gray-900 transition-colors duration-300 rounded-t-[3rem] mt-[-30px]">
+                <div class="px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16 pt-8 md:pt-12 relative z-20 transition-colors duration-300 rounded-t-[3rem] mt-[-30px]" style="background-color: var(--theme-bg-surface);">
                 
                 @if (!empty($schoolProfile?->welcome_message))
                     {{-- CARD 1: SELAMAT DATANG (PLAYFUL) - PERBAIKAN: Label Halo & Rotasi Dinamis --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal>
+                    <div class="mb-12 rounded-3xl p-8 border-4 border-dashed relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal style="background-color: var(--theme-welcome-card-bg); border-color: var(--theme-welcome-card-border); box-shadow: 0 8px 0 var(--theme-welcome-card-border);">
                         
                         {{-- Label Halo Melayang --}}
-                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30">
+                        <div class="absolute -top-6 -left-4 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30" style="background-color: var(--theme-welcome-label-bg);">
                             Halo! 👋
                         </div>
 
-                        <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang di Dunia Ceria!</h2>
+                        <h2 class="font-playful text-3xl md:text-4xl mb-4" style="color: var(--theme-welcome-title);">Selamat Datang di Dunia Ceria!</h2>
                         <div class="rtf-content text-lg text-gray-700 dark:text-gray-300 font-semibold leading-relaxed prose dark:prose-invert max-w-none">{!! $schoolProfile->welcome_message !!}</div>
                     </div>
 
@@ -296,11 +349,11 @@
                     </div>
                 @else
                     {{-- Default jika belum ada data di database --}}
-                    <div class="mb-12 bg-white dark:bg-gray-800 rounded-3xl p-8 border-4 border-dashed border-[#FF4500] dark:border-red-500 shadow-[0_8px_0_#FF4500] dark:shadow-[0_8px_0_#b91c1c] relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal>
-                        <div class="absolute -top-6 -left-4 bg-[#FFD700] dark:bg-yellow-500 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30">
+                    <div class="mb-12 rounded-3xl p-8 border-4 border-dashed relative transform rotate-1 hover:rotate-0 transition-all duration-300 scroll-reveal" data-reveal style="background-color: var(--theme-welcome-card-bg); border-color: var(--theme-welcome-card-border); box-shadow: 0 8px 0 var(--theme-welcome-card-border);">
+                        <div class="absolute -top-6 -left-4 text-gray-900 font-playful px-4 py-2 rounded-xl border-2 border-black dark:border-gray-800 rotate-[-10deg] shadow-sm z-30" style="background-color: var(--theme-welcome-label-bg);">
                             Halo! 👋
                         </div>
-                        <h2 class="font-playful text-3xl md:text-4xl text-[#DC143C] dark:text-red-400 mb-4">Selamat Datang!</h2>
+                        <h2 class="font-playful text-3xl md:text-4xl mb-4" style="color: var(--theme-welcome-title);">Selamat Datang!</h2>
                         <p class="text-lg text-gray-700 dark:text-gray-300 font-semibold">Senang sekali melihat Anda di sini! Selamat menjelajahi {{ config('app.name', 'Laravel') }}.</p>
                     </div>
                 @endif
@@ -345,7 +398,7 @@
                 </div>
                 @endif
 
-                {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & KELAS --}}
+                {{-- GURU COLORFUL DENGAN CAROUSEL/SLIDER & JABATAN --}}
                 @if (!empty($gurus) && $gurus->count())
                     <div id="guru" class="mb-14 pt-4 scroll-reveal" data-reveal>
                         <div class="flex flex-col md:flex-row items-center justify-between bg-[#32CD32] dark:bg-green-700 rounded-[2rem] p-6 md:p-8 shadow-[0_8px_0_#228B22] dark:shadow-[0_8px_0_#14532d] border-4 border-white dark:border-gray-800 transition-colors duration-300 mb-8">
@@ -390,12 +443,12 @@
                                                         @endif
                                                     </div>
                                                     <h4 class="font-bold text-gray-800 dark:text-gray-100 text-base leading-tight">{{ $guru->name }}</h4>
-                                                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p>
+                                                    {{-- <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">Guru Pengajar</p> --}}
                                                 </div>
                                                 
                                                 <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
                                                     @if (!empty($guru->kelas))
-                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">Kelas {{ $guru->kelas }}</span>
+                                                        <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border {{ $classBadge }}">{{ $guru->kelas }}</span>
                                                     @else
                                                         <span class="text-xs font-bold py-1 px-3 rounded-full inline-block border bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">Umum</span>
                                                     @endif

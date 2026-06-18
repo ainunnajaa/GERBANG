@@ -7,7 +7,9 @@ use App\Models\SchoolBackground;
 use App\Models\SchoolContent;
 use App\Models\SchoolProgram;
 use App\Models\SchoolProfile;
+use App\Models\Tema;
 use App\Models\User;
+use App\Models\DownloadSetting;
 use Google\Client as GoogleClient;
 use Google\Service\YouTube;
 use Google\Service\YouTube\Video;
@@ -39,6 +41,8 @@ class WebProfilController extends Controller
 		$backgrounds = $profile
 			? SchoolBackground::where('school_profile_id', $profile->id)->orderByDesc('created_at')->get()
 			: collect();
+		$tema = Tema::first();
+		$downloadSettings = DownloadSetting::first();
 
 		return view('admin.profile_sekolah.kelola_web_profil', [
 			'profile' => $profile,
@@ -46,6 +50,8 @@ class WebProfilController extends Controller
 			'contents' => $contents,
 			'videos' => $videos,
 			'backgrounds' => $backgrounds,
+			'tema' => $tema,
+			'downloadSettings' => $downloadSettings,
 			'youtubeConnected' => $this->getValidYouTubeAccessToken() !== null,
 			'youtubeUploadMaxBytes' => $this->getYouTubeUploadCapBytes(),
 			'youtubeUploadMaxMb' => max(1, (int) floor($this->getYouTubeUploadCapBytes() / (1024 * 1024))),
@@ -227,6 +233,7 @@ class WebProfilController extends Controller
 			'school_profile' => ['nullable', 'string'],
 			'vision' => ['nullable', 'string'],
 			'mission' => ['nullable', 'string'],
+			'student_count' => ['nullable', 'integer', 'min:0'],
 		]);
 
 		$profile = SchoolProfile::firstOrNew(['id' => 1]);
@@ -246,6 +253,7 @@ class WebProfilController extends Controller
 		$profile->school_profile = $validated['school_profile'] ?? null;
 		$profile->vision = $validated['vision'] ?? null;
 		$profile->mission = $validated['mission'] ?? null;
+		$profile->student_count = $validated['student_count'] ?? null;
 		$profile->updated_by = Auth::id();
 		$profile->save();
 

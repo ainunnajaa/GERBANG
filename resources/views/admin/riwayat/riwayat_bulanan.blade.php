@@ -245,7 +245,7 @@
 										<thead>
 											<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
 												<th class="px-2 py-2 text-left whitespace-nowrap">Nama Guru</th>
-												<th class="px-2 py-2 text-left whitespace-nowrap">Kelas</th>
+												<th class="px-2 py-2 text-left whitespace-nowrap">Jabatan</th>
 												@foreach($monthDates as $date)
 													@php
 														$isSunday = $date->isSunday();
@@ -301,7 +301,7 @@
 								<thead>
 									<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
 										<th class="px-2 py-2 text-left whitespace-nowrap">Nama Guru</th>
-										<th class="px-2 py-2 text-left whitespace-nowrap">Kelas</th>
+										<th class="px-2 py-2 text-left whitespace-nowrap">Jabatan</th>
 										@foreach($days as $day)
 											@php
 												$isSunday = \Carbon\Carbon::create($year, $month, $day)->isSunday();
